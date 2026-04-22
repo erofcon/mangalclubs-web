@@ -1,4 +1,3 @@
-
 // Product categories
 export interface Category {
     id: string;
@@ -11,6 +10,7 @@ export interface MenuItem {
     description: string;
     price: number;
     image?: string;
+    isHit: boolean;
 }
 
 export interface MenuCategory extends Category {
