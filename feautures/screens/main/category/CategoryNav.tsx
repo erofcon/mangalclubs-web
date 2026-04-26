@@ -5,12 +5,33 @@ import {categories} from "@/mocks/mocks-data";
 import Image from "next/image";
 import {CategoryIcons} from "@/types/products";
 
+type FlyingItem = {
+    id: number;
+    image?: string;
+    name: string;
+    from: {
+        x: number;
+        y: number;
+    };
+    center: {
+        x: number;
+        y: number;
+    };
+    to: {
+        x: number;
+        y: number;
+    };
+};
+
 export function CategoriesNav() {
     const [activeId, setActiveId] = useState<string | number | null>(
         categories[0]?.id ?? null
     );
 
+    const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
+
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
+    const cartRef = useRef<HTMLButtonElement | null>(null);
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
         const element = categoryRefs.current[String(categoryId)];
@@ -23,6 +44,52 @@ export function CategoriesNav() {
             block: "nearest",
         });
     };
+
+    useEffect(() => {
+        const handleFlyToCart = (event: Event) => {
+            const customEvent = event as CustomEvent<{
+                image?: string;
+                name: string;
+                from: {
+                    x: number;
+                    y: number;
+                };
+            }>;
+
+            const cartRect = cartRef.current?.getBoundingClientRect();
+
+            if (!cartRect) return;
+
+            const id = Date.now();
+
+            const flyingItem: FlyingItem = {
+                id,
+                image: customEvent.detail.image,
+                name: customEvent.detail.name,
+                from: customEvent.detail.from,
+                center: {
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                },
+                to: {
+                    x: cartRect.left + cartRect.width / 2,
+                    y: cartRect.top + cartRect.height / 2,
+                },
+            };
+
+            setFlyingItems((prev) => [...prev, flyingItem]);
+
+            setTimeout(() => {
+                setFlyingItems((prev) => prev.filter((item) => item.id !== id));
+            }, 1050);
+        };
+
+        window.addEventListener("fly-to-cart", handleFlyToCart);
+
+        return () => {
+            window.removeEventListener("fly-to-cart", handleFlyToCart);
+        };
+    }, []);
 
     useEffect(() => {
         let scrollTimeout: ReturnType<typeof setTimeout>;
@@ -85,49 +152,114 @@ export function CategoriesNav() {
     };
 
     return (
-        <nav className="sticky top-0 z-30  backdrop-blur-md py-4 md:max-w-6xl mx-auto px-4">
-            <div className="flex items-center justify-between gap-4">
+        <>
+            <nav className="sticky top-0 z-30 mx-auto px-4 py-4 backdrop-blur-md md:max-w-6xl">
+                <div className="flex items-center justify-between gap-4">
+                    <ul className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {categories.map((category) => {
+                            const isActive = activeId === category.id;
 
-                <ul className="flex gap-3 overflow-x-auto whitespace-nowrap scroll-smooth flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    {categories.map(category => {
-                        const isActive = activeId === category.id;
+                            return (
+                                <li
+                                    key={category.id}
+                                    ref={(element) => {
+                                        categoryRefs.current[String(category.id)] = element;
+                                    }}
+                                    onClick={() => scrollToCategory(category.id)}
+                                    className={`flex shrink-0 cursor-pointer items-center gap-4 rounded-full px-3 py-1 font-semibold transition-all ${
+                                        isActive
+                                            ? "bg-warning text-primary-foreground shadow-md"
+                                            : "border border-border bg-card text-text hover:bg-warning hover:text-text-on-primary"
+                                    }`}
+                                >
+                                    <div className="rounded-full bg-surface p-1">
+                                        <Image
+                                            src={CategoryIcons[category.icon]}
+                                            alt="icon"
+                                            width={28}
+                                            height={28}
+                                        />
+                                    </div>
 
-                        return (
-                            <li
-                                key={category.id}
-                                ref={(element) => {
-                                    categoryRefs.current[String(category.id)] = element;
-                                }}
-                                onClick={() => scrollToCategory(category.id)}
-                                className={`flex items-center gap-4 cursor-pointer rounded-full px-3 py-1 font-semibold transition-all shrink-0
-                            ${isActive
-                                    ? "bg-warning text-primary-foreground shadow-md"
-                                    : "bg-card text-text border border-border hover:bg-warning hover:text-text-on-primary"
+                                    {category.title}
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    <button
+                        ref={cartRef}
+                        className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-full bg-warning px-5 py-2 font-semibold text-text-on-primary hover:opacity-90 md:flex"
+                    >
+                        Корзина
+                        <span className="rounded-full bg-card px-2 text-text">3</span>
+                    </button>
+                </div>
+            </nav>
+
+            {flyingItems.map((item) => {
+                const animationDuration = 1.65;
+
+                return (
+                    <div
+                        key={item.id}
+                        className="pointer-events-none fixed z-9999 h-28 w-28 rounded-2xl bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
+                        style={{
+                            left: item.from.x - 56,
+                            top: item.from.y - 56,
+                            animation: `fly-to-cart-${item.id} ${animationDuration}s cubic-bezier(.2,.9,.2,1) forwards`,
+                        }}
+                    >
+                        {item.image ? (
+                            <Image
+                                src={item.image}
+                                alt={item.name}
+                                width={112}
+                                height={112}
+                                className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.45)]"
+                            />
+                        ) : (
+                            <div
+                                className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
+                                {item.name}
+                            </div>
+                        )}
+
+                        <style jsx>{`
+                            @keyframes fly-to-cart-${item.id} {
+                                0% {
+                                    transform: translate(0, 0) scale(0.7) rotate(0deg);
+                                    opacity: 0;
                                 }
-                        `}
-                            >
-                                <div className="bg-surface p-1 rounded-full">
-                                    <Image
-                                        src={CategoryIcons[category.icon]}
-                                        alt="icon"
-                                        width={28}
-                                        height={28}
-                                    />
-                                </div>
-                                {category.title}
-                            </li>
-                        );
-                    })}
-                </ul>
 
-                <button
-                    className="hidden cursor-pointer md:flex shrink-0 items-center gap-2 rounded-full px-5 py-2 font-semibold bg-warning text-text-on-primary hover:opacity-90"
-                >
-                    Корзина
-                    <span className={'bg-card text-text px-2 rounded-full'}>3</span>
-                </button>
+                                22% {
+                                    transform: translate(
+                                            ${item.center.x - item.from.x}px,
+                                            ${item.center.y - item.from.y}px
+                                    ) scale(1.18) rotate(-3deg);
+                                    opacity: 1;
+                                }
 
-            </div>
-        </nav>
+                                38% {
+                                    transform: translate(
+                                            ${item.center.x - item.from.x}px,
+                                            ${item.center.y - item.from.y}px
+                                    ) scale(1.18) rotate(0deg);
+                                    opacity: 1;
+                                }
+
+                                100% {
+                                    transform: translate(
+                                            ${item.to.x - item.from.x}px,
+                                            ${item.to.y - item.from.y}px
+                                    ) scale(0.12) rotate(24deg);
+                                    opacity: 0;
+                                }
+                            }
+                        `}</style>
+                    </div>
+                );
+            })}
+        </>
     );
 }
