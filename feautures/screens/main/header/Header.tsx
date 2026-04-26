@@ -73,8 +73,8 @@ export default function DarkDodoHeader() {
                     <Image
                         src="/logo.png"
                         alt="logo"
-                        width={60}
-                        height={60}
+                        width={80}
+                        height={80}
                         priority
                     />
                 </Link>
@@ -87,13 +87,13 @@ export default function DarkDodoHeader() {
             <div
                 className={`fixed inset-0 z-50 bg-black transition-transform duration-300 md:hidden ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
 
-                <div className="flex h-15 items-center justify-between px-4 pt-2">
+                <div className="flex h-15 items-center justify-between px-4 pt-2 mb-4">
                     <Link href="#" className="flex items-center gap-2">
                         <Image
                             src="/logo.png"
                             alt="logo"
-                            width={60}
-                            height={60}
+                            width={80}
+                            height={80}
                             priority
                         />
                     </Link>

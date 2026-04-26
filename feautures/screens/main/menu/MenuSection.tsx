@@ -10,7 +10,7 @@ export function MenuSection() {
                     id={`menu-${menu.id}`}
                     className="relative"
                 >
-                    <div className="mb-8  py-4">
+                    <div className="md:mb-8 mb-4  md:py-4">
                         <h2 className="text-text text-base md:text-lg font-semibold tracking-wide">
                             {menu.title}
                         </h2>
