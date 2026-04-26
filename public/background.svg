@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+    <defs>
+        <radialGradient id="base" cx="50%" cy="42%" r="85%">
+            <stop offset="0%" stop-color="#181818"/>
+            <stop offset="45%" stop-color="#0b0b0b"/>
+            <stop offset="100%" stop-color="#020202"/>
+        </radialGradient>
+
+        <filter id="ultraGrain">
+            <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0"
+                    numOctaves="2"
+                    seed="14"
+                    stitchTiles="stitch"
+            />
+            <feColorMatrix type="saturate" values="0"/>
+            <feComponentTransfer>
+                <feFuncR type="table" tableValues="0.05 0.22"/>
+                <feFuncG type="table" tableValues="0.05 0.22"/>
+                <feFuncB type="table" tableValues="0.05 0.22"/>
+                <feFuncA type="table" tableValues="0.18 0.55"/>
+            </feComponentTransfer>
+        </filter>
+
+        <filter id="microSpecks">
+            <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="6.5"
+                    numOctaves="2"
+                    seed="33"
+                    stitchTiles="stitch"
+            />
+            <feColorMatrix type="saturate" values="0"/>
+            <feComponentTransfer>
+                <feFuncA type="table" tableValues="0 0.22"/>
+            </feComponentTransfer>
+        </filter>
+
+        <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+            <stop offset="55%" stop-color="#000000" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#000000" stop-opacity="0.55"/>
+        </radialGradient>
+    </defs>
+
+    <rect width="100%" height="100%" fill="url(#base)"/>
+
+    <rect width="100%" height="100%" filter="url(#ultraGrain)" opacity="0.42"/>
+    <rect width="100%" height="100%" filter="url(#microSpecks)" opacity="0.25"/>
+
+    <rect width="100%" height="100%" fill="#000" opacity="0.12"/>
+    <rect width="100%" height="100%" fill="url(#vignette)"/>
+</svg>

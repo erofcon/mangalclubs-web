@@ -2,6 +2,7 @@
 export interface Category {
     id: string;
     title: string;
+    icon: string,
 }
 
 export interface MenuItem {
@@ -16,3 +17,9 @@ export interface MenuItem {
 export interface MenuCategory extends Category {
     items: MenuItem[];
 }
+
+
+export const CategoryIcons: Record<string, string> = {
+    steak: "/menu/icons/steak.svg",
+    grill: "/menu/icons/grill.svg",
+};

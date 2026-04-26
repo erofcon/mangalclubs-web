@@ -1,17 +1,13 @@
 import type {Metadata} from "next";
-import {Geist, Geist_Mono} from "next/font/google";
+import {Open_Sans} from "next/font/google";
 import "@/styles/globals.css"
 import React from "react";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
+const myFont = Open_Sans({
+    subsets: ["cyrillic"],
+    weight: ["400", "600", "800"]
 });
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
     title: "Мангал Клабс",
@@ -26,9 +22,9 @@ export default function RootLayout({
     return (
         <html
             lang="ru"
-            className={`${geistSans.variable} ${geistMono.variable}`}
         >
-        <body className={'bg-background min-h-dvh md:max-w-6xl mx-auto'}>{children}</body>
+        {/*<body className={` ${myFont.className} bg-background min-h-dvh md:max-w-6xl mx-auto`}>{children}</body>*/}
+        <body className={` ${myFont.className} min-h-dvh`}>{children}</body>
         </html>
     );
 }

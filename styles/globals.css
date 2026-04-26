@@ -41,8 +41,15 @@
     transform: translateZ(0);
 }
 
-.text-weight {
-    font-weight: normal;
+.font-condensed {
+    font-stretch: condensed;
 }
 
-
+body {
+    background-image: url("/background.svg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #050505;
+}
