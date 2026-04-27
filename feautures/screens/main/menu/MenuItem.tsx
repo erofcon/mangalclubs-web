@@ -1,17 +1,19 @@
 'use client';
 
 import Image from "next/image";
-import { useRef } from "react";
-import { MenuItem as MenuItemType } from "@/types/products";
+import React, {useRef} from "react";
+import {MenuItem as MenuItemType} from "@/types/products";
 
 interface MenuItemProps {
     item: MenuItemType;
 }
 
-export function MenuItem({ item }: MenuItemProps) {
+export function MenuItem({item}: MenuItemProps) {
     const imageWrapperRef = useRef<HTMLDivElement | null>(null);
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
         if (!imageRect) return;
@@ -31,8 +33,10 @@ export function MenuItem({ item }: MenuItemProps) {
     };
 
     return (
-        <article className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border p-3 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)] sm:p-4">
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-black/70 to-transparent sm:h-32" />
+        <article
+            className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border p-3 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)] sm:p-4">
+            <div
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-black/70 to-transparent sm:h-32"/>
 
             {item.isHit && (
                 <div className="absolute left-3 top-3 z-20 rounded bg-card px-1.5 py-1 sm:left-4 sm:top-4">
@@ -78,7 +82,8 @@ export function MenuItem({ item }: MenuItemProps) {
                     {item.name}
                 </h3>
 
-                <div className="mt-auto flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between sm:gap-3 sm:pt-6">
+                <div
+                    className="mt-auto flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between sm:gap-3 sm:pt-6">
                     <span className="text-lg font-bold text-white sm:text-xl">
                         {item.price.toLocaleString("ru-RU")} ₽
                     </span>

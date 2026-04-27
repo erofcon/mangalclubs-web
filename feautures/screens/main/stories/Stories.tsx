@@ -201,212 +201,207 @@ export default function Stories() {
 
     return (
         <>
-
-            <div className={'bg-background/50'}>
-                <div
-                    className="flex gap-3 mb-8  md:max-w-6xl mx-auto px-4 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {StoriesData.map((story, index) => (
-                        <button
-                            key={story.id}
-                            type="button"
-                            onClick={() => openStory(index)}
-                            className="relative aspect-4/5 min-w-37.5 cursor-pointer overflow-hidden rounded-[18px] border-0 bg-neutral-200 p-0 text-left transition-transform active:scale-95 md:min-w-45"
-                        >
-                            <Image
-                                src={story.previewImage}
-                                alt={story.title ?? "Story preview"}
-                                fill
-                                sizes="(max-width: 768px) 150px, 180px"
-                                className="object-cover"
-                                priority={index < 3}
-                            />
-
-                            <div
-                                className="absolute inset-0 bg-linear-to-t from-black/45 via-transparent to-transparent"/>
-
-                            {story.title && (
-                                <span
-                                    className="absolute bottom-4.5 left-4.5 max-w-35 text-xl font-extrabold leading-none text-white lowercase md:text-2xl">
-                                    {story.title}
-                                </span>
-                            )}
-                        </button>
-                    ))}
-                </div>
-
-                {activeStory && activeSlide && (
-                    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black">
-                        <button
-                            type="button"
-                            onClick={prev}
-                            className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
-                            aria-label="Previous story"
-                        >
-                            ‹
-                        </button>
+            <div
+                className="flex gap-3 mb-8  md:max-w-6xl mx-auto px-4 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {StoriesData.map((story, index) => (
+                    <button
+                        key={story.id}
+                        type="button"
+                        onClick={() => openStory(index)}
+                        className="relative aspect-4/5 min-w-37.5 cursor-pointer overflow-hidden rounded-[18px] border-0 bg-neutral-200 p-0 text-left transition-transform active:scale-95 md:min-w-45"
+                    >
+                        <Image
+                            src={story.previewImage}
+                            alt={story.title ?? "Story preview"}
+                            fill
+                            sizes="(max-width: 768px) 150px, 180px"
+                            className="object-cover"
+                            priority={index < 3}
+                        />
 
                         <div
-                            className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
-                            <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
-                                {activeStory.slides.map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="h-1 flex-1 overflow-hidden rounded-full bg-white/35"
-                                    >
-                                        <div
-                                            className="h-full bg-white transition-[width] duration-75"
-                                            style={{
-                                                width:
-                                                    index < activeSlideIndex
-                                                        ? "100%"
-                                                        : index === activeSlideIndex
-                                                            ? `${progress}%`
-                                                            : "0%",
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                            className="absolute inset-0 bg-linear-to-t from-black/45 via-transparent to-transparent"/>
 
-                            <button
-                                type="button"
-                                onClick={close}
-                                className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-3xl leading-none text-white"
-                                aria-label="Close story"
-                            >
-                                ×
-                            </button>
+                        {story.title && (
+                            <span
+                                className="absolute bottom-4.5 left-4.5 max-w-35 text-xl font-extrabold leading-none text-white lowercase md:text-2xl">
+                                    {story.title}
+                                </span>
+                        )}
+                    </button>
+                ))}
+            </div>
 
-                            {activeMediaType === "video" ? (
-                                <video
-                                    ref={videoRef}
-                                    key={activeSlide.src}
-                                    src={activeSlide.src}
-                                    poster={activeSlide.poster}
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                    autoPlay
-                                    muted
-                                    playsInline
-                                    preload="auto"
-                                    controls={false}
-                                    onLoadedData={() => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(false);
-                                    }}
-                                    onCanPlay={async (event) => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(false);
+            {activeStory && activeSlide && (
+                <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black">
+                    <button
+                        type="button"
+                        onClick={prev}
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
+                        aria-label="Previous story"
+                    >
+                        ‹
+                    </button>
 
-                                        try {
-                                            await event.currentTarget.play();
-                                        } catch {
-                                            setHasMediaError(true);
-                                        }
-                                    }}
-                                    onWaiting={() => {
-                                        setIsMediaLoading(true);
-                                    }}
-                                    onPlaying={() => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(false);
-                                    }}
-                                    onError={() => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(true);
-                                    }}
-                                    onTimeUpdate={(event) => {
-                                        const video = event.currentTarget;
-
-                                        if (!video.duration || isMediaLoading || hasMediaError) {
-                                            return;
-                                        }
-
-                                        setProgress((video.currentTime / video.duration) * 100);
-                                    }}
-                                    onEnded={next}
-                                />
-                            ) : (
-                                <Image
-                                    key={activeSlide.src}
-                                    src={activeSlide.src}
-                                    alt={activeStory.title ?? "Story image"}
-                                    fill
-                                    sizes="100vw"
-                                    className="object-cover"
-                                    priority
-                                    unoptimized={activeSlide.src.endsWith(".gif")}
-                                    onLoad={() => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(false);
-                                    }}
-                                    onError={() => {
-                                        setIsMediaLoading(false);
-                                        setHasMediaError(true);
-                                    }}
-                                />
-                            )}
-
-                            {(isMediaLoading || hasMediaError) && (
+                    <div
+                        className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
+                        <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
+                            {activeStory.slides.map((_, index) => (
                                 <div
-                                    className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
-                                    {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
+                                    key={index}
+                                    className="h-1 flex-1 overflow-hidden rounded-full bg-white/35"
+                                >
+                                    <div
+                                        className="h-full bg-white transition-[width] duration-75"
+                                        style={{
+                                            width:
+                                                index < activeSlideIndex
+                                                    ? "100%"
+                                                    : index === activeSlideIndex
+                                                        ? `${progress}%`
+                                                        : "0%",
+                                        }}
+                                    />
                                 </div>
-                            )}
-
-                            <div
-                                className="pointer-events-none absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
-                                <button
-                                    type="button"
-                                    onClick={prev}
-                                    aria-label="Previous slide"
-                                    className={'rounded-full p-2 bg-black/55'}
-                                >
-                                    <ChevronLeft
-                                        className={'h-5 w-5 text-text '}
-                                    />
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={next}
-                                    aria-label="Previous slide"
-                                    className={'rounded-full p-2 bg-black/55'}
-                                >
-                                    <ChevronRight
-                                        className={'h-5 w-5 text-text '}
-                                    />
-                                </button>
-
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={prev}
-                                className="absolute bottom-0 left-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                                aria-label="Previous slide"
-                            />
-
-                            <button
-                                type="button"
-                                onClick={next}
-                                className="absolute bottom-0 right-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                                aria-label="Next slide"
-                            />
+                            ))}
                         </div>
 
                         <button
                             type="button"
-                            onClick={next}
-                            className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
-                            aria-label="Next story"
+                            onClick={close}
+                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-3xl leading-none text-white"
+                            aria-label="Close story"
                         >
-                            ›
+                            ×
                         </button>
+
+                        {activeMediaType === "video" ? (
+                            <video
+                                ref={videoRef}
+                                key={activeSlide.src}
+                                src={activeSlide.src}
+                                poster={activeSlide.poster}
+                                className="absolute inset-0 h-full w-full object-cover"
+                                autoPlay
+                                muted
+                                playsInline
+                                preload="auto"
+                                controls={false}
+                                onLoadedData={() => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(false);
+                                }}
+                                onCanPlay={async (event) => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(false);
+
+                                    try {
+                                        await event.currentTarget.play();
+                                    } catch {
+                                        setHasMediaError(true);
+                                    }
+                                }}
+                                onWaiting={() => {
+                                    setIsMediaLoading(true);
+                                }}
+                                onPlaying={() => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(false);
+                                }}
+                                onError={() => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(true);
+                                }}
+                                onTimeUpdate={(event) => {
+                                    const video = event.currentTarget;
+
+                                    if (!video.duration || isMediaLoading || hasMediaError) {
+                                        return;
+                                    }
+
+                                    setProgress((video.currentTime / video.duration) * 100);
+                                }}
+                                onEnded={next}
+                            />
+                        ) : (
+                            <Image
+                                key={activeSlide.src}
+                                src={activeSlide.src}
+                                alt={activeStory.title ?? "Story image"}
+                                fill
+                                sizes="100vw"
+                                className="object-cover"
+                                priority
+                                unoptimized={activeSlide.src.endsWith(".gif")}
+                                onLoad={() => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(false);
+                                }}
+                                onError={() => {
+                                    setIsMediaLoading(false);
+                                    setHasMediaError(true);
+                                }}
+                            />
+                        )}
+
+                        {(isMediaLoading || hasMediaError) && (
+                            <div
+                                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
+                                {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
+                            </div>
+                        )}
+
+                        <div
+                            className="pointer-events-none absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
+                            <button
+                                type="button"
+                                onClick={prev}
+                                aria-label="Previous slide"
+                                className={'rounded-full p-2 bg-black/55'}
+                            >
+                                <ChevronLeft
+                                    className={'h-5 w-5 text-text '}
+                                />
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={next}
+                                aria-label="Previous slide"
+                                className={'rounded-full p-2 bg-black/55'}
+                            >
+                                <ChevronRight
+                                    className={'h-5 w-5 text-text '}
+                                />
+                            </button>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={prev}
+                            className="absolute bottom-0 left-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
+                            aria-label="Previous slide"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={next}
+                            className="absolute bottom-0 right-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
+                            aria-label="Next slide"
+                        />
                     </div>
-                )}
-            </div>
 
-
+                    <button
+                        type="button"
+                        onClick={next}
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
+                        aria-label="Next story"
+                    >
+                        ›
+                    </button>
+                </div>
+            )}
         </>
     );
 }

@@ -24,7 +24,7 @@ export default function RootLayout({
             lang="ru"
         >
         {/*<body className={` ${myFont.className} bg-background min-h-dvh md:max-w-6xl mx-auto`}>{children}</body>*/}
-        <body className={` ${myFont.className} min-h-dvh`}>{children}</body>
+        <body className={` ${myFont.className} bg-background min-h-dvh`}>{children}</body>
         </html>
     );
 }

@@ -45,11 +45,26 @@
     font-stretch: condensed;
 }
 
-body {
-    background-image: url("/background.svg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-color: #050505;
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }

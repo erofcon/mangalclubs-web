@@ -12,6 +12,10 @@ export interface MenuItem {
     price: number;
     image?: string;
     isHit: boolean;
+    calories?: string | number;
+    fats?: string | number;
+    proteins?: string | number;
+    carbs?: string | number;
 }
 
 export interface MenuCategory extends Category {

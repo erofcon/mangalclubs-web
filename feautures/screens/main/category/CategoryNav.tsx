@@ -4,6 +4,8 @@ import {useEffect, useRef, useState} from "react";
 import {categories} from "@/mocks/mocks-data";
 import Image from "next/image";
 import {CategoryIcons} from "@/types/products";
+import {useCartDrawerStore} from "@/store/cart-drawer-store";
+
 
 type FlyingItem = {
     id: number;
@@ -32,6 +34,8 @@ export function CategoriesNav() {
 
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
     const cartRef = useRef<HTMLButtonElement | null>(null);
+
+    const openCart = useCartDrawerStore((state) => state.openCart);
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
         const element = categoryRefs.current[String(categoryId)];
@@ -142,7 +146,7 @@ export function CategoriesNav() {
         setActiveId(categoryId);
         scrollActiveCategoryIntoView(categoryId);
 
-        const yOffset = -88;
+        const yOffset = -100;
         const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
 
         window.scrollTo({
@@ -189,6 +193,7 @@ export function CategoriesNav() {
 
                     <button
                         ref={cartRef}
+                        onClick={openCart}
                         className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-full bg-warning px-5 py-2 font-semibold text-text-on-primary hover:opacity-90 md:flex"
                     >
                         Корзина
