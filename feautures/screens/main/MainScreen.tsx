@@ -3,6 +3,7 @@ import {CategoriesNav} from "@/feautures/screens/main/category/CategoryNav";
 import {MenuSection} from "@/feautures/screens/main/menu/MenuSection";
 import Stories from "@/feautures/screens/main/stories/Stories";
 import {CartDrawer} from "@/feautures/screens/main/cart/CartDrawer";
+import FloatingButton from "@/feautures/floating_buttons/FloatingButton";
 
 
 export function MainScreen() {
@@ -13,6 +14,7 @@ export function MainScreen() {
             <CategoriesNav/>
             <MenuSection/>
             <CartDrawer/>
+            <FloatingButton/>
         </main>
     )
 }
