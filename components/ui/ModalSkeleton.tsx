@@ -21,7 +21,8 @@ export function ModalSkeleton({
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className={`relative h-dvh w-full sm:h-[520px] sm:max-h-[90dvh] sm:max-w-[900px] ${className}`}
+                className={`relative h-dvh w-full sm:max-h-[90dvh] sm:max-w-[900px] ${className}`}
+                // className={`relative w-full sm:max-w-[900px] ${className}`}
             >
                 <button
                     onClick={onClose}

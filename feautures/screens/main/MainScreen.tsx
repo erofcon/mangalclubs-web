@@ -5,6 +5,8 @@ import Stories from "@/feautures/screens/main/stories/Stories";
 import {CartDrawer} from "@/feautures/screens/main/cart/CartDrawer";
 import FloatingButton from "@/feautures/floating_buttons/FloatingButton";
 import {AuthModal} from "@/feautures/auth/AuthModal";
+import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
+import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
 
 
 export function MainScreen() {
@@ -17,6 +19,8 @@ export function MainScreen() {
             <CartDrawer/>
             <FloatingButton/>
             <AuthModal/>
+            <OrderTypeModal/>
+            <RestaurantTypeModal/>
         </main>
     )
 }
