@@ -8,6 +8,7 @@ export function OrderTypeModal() {
     const isOpen = useUIStore((state) => state.isOrderTypeModalOpen);
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
     const openRestaurantTypeModal = useUIStore((state) => state.openRestaurantTypeModal);
+    const openDeliveryTypeModal = useUIStore((state) => state.openDeliveryTypeModal);
 
     if (!isOpen) return null;
 
@@ -16,8 +17,7 @@ export function OrderTypeModal() {
             onClose={closeOrderTypeModal}
             className="sm:max-w-md sm:h-70"
         >
-            <div
-                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
+            <div className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
                 <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col gap-2 text-center">
                         <h1 className="text-text text-2xl font-bold">
@@ -29,9 +29,9 @@ export function OrderTypeModal() {
                     </div>
                 </div>
 
-                <div className="flex gap-2 md:gap-6">
+                <div className="flex flex-col gap-4 md:gap-6">
                     <button
-                        onClick={closeOrderTypeModal}
+                        onClick={openDeliveryTypeModal}
                         className="flex justify-center gap-2 text-text-on-primary font-bold cursor-pointer w-full py-3.5 rounded-full bg-warning"
                     >
                         <Bike width={24} height={24}/>
