@@ -4,7 +4,8 @@ import {useEffect, useRef, useState} from "react";
 import {categories} from "@/mocks/mocks-data";
 import Image from "next/image";
 import {CategoryIcons} from "@/types/products";
-import {useCartDrawerStore} from "@/store/cart-drawer-store";
+import {useUIStore} from "@/store/ui-store";
+
 
 type FlyingItem = {
     id: number;
@@ -33,7 +34,7 @@ export function CategoriesNav() {
 
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
 
-    const openCart = useCartDrawerStore((state) => state.openCart);
+    const openCart = useUIStore((state) => state.openCart);
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
         const element = categoryRefs.current[String(categoryId)];
@@ -236,7 +237,8 @@ export function CategoriesNav() {
                                 className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.45)]"
                             />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
+                            <div
+                                className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
                                 {item.name}
                             </div>
                         )}

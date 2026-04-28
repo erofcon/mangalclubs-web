@@ -5,7 +5,8 @@ type LogoProps = {
     size: "desktop" | "mobile";
 };
 
-export function Logo({ size }: LogoProps) {
+
+export function Logo({size}: LogoProps) {
     const imageSize = size === "desktop" ? 150 : 80;
 
     return (
