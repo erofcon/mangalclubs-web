@@ -34,31 +34,30 @@ export function MenuItem({item}: MenuItemProps) {
 
     return (
         <article
-            className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border p-3 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)] sm:p-4">
-            <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-black/70 to-transparent sm:h-32"/>
+            className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border p-3 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
+        >
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/70 to-transparent"/>
 
             {item.isHit && (
-                <div className="absolute left-3 top-3 z-20 rounded bg-card px-1.5 py-1 sm:left-4 sm:top-4">
+                <div className="absolute left-3 top-3 z-20 rounded bg-card px-1.5 py-1">
                     <div className="flex items-end gap-1">
                         <Image
                             src="/menu/icons/heart-on-fire-svgrepo-com.svg"
                             alt="Хит продаж"
                             width={18}
                             height={18}
-                            className="sm:h-5 sm:w-5"
                         />
-
-                        <span className="text-xs font-bold uppercase text-text sm:text-sm">
+                        <span className="text-xs font-bold uppercase text-text">
                             Хит
                         </span>
                     </div>
                 </div>
             )}
 
+            {/* IMAGE */}
             <div
                 ref={imageWrapperRef}
-                className="relative z-10 flex items-center justify-center sm:h-32.5 lg:h-35"
+                className="relative z-10 flex h-28 items-end justify-center sm:h-32 lg:h-34"
             >
                 {item.image ? (
                     <Image
@@ -66,25 +65,25 @@ export function MenuItem({item}: MenuItemProps) {
                         alt={item.name}
                         width={240}
                         height={160}
-                        className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.5)]"
+                        className="max-h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.5)]"
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                        <p className="text-center text-sm font-semibold text-text sm:text-base">
+                        <p className="text-center text-sm font-semibold text-text">
                             Нет фото
                         </p>
                     </div>
                 )}
             </div>
 
-            <div className="relative z-10 mt-3 flex flex-1 flex-col text-center">
-                <h3 className="line-clamp-2 text-base font-semibold text-text sm:text-lg">
+            {/* CONTENT */}
+            <div className="relative z-10 mt-1 flex flex-1 flex-col text-center">
+                <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-5 text-text sm:min-h-[44px] sm:text-base">
                     {item.name}
                 </h3>
 
-                <div
-                    className="mt-auto flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between sm:gap-3 sm:pt-6">
-                    <span className="text-lg font-bold text-white sm:text-xl">
+                <div className="mt-auto flex flex-col items-center gap-2 pt-2 sm:flex-row sm:justify-between sm:gap-3 sm:pt-3">
+                    <span className="text-base font-bold text-white sm:text-lg">
                         {item.price.toLocaleString("ru-RU")} ₽
                     </span>
 

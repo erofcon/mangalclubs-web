@@ -6,7 +6,6 @@ import Image from "next/image";
 import {CategoryIcons} from "@/types/products";
 import {useCartDrawerStore} from "@/store/cart-drawer-store";
 
-
 type FlyingItem = {
     id: number;
     image?: string;
@@ -33,7 +32,6 @@ export function CategoriesNav() {
     const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
 
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
-    const cartRef = useRef<HTMLButtonElement | null>(null);
 
     const openCart = useCartDrawerStore((state) => state.openCart);
 
@@ -49,6 +47,20 @@ export function CategoriesNav() {
         });
     };
 
+    const getVisibleCartButtonRect = () => {
+        const cartButtons = Array.from(
+            document.querySelectorAll<HTMLElement>('[data-cart-target="true"]')
+        );
+
+        const visibleCartButton = cartButtons.find((button) => {
+            const rect = button.getBoundingClientRect();
+
+            return rect.width > 0 && rect.height > 0;
+        });
+
+        return visibleCartButton?.getBoundingClientRect() ?? null;
+    };
+
     useEffect(() => {
         const handleFlyToCart = (event: Event) => {
             const customEvent = event as CustomEvent<{
@@ -60,7 +72,7 @@ export function CategoriesNav() {
                 };
             }>;
 
-            const cartRect = cartRef.current?.getBoundingClientRect();
+            const cartRect = getVisibleCartButtonRect();
 
             if (!cartRect) return;
 
@@ -192,7 +204,7 @@ export function CategoriesNav() {
                     </ul>
 
                     <button
-                        ref={cartRef}
+                        data-cart-target="true"
                         onClick={openCart}
                         className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-full bg-warning px-5 py-2 font-semibold text-text-on-primary hover:opacity-90 md:flex"
                     >
@@ -224,8 +236,7 @@ export function CategoriesNav() {
                                 className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.45)]"
                             />
                         ) : (
-                            <div
-                                className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
+                            <div className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
                                 {item.name}
                             </div>
                         )}
