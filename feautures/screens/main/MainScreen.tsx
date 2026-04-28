@@ -7,6 +7,7 @@ import FloatingButton from "@/feautures/floating-buttons/FloatingButton";
 import {AuthModal} from "@/feautures/auth/AuthModal";
 import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
 import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
+import {DeliveryTypeModal} from "@/feautures/order/DeliveryTypeModal";
 
 
 export function MainScreen() {
@@ -21,6 +22,7 @@ export function MainScreen() {
             <AuthModal/>
             <OrderTypeModal/>
             <RestaurantTypeModal/>
+            <DeliveryTypeModal/>
         </main>
     )
 }

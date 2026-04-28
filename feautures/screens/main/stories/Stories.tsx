@@ -9,8 +9,8 @@ import {
     useState,
 } from "react";
 import {StoriesData} from "@/mocks/mocks-data";
-
 import {ChevronLeft, ChevronRight} from "lucide-react";
+import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 
 const DEFAULT_IMAGE_DURATION = 5000;
 const LOAD_TIMEOUT = 15000;
@@ -48,6 +48,10 @@ export default function Stories() {
         activeStoryIndex !== null ? StoriesData[activeStoryIndex] : null;
 
     const activeSlide = activeStory?.slides[activeSlideIndex] ?? null;
+
+    const isViewerOpen = Boolean(activeStory && activeSlide);
+
+    useBodyScrollLock(isViewerOpen);
 
     const activeMediaType = useMemo(() => {
         if (!activeSlide) return null;
@@ -198,6 +202,7 @@ export default function Stories() {
         video.pause();
         video.load();
     }, [activeSlide, activeMediaType]);
+
 
     return (
         <>

@@ -1,7 +1,8 @@
 "use client";
 
 import {X} from "lucide-react";
-import {ReactNode, useEffect} from "react";
+import {ReactNode} from "react";
+import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 
 interface ModalSkeletonProps {
     onClose: () => void;
@@ -14,46 +15,7 @@ export function ModalSkeleton({
                                   children,
                                   className = "",
                               }: ModalSkeletonProps) {
-    useEffect(() => {
-        const body = document.body;
-        const html = document.documentElement;
-
-        const currentLocks = Number(body.dataset.modalLockCount ?? "0");
-
-        if (currentLocks === 0) {
-            const scrollbarWidth = window.innerWidth - html.clientWidth;
-
-            body.dataset.prevBodyOverflow = body.style.overflow;
-            body.dataset.prevBodyPaddingRight = body.style.paddingRight;
-            html.dataset.prevHtmlOverflow = html.style.overflow;
-
-            body.style.overflow = "hidden";
-            html.style.overflow = "hidden";
-
-            if (scrollbarWidth > 0) {
-                body.style.paddingRight = `${scrollbarWidth}px`;
-            }
-        }
-
-        body.dataset.modalLockCount = String(currentLocks + 1);
-
-        return () => {
-            const nextLocks = Number(body.dataset.modalLockCount ?? "1") - 1;
-
-            if (nextLocks <= 0) {
-                body.style.overflow = body.dataset.prevBodyOverflow ?? "";
-                body.style.paddingRight = body.dataset.prevBodyPaddingRight ?? "";
-                html.style.overflow = html.dataset.prevHtmlOverflow ?? "";
-
-                delete body.dataset.modalLockCount;
-                delete body.dataset.prevBodyOverflow;
-                delete body.dataset.prevBodyPaddingRight;
-                delete html.dataset.prevHtmlOverflow;
-            } else {
-                body.dataset.modalLockCount = String(nextLocks);
-            }
-        };
-    }, []);
+    useBodyScrollLock(true);
 
     return (
         <div
