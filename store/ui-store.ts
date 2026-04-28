@@ -4,6 +4,7 @@ type UIStore = {
     isCartOpen: boolean;
     isAuthModalOpen: boolean;
     isOrderTypeModalOpen: boolean;
+    isRestaurantTypeModalOpen: boolean;
 
     openCart: () => void;
     closeCart: () => void;
@@ -17,6 +18,10 @@ type UIStore = {
     closeOrderTypeModal: () => void;
     toggleOrderTypeModal: () => void;
 
+    openRestaurantTypeModal: () => void;
+    closeRestaurantTypeModal: () => void;
+    toggleRestaurantTypeModal: () => void;
+
     closeAllOverlays: () => void;
 };
 
@@ -24,12 +29,14 @@ export const useUIStore = create<UIStore>((set) => ({
     isCartOpen: false,
     isAuthModalOpen: false,
     isOrderTypeModalOpen: false,
+    isRestaurantTypeModalOpen: false,
 
     openCart: () =>
         set({
             isCartOpen: true,
             isAuthModalOpen: false,
             isOrderTypeModalOpen: false,
+            isRestaurantTypeModalOpen: false,
         }),
 
     closeCart: () =>
@@ -42,6 +49,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isCartOpen: !state.isCartOpen,
             isAuthModalOpen: !state.isCartOpen ? false : state.isAuthModalOpen,
             isOrderTypeModalOpen: !state.isCartOpen ? false : state.isOrderTypeModalOpen,
+            isRestaurantTypeModalOpen: !state.isCartOpen ? false : state.isRestaurantTypeModalOpen,
         })),
 
     openAuthModal: () =>
@@ -49,6 +57,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isCartOpen: false,
             isAuthModalOpen: true,
             isOrderTypeModalOpen: false,
+            isRestaurantTypeModalOpen: false,
         }),
 
     closeAuthModal: () =>
@@ -61,6 +70,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isAuthModalOpen: !state.isAuthModalOpen,
             isCartOpen: !state.isAuthModalOpen ? false : state.isCartOpen,
             isOrderTypeModalOpen: !state.isAuthModalOpen ? false : state.isOrderTypeModalOpen,
+            isRestaurantTypeModalOpen: !state.isAuthModalOpen ? false : state.isRestaurantTypeModalOpen,
         })),
 
     openOrderTypeModal: () =>
@@ -68,6 +78,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isCartOpen: false,
             isAuthModalOpen: false,
             isOrderTypeModalOpen: true,
+            isRestaurantTypeModalOpen: false,
         }),
 
     closeOrderTypeModal: () =>
@@ -80,6 +91,28 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: !state.isOrderTypeModalOpen,
             isCartOpen: !state.isOrderTypeModalOpen ? false : state.isCartOpen,
             isAuthModalOpen: !state.isOrderTypeModalOpen ? false : state.isAuthModalOpen,
+            isRestaurantTypeModalOpen: !state.isOrderTypeModalOpen ? false : state.isRestaurantTypeModalOpen,
+        })),
+
+    openRestaurantTypeModal: () =>
+        set({
+            isCartOpen: false,
+            isAuthModalOpen: false,
+            isOrderTypeModalOpen: true,
+            isRestaurantTypeModalOpen: true,
+        }),
+
+    closeRestaurantTypeModal: () =>
+        set({
+            isRestaurantTypeModalOpen: false,
+        }),
+
+    toggleRestaurantTypeModal: () =>
+        set((state) => ({
+            isRestaurantTypeModalOpen: !state.isRestaurantTypeModalOpen,
+            isCartOpen: !state.isRestaurantTypeModalOpen ? false : state.isCartOpen,
+            isAuthModalOpen: !state.isRestaurantTypeModalOpen ? false : state.isAuthModalOpen,
+            isOrderTypeModalOpen: !state.isRestaurantTypeModalOpen ? true : state.isOrderTypeModalOpen,
         })),
 
     closeAllOverlays: () =>
@@ -87,5 +120,6 @@ export const useUIStore = create<UIStore>((set) => ({
             isCartOpen: false,
             isAuthModalOpen: false,
             isOrderTypeModalOpen: false,
+            isRestaurantTypeModalOpen: false,
         }),
 }));

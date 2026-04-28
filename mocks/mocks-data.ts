@@ -1,5 +1,6 @@
 import {Category, MenuCategory} from "@/types/products";
 import {Story} from "@/types/story";
+import {Coordinates, Orientation} from "@/types/organization";
 
 
 export const categories: Category[] = [
@@ -237,3 +238,17 @@ export const StoriesData: Story[] = [
         ],
     },
 ];
+
+
+export const PICKUP_POINT: Orientation = {
+    name: "Mangal Club",
+    city: "г. Грозный",
+    address: "ул. Светлая улица, 105А",
+    schedule: "Ежедневно с 10:30 до 01:30",
+    phone: "+7 (928) 340-50-50",
+    coordinates: {
+        latitude: 43.359307,
+        longitude: 45.697802,
+        accuracy: null,
+    },
+};

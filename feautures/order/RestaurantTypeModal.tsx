@@ -1,20 +1,116 @@
-"use client"
+"use client";
 
-
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
+import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {MapPin, Phone, Clock} from "lucide-react";
+import {useUIStore} from "@/store/ui-store";
 
+const RestaurantMap = dynamic(
+    () =>
+        import("@/components/maps/RestaurantMap").then(
+            (mod) => mod.RestaurantMap
+        ),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-full w-full animate-pulse rounded-2xl bg-muted"/>
+        ),
+    }
+);
 
 export function RestaurantTypeModal() {
+    const isOpen = useUIStore((state) => state.isRestaurantTypeModalOpen);
+    const closeRestaurantTypeModal = useUIStore((state) => state.closeRestaurantTypeModal);
+    const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
+
+    const handleSelect = () => {
+        closeRestaurantTypeModal();
+        closeOrderTypeModal();
+    };
+
+    if (!isOpen) return null;
+
     return (
         <ModalSkeleton
-            onClose={() => {
-            }}
-            className="sm:max-w-md sm:h-[280px]"
+            onClose={closeRestaurantTypeModal}
+            className="h-155 w-[calc(100vw-32px)] max-w-4xl p-0 sm:h-120"
         >
-            <div>
-                Hello nigers!
-                <button>Выбрать</button>
+            <div className="flex h-full flex-col overflow-hidden bg-background md:rounded-2xl sm:flex-row">
+                <div className="order-2 flex flex-[0_0_45%] flex-col p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8">
+                    <div className="space-y-5 text-text">
+                        <div>
+                            <div className="flex items-end gap-2">
+                                <Image
+                                    src="/logo.png"
+                                    alt="logo"
+                                    width={473}
+                                    height={284}
+                                    className="h-10 w-auto"
+                                />
+                                <span className="translate-y-1 text-xl font-bold md:text-2xl">
+                                    {PICKUP_POINT.name}
+                                </span>
+                            </div>
+
+                            <p className="mt-4 text-sm">
+                                {PICKUP_POINT.city}
+                            </p>
+                        </div>
+
+                        <div className="space-y-4 text-sm md:mt-10 md:space-y-6">
+                            <div className="flex items-center gap-4">
+                                <MapPin className="mt-0.5 size-5 shrink-0"/>
+                                <div>
+                                    <p className="hidden font-medium md:block">Адрес</p>
+                                    <p>
+                                        {PICKUP_POINT.address}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <Clock className="mt-0.5 size-5 shrink-0"/>
+                                <div>
+                                    <p className="hidden font-medium md:block">Время работы</p>
+                                    <p>
+                                        {PICKUP_POINT.schedule}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <Phone className="mt-0.5 size-5 shrink-0"/>
+                                <div>
+                                    <p className="hidden font-medium md:block">Телефон</p>
+                                    <a
+                                        href={`tel:${PICKUP_POINT.phone.replace(/\D/g, "")}`}
+                                        className="hover:text-warning underline"
+                                    >
+                                        {PICKUP_POINT.phone}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleSelect}
+                        className="mt-auto h-12 w-full cursor-pointer rounded-full bg-warning text-base font-semibold text-text-on-primary"
+                    >
+                        Выбрать
+                    </button>
+                </div>
+
+                <div className="order-1 flex-[0_0_55%] shrink-0 sm:order-2 sm:h-full sm:flex-1">
+                    <RestaurantMap
+                        name={PICKUP_POINT.name}
+                        address={`${PICKUP_POINT.city}, ${PICKUP_POINT.address}`}
+                        coordinates={PICKUP_POINT.coordinates}
+                    />
+                </div>
             </div>
         </ModalSkeleton>
-    )
+    );
 }

@@ -7,16 +7,17 @@ import {useUIStore} from "@/store/ui-store";
 export function OrderTypeModal() {
     const isOpen = useUIStore((state) => state.isOrderTypeModalOpen);
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
+    const openRestaurantTypeModal = useUIStore((state) => state.openRestaurantTypeModal);
 
     if (!isOpen) return null;
 
     return (
         <ModalSkeleton
             onClose={closeOrderTypeModal}
-            className="sm:max-w-md sm:h-[280px]"
+            className="sm:max-w-md sm:h-70"
         >
             <div
-                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-[32px] sm:px-10 sm:py-10">
+                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
                 <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col gap-2 text-center">
                         <h1 className="text-text text-2xl font-bold">
@@ -28,16 +29,20 @@ export function OrderTypeModal() {
                     </div>
                 </div>
 
-                <div className="flex gap-6">
+                <div className="flex gap-2 md:gap-6">
                     <button
-                        className="flex justify-center gap-2 text-text-on-primary font-bold cursor-pointer w-full py-3.5 rounded-full bg-warning">
+                        onClick={closeOrderTypeModal}
+                        className="flex justify-center gap-2 text-text-on-primary font-bold cursor-pointer w-full py-3.5 rounded-full bg-warning"
+                    >
                         <Bike width={24} height={24}/>
                         Доставка
                     </button>
 
                     <button
-                        className="flex justify-center gap-2 text-text font-bold cursor-pointer w-full py-3.5 rounded-full bg-stroke">
-                        <Utensils width={20} height={20}/>
+                        onClick={openRestaurantTypeModal}
+                        className="flex justify-center items-center gap-2 text-text font-bold cursor-pointer w-full py-3.5 rounded-full bg-stroke"
+                    >
+                        <Utensils width={16} height={16}/>
                         В ресторане
                     </button>
                 </div>
