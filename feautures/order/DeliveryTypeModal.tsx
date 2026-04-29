@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import {ChangeEvent, useState} from "react";
-import {LocateFixed} from "lucide-react";
-import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
-import {PICKUP_POINT} from "@/mocks/mocks-data";
-import {useUIStore} from "@/store/ui-store";
+import { ChangeEvent, useState } from "react";
+import { LoaderCircle, Navigation } from "lucide-react";
+import { ModalSkeleton } from "@/components/ui/ModalSkeleton";
+import { PICKUP_POINT } from "@/mocks/mocks-data";
+import { useUIStore } from "@/store/ui-store";
 
 const RestaurantMap = dynamic(
     () =>
@@ -15,7 +15,7 @@ const RestaurantMap = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-full w-full animate-pulse bg-card"/>
+            <div className="h-full w-full animate-pulse bg-card" />
         ),
     }
 );
@@ -41,14 +41,62 @@ const initialForm: DeliveryFormState = {
     comment: "",
 };
 
-const inputClassName =
-    "h-15 w-full rounded-[22px] border border-white/8 bg-card/90 px-5 text-[15px] text-text outline-none transition placeholder:text-text-secondary focus:border-warning";
+function useGeolocation() {
+    const [isLocating, setIsLocating] = useState(false);
+    const [locationError, setLocationError] = useState<string | null>(null);
 
-const textareaClassName =
-    "min-h-40 w-full resize-none rounded-[24px] border border-white/8 bg-card/90 px-5 py-4 text-[15px] text-text outline-none transition placeholder:text-text-secondary focus:border-warning";
+    const locate = (onSuccess: (coordinates: CoordinatesState) => void) => {
+        if (isLocating) return;
 
-const floatingLabelClassName =
-    "absolute left-5 top-0 z-10 -translate-y-1/2 rounded-full border border-white/8 bg-background px-3 py-1 text-[12px] font-medium text-text-secondary";
+        if (!navigator.geolocation) {
+            setLocationError("Ваш браузер не поддерживает определение местоположения.");
+            return;
+        }
+
+        setIsLocating(true);
+        setLocationError(null);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                onSuccess({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                });
+
+                setIsLocating(false);
+            },
+            (error) => {
+                let message = "Не удалось определить местоположение. Попробуйте еще раз.";
+
+                if (error.code === error.PERMISSION_DENIED) {
+                    message = "Разрешите доступ к геолокации, чтобы мы могли определить ваш адрес.";
+                }
+
+                if (error.code === error.POSITION_UNAVAILABLE) {
+                    message = "Местоположение сейчас недоступно. Проверьте GPS или интернет.";
+                }
+
+                if (error.code === error.TIMEOUT) {
+                    message = "Определение местоположения заняло слишком много времени.";
+                }
+
+                setLocationError(message);
+                setIsLocating(false);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            }
+        );
+    };
+
+    return {
+        locate,
+        isLocating,
+        locationError,
+    };
+}
 
 export function DeliveryTypeModal() {
     const isOpen = useUIStore((state) => state.isDeliveryTypeModalOpen);
@@ -56,11 +104,12 @@ export function DeliveryTypeModal() {
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
 
     const [form, setForm] = useState<DeliveryFormState>(initialForm);
-    const [isLocating, setIsLocating] = useState(false);
     const [mapCoordinates, setMapCoordinates] = useState<CoordinatesState>({
         latitude: PICKUP_POINT.coordinates.latitude,
         longitude: PICKUP_POINT.coordinates.longitude,
     });
+
+    const { locate, isLocating, locationError } = useGeolocation();
 
     if (!isOpen) return null;
 
@@ -74,26 +123,14 @@ export function DeliveryTypeModal() {
             };
 
     const handleLocate = () => {
-        if (!navigator.geolocation || isLocating) return;
+        locate((coordinates) => {
+            setMapCoordinates(coordinates);
 
-        setIsLocating(true);
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setMapCoordinates({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                });
-                setIsLocating(false);
-            },
-            () => {
-                setIsLocating(false);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-            }
-        );
+            // Позже здесь можно добавить reverse geocoding:
+            // 1. отправить coordinates в API
+            // 2. получить адрес
+            // 3. записать его в form.address
+        });
     };
 
     const handleSave = () => {
@@ -104,7 +141,7 @@ export function DeliveryTypeModal() {
     return (
         <ModalSkeleton
             onClose={closeDeliveryTypeModal}
-            className="h-dvh w-full p-0 sm:h-[760px] sm:w-[calc(100vw-32px)] sm:max-w-7xl"
+            className="h-dvh w-full p-0 sm:h-[560px] sm:w-[calc(100vw-32px)] sm:max-w-8xl"
         >
             <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:rounded-[32px] md:flex-row">
                 <div className="order-1 relative h-[40dvh] min-h-[320px] w-full shrink-0 overflow-hidden md:order-2 md:h-full md:flex-1">
@@ -115,17 +152,26 @@ export function DeliveryTypeModal() {
                         coordinates={mapCoordinates}
                     />
 
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-background via-background/45 to-transparent"/>
-
-                    <div className="absolute inset-x-4 bottom-4 z-[1000] flex justify-center md:justify-start">
+                    <div className="absolute right-5 bottom-5 z-[1000] md:right-10 md:bottom-8">
                         <button
                             type="button"
                             onClick={handleLocate}
                             disabled={isLocating}
-                            className="pointer-events-auto inline-flex h-12 items-center gap-2 rounded-full border border-white/10 bg-background/92 px-5 text-sm font-semibold text-text shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:border-warning/40 hover:text-warning disabled:cursor-default disabled:opacity-70"
+                            aria-label="Определить местоположение"
+                            className="
+                                group flex h-14 w-14 items-center justify-center rounded-full
+                                border border-white/10 bg-card/95 text-text shadow-xl shadow-black/20
+                                backdrop-blur-md transition-all duration-200
+                                hover:scale-105
+                                active:scale-95 disabled:pointer-events-none disabled:opacity-80
+                                cursor-pointer
+                            "
                         >
-                            <LocateFixed className="h-4 w-4"/>
-                            {isLocating ? "Определяем геопозицию" : "Мое местоположение"}
+                            {isLocating ? (
+                                <LoaderCircle className="h-6 w-6 animate-spin" />
+                            ) : (
+                                <Navigation className="h-6 w-6" />
+                            )}
                         </button>
                     </div>
                 </div>
@@ -133,83 +179,69 @@ export function DeliveryTypeModal() {
                 <div className="order-2 flex min-h-0 flex-1 flex-col border-t border-white/6 bg-linear-to-b from-background to-surface px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
                     <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                         <div className="max-w-xl">
-                            <h2 className="text-3xl font-bold leading-none text-text sm:text-[38px]">
+                            <h2 className="text-xl font-bold text-text md:text-2xl">
                                 Укажи адрес
                             </h2>
                         </div>
 
                         <div className="mt-8 space-y-5">
                             <div className="relative pt-2">
-                                <span className={floatingLabelClassName}>
-                                    Город, улица, дом
-                                </span>
-
                                 <input
                                     type="text"
                                     value={form.address}
                                     onChange={handleChange("address")}
-                                    placeholder="Москва, Скаковая улица, 4к1"
-                                    className={inputClassName}
+                                    placeholder="Город, улица, дом"
+                                    className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                 />
+
+                                {locationError && (
+                                    <p className="mt-2 text-sm font-medium text-red-500">
+                                        {locationError}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                 <div className="relative pt-2">
-                                    <span className={floatingLabelClassName}>
-                                        Подъезд
-                                    </span>
-
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         value={form.entrance}
                                         onChange={handleChange("entrance")}
                                         placeholder="Подъезд"
-                                        className={inputClassName}
+                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                     />
                                 </div>
 
                                 <div className="relative pt-2">
-                                    <span className={floatingLabelClassName}>
-                                        Этаж
-                                    </span>
-
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         value={form.floor}
                                         onChange={handleChange("floor")}
                                         placeholder="Этаж"
-                                        className={inputClassName}
+                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                     />
                                 </div>
 
                                 <div className="relative pt-2">
-                                    <span className={floatingLabelClassName}>
-                                        Квартира
-                                    </span>
-
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         value={form.apartment}
                                         onChange={handleChange("apartment")}
                                         placeholder="Квартира"
-                                        className={inputClassName}
+                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                     />
                                 </div>
                             </div>
 
                             <div className="relative pt-2">
-                                <span className={floatingLabelClassName}>
-                                    Комментарий курьеру
-                                </span>
-
                                 <textarea
                                     value={form.comment}
                                     onChange={handleChange("comment")}
                                     placeholder="Комментарий курьеру"
-                                    className={textareaClassName}
+                                    className="min-h-30 w-full resize-none rounded-xl border border-border bg-card px-5 py-4 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                 />
                             </div>
                         </div>
@@ -218,7 +250,7 @@ export function DeliveryTypeModal() {
                     <button
                         type="button"
                         onClick={handleSave}
-                        className="mt-6 h-14 w-full rounded-full bg-warning text-base font-bold text-text-on-primary shadow-[0_18px_40px_rgba(252,194,27,0.18)] transition hover:opacity-90 md:mt-8 md:w-[320px]"
+                        className="mt-6 h-14 w-full cursor-pointer rounded-full bg-warning text-base font-bold text-text-on-primary"
                     >
                         Сохранить адрес
                     </button>

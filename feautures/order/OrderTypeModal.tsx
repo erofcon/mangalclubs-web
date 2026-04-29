@@ -29,7 +29,7 @@ export function OrderTypeModal() {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4 md:gap-6">
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                     <button
                         onClick={openDeliveryTypeModal}
                         className="flex justify-center gap-2 text-text-on-primary font-bold cursor-pointer w-full py-3.5 rounded-full bg-warning"

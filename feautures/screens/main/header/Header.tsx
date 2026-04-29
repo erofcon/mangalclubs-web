@@ -20,13 +20,13 @@ export default function Header() {
                     <Logo size="desktop"/>
                     <DeliverySelector/>
                 </div>
-
-                <LoginButton/>
+                <div className="flex gap-4">
+                    <LoginButton/>
+                </div>
             </div>
 
-            <div className="flex h-15 items-center justify-between px-4 pt-2 md:hidden">
+            <div className="flex h-15 items-end justify-between px-4 pt-2 mb-2 md:hidden">
                 <Logo size="mobile"/>
-
                 <button aria-label="menu" onClick={() => setIsOpen(true)}>
                     <Menu className="h-6 w-6 text-text"/>
                 </button>
