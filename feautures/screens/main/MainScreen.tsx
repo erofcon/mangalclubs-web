@@ -8,6 +8,7 @@ import {AuthModal} from "@/feautures/auth/AuthModal";
 import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
 import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
 import {DeliveryTypeModal} from "@/feautures/order/DeliveryTypeModal";
+import WelcomeBookingBanner from "@/feautures/screens/main/booking/WelcomeBookingBanner";
 
 
 export function MainScreen() {
@@ -15,6 +16,7 @@ export function MainScreen() {
         <main>
             <Header/>
             <Stories/>
+            <WelcomeBookingBanner/>
             <CategoriesNav/>
             <MenuSection/>
             <CartDrawer/>

@@ -185,8 +185,8 @@ export function CategoriesNav() {
                                     onClick={() => scrollToCategory(category.id)}
                                     className={`flex shrink-0 cursor-pointer items-center gap-4 rounded-full px-3 py-1 font-semibold transition-all ${
                                         isActive
-                                            ? "bg-warning text-primary-foreground shadow-md"
-                                            : "border border-border bg-card text-text hover:bg-warning hover:text-text-on-primary"
+                                            ? "bg-text text-primary-foreground shadow-md"
+                                            : "border border-border bg-card text-text hover:bg-text hover:text-text-on-primary"
                                     }`}
                                 >
                                     <div className="rounded-full bg-surface p-1">
