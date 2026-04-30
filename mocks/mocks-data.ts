@@ -1,7 +1,7 @@
 import {Category, MenuCategory} from "@/types/products";
 import {Story} from "@/types/story";
-import {Coordinates, Orientation} from "@/types/organization";
-
+import {Orientation} from "@/types/organization";
+import {Booking} from "@/types/booking";
 
 export const categories: Category[] = [
     {
@@ -252,3 +252,49 @@ export const PICKUP_POINT: Orientation = {
         accuracy: null,
     },
 };
+
+
+export const BookingMocks: Booking[] = [
+    {
+        id: "3edsfsf",
+        title: "Каминная",
+        description: "Уютная кабина с атмосферой живого огня — идеальна для тёплых встреч и долгих разговоров",
+        image: "/booking/609686908_18097555516907715_1890579568138563188_n..jpg",
+    },
+    {
+        id: "5redsfsf",
+        title: "Тёплый угол",
+        description: "Пространство, где хочется задержаться — мягкий свет, комфорт и спокойная атмосфера",
+        image: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
+    },
+    {
+        id: "5re2323dsfsf",
+        title: "Лофт-зона",
+        description: "Стильная кабина с кирпичом и мягкими диванами для компании и расслабленного отдыха",
+        image: "/booking/609982327_18097555342907715_1986147056012483252_n..jpg",
+    },
+    {
+        id: "4re2323dsfsf",
+        title: "Зелёная гостиная",
+        description: "Живые акценты и тёплое дерево создают ощущение домашнего уюта и уединения",
+        image: "/booking/610002010_18097554682907715_6683000151825881101_n..jpg",
+    },
+    {
+        id: "56tedre2323dsfsf",
+        title: "Закрытый клуб",
+        description: "Приватная зона для своей компании — отдых, общение и максимум комфорта без лишних глаз",
+        image: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg",
+    },
+    {
+        id: "udfftedre2323dsfsf",
+        title: "Мягкая зона",
+        description: "Просторная кабина с удобными диванами для больших компаний и долгих посиделок",
+        image: "/booking/610683031_18097554145907715_1235544446749212874_n..jpg",
+    },
+    {
+        id: "56tedre2323dsf34r5weffdwsf",
+        title: "Кино-комната",
+        description: "Идеальное место для отдыха с экраном, приставкой и любимыми фильмами",
+        image: "/booking/611264128_18097554673907715_2049357468313814860_n..jpg",
+    },
+]
