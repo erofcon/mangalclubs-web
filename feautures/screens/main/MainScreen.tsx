@@ -9,6 +9,7 @@ import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
 import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
 import {DeliveryTypeModal} from "@/feautures/order/DeliveryTypeModal";
 import WelcomeBookingBanner from "@/feautures/screens/main/booking/WelcomeBookingBanner";
+import {AuthCodeConfirm} from "@/feautures/auth/AuthCodeConfirm";
 
 
 export function MainScreen() {
@@ -22,6 +23,7 @@ export function MainScreen() {
             <CartDrawer/>
             <FloatingButton/>
             <AuthModal/>
+            <AuthCodeConfirm/>
             <OrderTypeModal/>
             <RestaurantTypeModal/>
             <DeliveryTypeModal/>

@@ -12,10 +12,10 @@ export function AuthModal() {
     return (
         <ModalSkeleton
             onClose={closeAuthModal}
-            className="sm:max-w-md sm:h-[500px]"
+            className="sm:max-w-md sm:h-125"
         >
             <div
-                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-[32px] sm:px-10 sm:py-10">
+                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
                 <div className="flex flex-1 flex-col justify-center">
                     <h1 className="text-center text-2xl font-semibold text-text">
                         Войдите в профиль
