@@ -129,7 +129,7 @@ export function BookingSelectedScreen() {
                                     flex gap-4 items-center"
                                     >
                                         <Image
-                                            src="/booking/WhatsappIcon.svg"
+                                            src="/icons/WhatsappIcon.svg"
                                             alt="WhatsApp"
                                             priority
                                             width={256}

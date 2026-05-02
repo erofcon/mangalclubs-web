@@ -3,6 +3,7 @@ import {Open_Sans} from "next/font/google";
 import "@/styles/globals.css"
 import "leaflet/dist/leaflet.css";
 import React from "react";
+import {Footer} from "@/feautures/footer/Footer";
 
 const myFont = Open_Sans({
     subsets: ["cyrillic"],
@@ -24,8 +25,10 @@ export default function RootLayout({
         <html
             lang="ru"
         >
-        {/*<body className={` ${myFont.className} bg-background min-h-dvh md:max-w-6xl mx-auto`}>{children}</body>*/}
-        <body className={` ${myFont.className} bg-background min-h-dvh`}>{children}</body>
+        <body className={` ${myFont.className} bg-background min-h-dvh`}>
+        {children}
+        <Footer/>
+        </body>
         </html>
     );
 }
