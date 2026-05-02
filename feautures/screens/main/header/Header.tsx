@@ -12,7 +12,7 @@ export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <header className="w-full mb-8 md:max-w-6xl mx-auto px-4">
+        <header className="mb-8 mx-auto w-full max-w-374 px-7">
             <TopNav/>
 
             <div className="mx-auto flex items-end justify-between max-md:hidden">

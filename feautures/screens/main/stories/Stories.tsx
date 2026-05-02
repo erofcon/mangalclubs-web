@@ -207,7 +207,7 @@ export default function Stories() {
     return (
         <>
             <div
-                className="flex gap-3 mb-8  md:max-w-6xl mx-auto px-4 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                className="flex gap-3 mb-8 mx-auto w-full max-w-374 px-7 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {StoriesData.map((story, index) => (
                     <button
                         key={story.id}

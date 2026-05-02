@@ -32,15 +32,15 @@ export default function WelcomeBookingBanner() {
     }, []);
 
     return (
-        <section className="mb-6 md:mb-8 md:max-w-6xl mx-auto px-4">
+        <section className="mb-6 md:mb-8 mx-auto w-full max-w-374 px-7">
             <div className="flex flex-col gap-4">
                 <h2 className="text-lg md:text-2xl font-extrabold leading-none text-text">
                     Приходите к нам!
                 </h2>
 
-                <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+                <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
                     <div
-                        className="flex items-center justify-between rounded-[12px] bg-card px-5 py-2 md:py-4 hover:scale-105 duration-300"
+                        className="flex items-center justify-between rounded-xl bg-card px-5 py-2 md:py-4 hover:scale-105 duration-300"
                         style={{
                             background: `linear-gradient(
                                 90deg,
@@ -78,7 +78,7 @@ export default function WelcomeBookingBanner() {
                         }}
                     >
                         <div
-                            className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/10 to-accent/20 blur-xl opacity-60 pointer-events-none"/>
+                            className="absolute inset-0 bg-linear-to-r from-primary/20 via-secondary/10 to-accent/20 blur-xl opacity-60 pointer-events-none"/>
 
                         <div className="relative flex flex-col md:flex-row h-full items-center justify-between gap-4">
                             <div className="flex items-center gap-4">

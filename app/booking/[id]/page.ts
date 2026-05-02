@@ -1,0 +1,1 @@
+export {BookingSelectedScreen as default} from "@/feautures/screens/booking/BookingSelectedScreen"

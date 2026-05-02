@@ -170,7 +170,7 @@ export function CategoriesNav() {
 
     return (
         <>
-            <nav className="sticky top-0 z-30 mx-auto px-4 py-4 backdrop-blur-md md:max-w-6xl">
+            <nav className="sticky top-0 z-30 py-4 backdrop-blur-md mx-auto w-full max-w-374 px-7">
                 <div className="flex items-center justify-between gap-4">
                     <ul className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {categories.map((category) => {

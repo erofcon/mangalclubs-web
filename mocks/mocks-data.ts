@@ -1,6 +1,6 @@
 import {Category, MenuCategory} from "@/types/products";
 import {Story} from "@/types/story";
-import {Orientation} from "@/types/organization";
+import {Organization} from "@/types/organization";
 import {Booking} from "@/types/booking";
 
 export const categories: Category[] = [
@@ -240,12 +240,18 @@ export const StoriesData: Story[] = [
 ];
 
 
-export const PICKUP_POINT: Orientation = {
+export const PICKUP_POINT: Organization = {
     name: "Mangal Club",
     city: "г. Грозный",
     address: "ул. Светлая улица, 105А",
     schedule: "Ежедневно с 10:30 до 01:30",
     phone: "+7 (928) 340-50-50",
+    intro: "Команда Mangal Clubs переосмысливает " +
+        "приватность и комфорт, вдохновляясь духом города и его настроением. " +
+        "Здесь современное гостеприимство встречается с камерной атмосферой, знакомой каждому алматинцу. " +
+        "Каждая кабинка — это уютный островок, где время течёт медленнее, а встречи обретают особый смысл. " +
+        "Пространство, идеальное для деловых завтраков, семейных обедов и неспешных ужинов в кругу близких. " +
+        "Забронируйте свою кабинку и откройте для себя новый формат городского гостеприимства.",
     coordinates: {
         latitude: 43.359307,
         longitude: 45.697802,

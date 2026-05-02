@@ -13,7 +13,7 @@ export function MenuSection() {
 
     return (
         <>
-            <div className="mt-4 space-y-12 md:max-w-6xl mx-auto px-4 mb-38">
+            <div className="mt-4 space-y-12 mx-auto w-full max-w-374 px-7 mb-38">
                 {menus.map((menu) => (
                     <section
                         key={menu.id}
