@@ -17,23 +17,33 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
     const handleAddToCart = () => {
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
+        if (!imageRect) {
+            onClose();
+            return;
+        }
+
+        const detail = {
+            image: item.image,
+            name: item.name,
+            from: {
+                x: imageRect.left + imageRect.width / 2,
+                y: imageRect.top + imageRect.height / 2,
+            },
+        };
+
         onClose();
 
-        if (!imageRect) return;
-
-        window.dispatchEvent(
-            new CustomEvent("fly-to-cart", {
-                detail: {
-                    image: item.image,
-                    name: item.name,
-                    from: {
-                        x: imageRect.left + imageRect.width / 2,
-                        y: imageRect.top + imageRect.height / 2,
-                    },
-                },
-            })
-        );
+        window.setTimeout(() => {
+            window.requestAnimationFrame(() => {
+                window.dispatchEvent(
+                    new CustomEvent("fly-to-cart", {
+                        detail,
+                    })
+                );
+            });
+        }, 0);
     };
+
 
     return (
         <ModalSkeleton onClose={onClose} className="sm:h-[500px]">
