@@ -34,13 +34,13 @@ export default function WelcomeBookingBanner() {
     return (
         <section className="mb-6 md:mb-8 mx-auto w-full max-w-374 px-7">
             <div className="flex flex-col gap-4">
-                <h2 className="text-lg md:text-2xl font-extrabold leading-none text-text">
+                <h2 className="text-xl md:text-2xl font-extrabold leading-none text-text">
                     Приходите к нам!
                 </h2>
 
                 <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
                     <div
-                        className="flex items-center justify-between rounded-xl bg-card px-5 py-2 md:py-4 hover:scale-105 duration-300"
+                        className="flex items-center justify-between rounded-xl bg-card px-5 py-6 hover:scale-105 duration-300"
                         style={{
                             background: `linear-gradient(
                                 90deg,
@@ -51,7 +51,7 @@ export default function WelcomeBookingBanner() {
                         }}
                     >
                         <div>
-                            <p className="text-xs md:text-sm leading-none text-text-secondary font-semibold">
+                            <p className="text-sm leading-none text-text-secondary font-semibold">
                                 Мы находимся
                             </p>
                             <p className="mt-2 text-sm md:text-lg font-bold leading-none text-text">
@@ -61,7 +61,7 @@ export default function WelcomeBookingBanner() {
 
                         <button
                             type="button"
-                            className="inline-flex hover:scale-105 duration-300 h-8 md:h-12 cursor-pointer items-center justify-center rounded-full bg-white px-6 text-sm md:text-base font-semibold text-black transition hover:bg-neutral-50"
+                            className="inline-flex hover:scale-105 duration-300 h-10 md:h-12 cursor-pointer items-center justify-center rounded-full bg-white px-6 text-sm md:text-base font-semibold text-black transition hover:bg-neutral-50"
                         >
                             Часы работы
                         </button>

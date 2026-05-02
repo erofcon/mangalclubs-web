@@ -30,6 +30,8 @@ export function CategoriesNav() {
         categories[0]?.id ?? null
     );
 
+    const categoryListRef = useRef<HTMLUListElement | null>(null);
+
     const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
 
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
@@ -37,16 +39,26 @@ export function CategoriesNav() {
     const openCart = useUIStore((state) => state.openCart);
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
+        const list = categoryListRef.current;
         const element = categoryRefs.current[String(categoryId)];
 
-        if (!element) return;
+        if (!list || !element) return;
 
-        element.scrollIntoView({
+        const listRect = list.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+
+        const left =
+            list.scrollLeft +
+            elementRect.left -
+            listRect.left -
+            (listRect.width - elementRect.width) / 2;
+
+        list.scrollTo({
+            left,
             behavior: "smooth",
-            inline: "center",
-            block: "nearest",
         });
     };
+
 
     const getVisibleCartButtonRect = () => {
         const cartButtons = Array.from(
@@ -172,7 +184,9 @@ export function CategoriesNav() {
         <>
             <nav className="sticky top-0 z-30 py-4 backdrop-blur-md mx-auto w-full max-w-374 px-7">
                 <div className="flex items-center justify-between gap-4">
-                    <ul className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <ul
+                        ref={categoryListRef}
+                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {categories.map((category) => {
                             const isActive = activeId === category.id;
 
