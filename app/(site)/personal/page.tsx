@@ -1,0 +1,1 @@
+export {PersonalScreen as default} from "@/feautures/screens/personal/PersonalScreen"

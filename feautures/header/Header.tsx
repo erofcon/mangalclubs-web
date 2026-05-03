@@ -2,11 +2,11 @@
 
 import {useEffect, useState} from "react";
 import {Menu, X} from "lucide-react";
-import {TopNav} from "@/feautures/screens/main/header/TopNav";
-import {Logo} from "@/feautures/screens/main/header/Logo";
-import {DeliverySelector} from "@/feautures/screens/main/header/DeliverySelector";
-import {LoginButton} from "@/feautures/screens/main/header/LoginButton";
-import {MobileMenu} from "@/feautures/screens/main/header/MobileMenu";
+import {TopNav} from "@/feautures/header/TopNav";
+import {Logo} from "@/feautures/header/Logo";
+import {DeliverySelector} from "@/feautures/header/DeliverySelector";
+import {LoginButton} from "@/feautures/header/LoginButton";
+import {MobileMenu} from "@/feautures/header/MobileMenu";
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
