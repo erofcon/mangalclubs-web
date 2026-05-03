@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {LogIn} from "lucide-react";
+import {useRouter} from "next/navigation";
+import {LogIn, User} from "lucide-react";
 import {topLinks} from "@/utils/constants";
 import {useUIStore} from "@/store/ui-store";
+import {useAuthStore} from "@/store/auth-store";
 
 type MobileMenuProps = {
     isOpen: boolean;
@@ -12,15 +14,23 @@ type MobileMenuProps = {
 
 export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
     const openAuthModal = useUIStore((state) => state.openAuthModal);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const router = useRouter();
 
-    const handleLoginClick = () => {
+    const handleProfileClick = () => {
         onClose();
+
+        if (isAuthenticated) {
+            router.push("/personal");
+            return;
+        }
+
         openAuthModal();
     };
 
     return (
         <div
-            className={`fixed left-0 right-0 top-20 bottom-0 z-50 overflow-y-auto bg-background transition-transform duration-300 md:hidden ${
+            className={`fixed left-0 right-0 top-20 bottom-0 z-100 overflow-y-auto bg-background transition-transform duration-300 md:hidden ${
                 isOpen
                     ? "translate-x-0 pointer-events-auto"
                     : "-translate-x-full pointer-events-none"
@@ -29,11 +39,11 @@ export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
             <nav className="divide-y divide-zinc-900 text-text">
                 <button
                     type="button"
-                    onClick={handleLoginClick}
+                    onClick={handleProfileClick}
                     className="flex min-h-11 w-full items-center justify-start gap-2 px-5 text-left"
                 >
-                    <LogIn className="w-4"/>
-                    <span className="text-sm">Войти</span>
+                    {isAuthenticated ? <User className="w-4"/> : <LogIn className="w-4"/>}
+                    <span className="text-sm">{isAuthenticated ? "Профиль" : "Войти"}</span>
                 </button>
 
                 {topLinks.map((link) => (

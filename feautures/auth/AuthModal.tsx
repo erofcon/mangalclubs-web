@@ -71,6 +71,12 @@ export function AuthModal() {
     const phoneDigits = phone.replace(/\D/g, "");
     const canSubmit = phoneDigits.length === 11 && isAgreementAccepted;
 
+    const handleClose = () => {
+        setPhone("");
+        setIsAgreementAccepted(false);
+        closeAuthModal();
+    };
+
     const handlePhoneChange = (value: string) => {
         setPhone(formatRussianPhone(value));
     };
@@ -93,6 +99,8 @@ export function AuthModal() {
         if (!canSubmit) return;
 
         requestCode(phone);
+        setPhone("");
+        setIsAgreementAccepted(false);
         openAuthCodeConfirm();
     };
 
@@ -100,7 +108,7 @@ export function AuthModal() {
 
     return (
         <ModalSkeleton
-            onClose={closeAuthModal}
+            onClose={handleClose}
             className="sm:max-w-md sm:h-125"
         >
             <form

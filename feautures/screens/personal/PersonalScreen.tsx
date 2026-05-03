@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 import {
     Cake,
@@ -11,20 +12,26 @@ import {
     Plus,
     Trash2,
     User,
-    Beef,
 } from "lucide-react";
 import {EmptyOrders} from "@/feautures/screens/personal/EmptyOrders";
 import {CompletedOrders} from "@/feautures/screens/personal/CompletedOrders";
 import {ShowOrderModal} from "@/feautures/screens/personal/modals/ShowOrderModal";
+import {useAuthStore} from "@/store/auth-store";
 
 export function PersonalScreen() {
 
     const [activeTab, setActiveTab] = useState<"info" | "orders">("info");
+    const logout = useAuthStore((state) => state.logout);
+    const router = useRouter();
 
 
     const activeTabClass = "bg-text text-text-on-primary";
     const inactiveTabClass = "bg-card text-text";
 
+    const handleLogout = () => {
+        logout();
+        router.replace("/");
+    };
 
     return (
         <>
@@ -105,6 +112,7 @@ export function PersonalScreen() {
                         <div className="flex flex-col gap-3 pt-8 sm:gap-4 sm:pt-16 md:flex-row md:flex-wrap">
                             <button
                                 type="button"
+                                onClick={handleLogout}
                                 className="flex min-h-14 w-full min-w-0 items-center justify-center gap-2 rounded-full bg-warning px-4 py-3 text-base font-extrabold text-text-on-primary duration-200 hover:scale-[1.02] sm:min-h-15 sm:gap-3 sm:px-7 sm:text-[20px] md:w-auto cursor-pointer"
                             >
                                 <LogOut

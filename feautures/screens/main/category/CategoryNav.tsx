@@ -7,11 +7,13 @@ import {CategoryIcons} from "@/types/products";
 import {useUIStore} from "@/store/ui-store";
 import {useCartStore} from "@/store/cart-store";
 
+const FLY_ANIMATION_DURATION_MS = 1650;
 
 type FlyingItem = {
-    id: number;
+    id: string;
     image?: string;
     name: string;
+    onComplete?: () => void;
     from: {
         x: number;
         y: number;
@@ -87,18 +89,23 @@ export function CategoriesNav() {
                     x: number;
                     y: number;
                 };
+                onComplete?: () => void;
             }>;
 
             const cartRect = getVisibleCartButtonRect();
 
-            if (!cartRect) return;
+            if (!cartRect) {
+                customEvent.detail.onComplete?.();
+                return;
+            }
 
-            const id = Date.now();
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
             const flyingItem: FlyingItem = {
                 id,
                 image: customEvent.detail.image,
                 name: customEvent.detail.name,
+                onComplete: customEvent.detail.onComplete,
                 from: customEvent.detail.from,
                 center: {
                     x: window.innerWidth / 2,
@@ -111,10 +118,6 @@ export function CategoriesNav() {
             };
 
             setFlyingItems((prev) => [...prev, flyingItem]);
-
-            setTimeout(() => {
-                setFlyingItems((prev) => prev.filter((item) => item.id !== id));
-            }, 1050);
         };
 
         window.addEventListener("fly-to-cart", handleFlyToCart);
@@ -236,16 +239,18 @@ export function CategoriesNav() {
             </nav>
 
             {flyingItems.map((item) => {
-                const animationDuration = 1.65;
-
                 return (
                     <div
                         key={item.id}
                         className="pointer-events-none fixed z-9999 h-28 w-28 rounded-2xl bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
+                        onAnimationEnd={() => {
+                            setFlyingItems((prev) => prev.filter((flyingItem) => flyingItem.id !== item.id));
+                            item.onComplete?.();
+                        }}
                         style={{
                             left: item.from.x - 56,
                             top: item.from.y - 56,
-                            animation: `fly-to-cart-${item.id} ${animationDuration}s cubic-bezier(.2,.9,.2,1) forwards`,
+                            animation: `fly-to-cart-${item.id} ${FLY_ANIMATION_DURATION_MS / 1000}s cubic-bezier(.2,.9,.2,1) forwards`,
                         }}
                     >
                         {item.image ? (
@@ -270,7 +275,7 @@ export function CategoriesNav() {
                                     opacity: 0;
                                 }
 
-                                22% {
+                                18% {
                                     transform: translate(
                                             ${item.center.x - item.from.x}px,
                                             ${item.center.y - item.from.y}px
@@ -278,11 +283,19 @@ export function CategoriesNav() {
                                     opacity: 1;
                                 }
 
-                                38% {
+                                36% {
                                     transform: translate(
                                             ${item.center.x - item.from.x}px,
                                             ${item.center.y - item.from.y}px
                                     ) scale(1.18) rotate(0deg);
+                                    opacity: 1;
+                                }
+
+                                88% {
+                                    transform: translate(
+                                            ${item.to.x - item.from.x}px,
+                                            ${item.to.y - item.from.y}px
+                                    ) scale(0.28) rotate(18deg);
                                     opacity: 1;
                                 }
 

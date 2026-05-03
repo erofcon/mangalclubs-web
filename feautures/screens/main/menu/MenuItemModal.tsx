@@ -26,11 +26,10 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
     };
 
     const handleAddToCart = () => {
-        addItem(item, quantity);
-
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
         if (!imageRect) {
+            addItem(item, quantity);
             onClose();
             return;
         }
@@ -42,6 +41,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                 x: imageRect.left + imageRect.width / 2,
                 y: imageRect.top + imageRect.height / 2,
             },
+            onComplete: () => addItem(item, quantity),
         };
 
         onClose();

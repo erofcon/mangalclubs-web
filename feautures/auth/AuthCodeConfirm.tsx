@@ -10,6 +10,7 @@ export function AuthCodeConfirm() {
     const closeAuthCodeConfirm = useUIStore((state) => state.closeAuthCodeConfirm);
     const pendingPhone = useAuthStore((state) => state.pendingPhone);
     const confirmCode = useAuthStore((state) => state.confirmCode);
+    const clearPendingPhone = useAuthStore((state) => state.clearPendingPhone);
 
     const [code, setCode] = useState(["", "", "", ""]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -37,6 +38,14 @@ export function AuthCodeConfirm() {
 
         return () => clearInterval(timer);
     }, [isOpen, isTimeout]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        requestAnimationFrame(() => {
+            inputRefs.current[0]?.focus();
+        });
+    }, [isOpen]);
 
     const handleChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value.replace(/\D/g, "").slice(-1);
@@ -97,11 +106,17 @@ export function AuthCodeConfirm() {
         resetTimer();
     };
 
+    const handleClose = () => {
+        clearPendingPhone();
+        closeAuthCodeConfirm();
+        resetTimer();
+    };
+
     if (!isOpen) return null;
 
     return (
         <ModalSkeleton
-            onClose={closeAuthCodeConfirm}
+            onClose={handleClose}
             className="sm:max-w-md sm:h-135"
         >
             <div

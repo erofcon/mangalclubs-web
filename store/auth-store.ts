@@ -13,6 +13,7 @@ type AuthStore = {
 
     requestCode: (phone: string) => void;
     confirmCode: (code: string) => void;
+    clearPendingPhone: () => void;
     logout: () => void;
 };
 
@@ -45,6 +46,11 @@ export const useAuthStore = create<AuthStore>()(
                     isAuthenticated: true,
                 });
             },
+
+            clearPendingPhone: () =>
+                set({
+                    pendingPhone: null,
+                }),
 
             logout: () =>
                 set({

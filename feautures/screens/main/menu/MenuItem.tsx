@@ -15,11 +15,13 @@ export function MenuItem({item}: MenuItemProps) {
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        addItem(item);
 
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
-        if (!imageRect) return;
+        if (!imageRect) {
+            addItem(item);
+            return;
+        }
 
         window.dispatchEvent(
             new CustomEvent("fly-to-cart", {
@@ -30,6 +32,7 @@ export function MenuItem({item}: MenuItemProps) {
                         x: imageRect.left + imageRect.width / 2,
                         y: imageRect.top + imageRect.height / 2,
                     },
+                    onComplete: () => addItem(item),
                 },
             })
         );
