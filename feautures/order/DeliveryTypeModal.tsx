@@ -118,15 +118,16 @@ function useGeolocation() {
                         );
                     } else if (error.code === error.POSITION_UNAVAILABLE) {
                         setLocationError(
-                            "Местоположение сейчас недоступно. Проверьте GPS или интернет."
+                            "Местоположение сейчас недоступно. Проверьте GPS или интернет. Если включен VPN, необходимо выключить."
                         );
                     } else if (error.code === error.TIMEOUT) {
                         setLocationError(
-                            "Определение местоположения заняло слишком много времени. Попробуйте еще раз."
+                            "Определение местоположения заняло слишком много времени. Если включен VPN, необходимо выключить. Попробуйте еще раз."
                         );
                     } else {
                         setLocationError(
-                            "Не удалось определить местоположение. Попробуйте еще раз."
+                            "Не удалось определить местоположение. Если включен VPN, необходимо выключить." +
+                            " Попробуйте еще раз."
                         );
                     }
 
@@ -161,6 +162,7 @@ export function DeliveryTypeModal() {
     });
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
+    const [resolvedAddress, setResolvedAddress] = useState("");
 
     const lastResolvedAddressRef = useRef("");
     const addressAbortRef = useRef<AbortController | null>(null);
@@ -169,6 +171,7 @@ export function DeliveryTypeModal() {
 
     const applyResolvedAddress = useCallback((resolved: ResolvedAddress) => {
         lastResolvedAddressRef.current = resolved.address;
+        setResolvedAddress(resolved.address);
 
         setForm((prev) => ({
             ...prev,
@@ -201,7 +204,7 @@ export function DeliveryTypeModal() {
                 if (!response.ok) {
                     const error = await response.json().catch(() => null);
                     throw new Error(
-                        error?.message || "Не удалось определить адрес"
+                        error?.message || "Не удалось определить адрес. Если включен VPN, необходимо выключить."
                     );
                 }
 
@@ -211,7 +214,7 @@ export function DeliveryTypeModal() {
                 setAddressError(
                     error instanceof Error
                         ? error.message
-                        : "Не удалось определить адрес"
+                        : "Не удалось определить адрес. Если включен VPN, необходимо выключить."
                 );
             } finally {
                 setIsAddressResolving(false);
@@ -238,7 +241,7 @@ export function DeliveryTypeModal() {
 
                 if (!response.ok) {
                     const error = await response.json().catch(() => null);
-                    throw new Error(error?.message || "Не удалось найти адрес");
+                    throw new Error(error?.message || "Не удалось найти адрес. Если включен VPN, необходимо выключить.");
                 }
 
                 const resolved = (await response.json()) as ResolvedAddress;
@@ -252,7 +255,7 @@ export function DeliveryTypeModal() {
                 setAddressError(
                     error instanceof Error
                         ? error.message
-                        : "Не удалось найти адрес"
+                        : "Не удалось найти адрес. Если включен VPN, необходимо выключить."
                 );
             } finally {
                 if (!signal.aborted) {
@@ -305,6 +308,7 @@ export function DeliveryTypeModal() {
                     setAddressError(null);
                     setIsAddressResolving(false);
                     lastResolvedAddressRef.current = "";
+                    setResolvedAddress("");
                 }
 
                 setForm((prev) => ({
@@ -326,6 +330,12 @@ export function DeliveryTypeModal() {
     };
 
     const isResolvingLocation = isLocating || isAddressResolving;
+    const trimmedAddress = form.address.trim();
+    const canSaveAddress =
+        Boolean(trimmedAddress) &&
+        trimmedAddress === resolvedAddress &&
+        !addressError &&
+        !isAddressResolving;
 
     return (
         <ModalSkeleton
@@ -442,7 +452,8 @@ export function DeliveryTypeModal() {
                     <button
                         type="button"
                         onClick={handleSave}
-                        className="mt-6 h-14 w-full cursor-pointer rounded-full bg-warning text-base font-bold text-text-on-primary"
+                        disabled={!canSaveAddress}
+                        className="mt-6 h-14 w-full cursor-pointer rounded-full bg-warning text-base font-bold text-text-on-primary transition disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Сохранить адрес
                     </button>
