@@ -304,3 +304,127 @@ export const BookingMocks: Booking[] = [
         image: "/booking/611264128_18097554673907715_2049357468313814860_n..jpg",
     },
 ]
+
+export type DeliveryZone = {
+    id: string;
+    title: string;
+    minOrder: number | null;
+    price: number;
+    freeDeliveryFrom: number | null;
+    deliveryTime: string;
+};
+
+export const deliveryZones: DeliveryZone[] = [
+    {
+        id: "0-3",
+        title: "Зона 0-3 км",
+        minOrder: null,
+        price: 200,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 45 минут",
+    },
+    {
+        id: "3-4",
+        title: "Зона 3-4 км",
+        minOrder: 800,
+        price: 250,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 50 минут",
+    },
+    {
+        id: "4-5",
+        title: "Зона 4-5 км",
+        minOrder: 900,
+        price: 300,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 55 минут",
+    },
+    {
+        id: "5-6",
+        title: "Зона 5-6 км",
+        minOrder: 1000,
+        price: 350,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 60 минут",
+    },
+    {
+        id: "6-7",
+        title: "Зона 6-7 км",
+        minOrder: 1100,
+        price: 400,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 65 минут",
+    },
+    {
+        id: "7-8",
+        title: "Зона 7-8 км",
+        minOrder: 1200,
+        price: 450,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 70 минут",
+    },
+    {
+        id: "8-9",
+        title: "Зона 8-9 км",
+        minOrder: 1300,
+        price: 500,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 75 минут",
+    },
+    {
+        id: "9-10",
+        title: "Зона 9-10 км",
+        minOrder: 1400,
+        price: 550,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 80 минут",
+    },
+    {
+        id: "10-11",
+        title: "Зона 10-11 км",
+        minOrder: 1500,
+        price: 600,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 85 минут",
+    },
+    {
+        id: "11-12",
+        title: "Зона 11-12 км",
+        minOrder: 1600,
+        price: 650,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 90 минут",
+    },
+    {
+        id: "12-13",
+        title: "Зона 12-13 км",
+        minOrder: 1700,
+        price: 700,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 95 минут",
+    },
+    {
+        id: "13-14",
+        title: "Зона 13-14 км",
+        minOrder: 1800,
+        price: 750,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 100 минут",
+    },
+    {
+        id: "14-15",
+        title: "Зона 14-15 км",
+        minOrder: 1900,
+        price: 800,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 105 минут",
+    },
+];
+
+export const deliveryPickupPoints = [
+    {
+        id: "svetlaya",
+        city: PICKUP_POINT.city,
+        address: PICKUP_POINT.address,
+    },
+];
