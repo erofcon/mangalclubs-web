@@ -1,7 +1,8 @@
 "use client";
 
-import {Bike, Utensils} from "lucide-react";
+import {Bike, Check, Utensils} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
+import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
 
 export function OrderTypeModal() {
@@ -9,8 +10,12 @@ export function OrderTypeModal() {
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
     const openRestaurantTypeModal = useUIStore((state) => state.openRestaurantTypeModal);
     const openDeliveryTypeModal = useUIStore((state) => state.openDeliveryTypeModal);
+    const orderType = useOrderStore((state) => state.orderType);
 
     if (!isOpen) return null;
+
+    const isDeliverySelected = orderType === "delivery";
+    const isRestaurantSelected = orderType === "restaurant";
 
     return (
         <ModalSkeleton
@@ -20,30 +25,44 @@ export function OrderTypeModal() {
             <div className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
                 <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col gap-2 text-center">
-                        <h1 className="text-text text-2xl font-bold">
+                        <h1 className="text-2xl font-bold text-text">
                             Как хотите получить заказ?
                         </h1>
-                        <h1 className="text-text-secondary">
+                        <p className="text-text-secondary">
                             Покажем доступные блюда и актуальные цены
-                        </h1>
+                        </p>
                     </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                <div className="flex flex-col gap-4 md:flex-row md:gap-6">
                     <button
+                        type="button"
                         onClick={openDeliveryTypeModal}
-                        className="flex justify-center gap-2 text-text-on-primary font-bold cursor-pointer w-full py-3.5 rounded-full bg-warning"
+                        className={`
+                            flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3.5 font-bold transition
+                            ${isDeliverySelected
+                            ? "bg-warning text-text-on-primary shadow-lg shadow-warning/20"
+                            : "bg-stroke text-text hover:bg-warning hover:text-text-on-primary"}
+                        `}
                     >
                         <Bike width={24} height={24}/>
                         Доставка
+                        {isDeliverySelected && <Check className="h-4 w-4"/>}
                     </button>
 
                     <button
+                        type="button"
                         onClick={openRestaurantTypeModal}
-                        className="flex justify-center items-center gap-2 text-text font-bold cursor-pointer w-full py-3.5 rounded-full bg-stroke"
+                        className={`
+                            flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3.5 font-bold transition
+                            ${isRestaurantSelected
+                            ? "bg-warning text-text-on-primary shadow-lg shadow-warning/20"
+                            : "bg-stroke text-text hover:bg-warning hover:text-text-on-primary"}
+                        `}
                     >
                         <Utensils width={16} height={16}/>
                         В ресторане
+                        {isRestaurantSelected && <Check className="h-4 w-4"/>}
                     </button>
                 </div>
             </div>

@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import { ChevronUp, Handbag } from "lucide-react";
 import { useUIStore } from "@/store/ui-store";
+import {useCartStore} from "@/store/cart-store";
 
 export default function FloatingButton() {
     const [isVisible, setIsVisible] = useState(false);
 
-    const totalItems = 0;
+    const totalItems = useCartStore((state) =>
+        state.items.reduce((sum, item) => sum + item.quantity, 0),
+    );
     const openCart = useUIStore((state) => state.openCart);
 
     useEffect(() => {

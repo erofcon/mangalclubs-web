@@ -5,6 +5,7 @@ import {categories} from "@/mocks/mocks-data";
 import Image from "next/image";
 import {CategoryIcons} from "@/types/products";
 import {useUIStore} from "@/store/ui-store";
+import {useCartStore} from "@/store/cart-store";
 
 
 type FlyingItem = {
@@ -37,6 +38,9 @@ export function CategoriesNav() {
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
 
     const openCart = useUIStore((state) => state.openCart);
+    const totalItems = useCartStore((state) =>
+        state.items.reduce((sum, item) => sum + item.quantity, 0),
+    );
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
         const list = categoryListRef.current;
@@ -224,7 +228,9 @@ export function CategoriesNav() {
                         className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-full bg-warning px-5 py-2 font-semibold text-text-on-primary hover:opacity-90 md:flex"
                     >
                         Корзина
-                        <span className="rounded-full bg-card px-2 text-text">3</span>
+                        {totalItems > 0 && (
+                            <span className="rounded-full bg-card px-2 text-text">{totalItems}</span>
+                        )}
                     </button>
                 </div>
             </nav>

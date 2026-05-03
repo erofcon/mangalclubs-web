@@ -2,15 +2,38 @@
 
 import Image from "next/image";
 import {X, ShoppingBag, Minus, Plus} from "lucide-react";
-import {menus} from "@/mocks/mocks-data";
 import {useUIStore} from "@/store/ui-store";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
+import {useCartStore} from "@/store/cart-store";
+
+const getProductPlural = (count: number) => {
+    const lastTwoDigits = count % 100;
+    const lastDigit = count % 10;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+        return "товаров";
+    }
+
+    if (lastDigit === 1) {
+        return "товар";
+    }
+
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return "товара";
+    }
+
+    return "товаров";
+};
 
 export function CartDrawer() {
-    const items = menus[0].items;
-
     const isOpen = useUIStore((state) => state.isCartOpen);
     const closeCart = useUIStore((state) => state.closeCart);
+    const items = useCartStore((state) => state.items);
+    const removeItem = useCartStore((state) => state.removeItem);
+    const incrementItem = useCartStore((state) => state.incrementItem);
+    const decrementItem = useCartStore((state) => state.decrementItem);
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     useBodyScrollLock(isOpen);
 
@@ -55,9 +78,8 @@ export function CartDrawer() {
                 <div className="flex-1 overflow-y-auto px-5 md:px-8">
                     {items.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center text-center text-text">
-                            <div
-                                className="surface-soft mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gray-50">
-                                <ShoppingBag size={48} className="text-primary" strokeWidth={1.5}/>
+                            <div className="surface-soft mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gray-50">
+                                <ShoppingBag size={48} className="text-text-on-primary" strokeWidth={1.5}/>
                             </div>
 
                             <p className="text-xl font-bold text-text">Корзина пуста</p>
@@ -78,8 +100,7 @@ export function CartDrawer() {
                                                 className="object-contain"
                                             />
                                         ) : (
-                                            <div
-                                                className="flex h-full w-full items-center justify-center text-xs text-text">
+                                            <div className="flex h-full w-full items-center justify-center text-xs text-text">
                                                 Нет фото
                                             </div>
                                         )}
@@ -92,25 +113,33 @@ export function CartDrawer() {
                                             </h3>
 
                                             <button
-                                                className="cursor-pointer rounded-full bg-card p-2 duration-200 hover:scale-115 hover:text-warning">
+                                                onClick={() => removeItem(item.id)}
+                                                aria-label={`Удалить ${item.name} из корзины`}
+                                                className="cursor-pointer rounded-full bg-card p-2 duration-200 hover:scale-115 hover:text-warning"
+                                            >
                                                 <X size={18}/>
                                             </button>
                                         </div>
 
                                         <div className="flex items-start justify-between">
-                                            <span>{item.price * 2}&nbsp;₽</span>
+                                            <span>{(item.price * item.quantity).toLocaleString("ru-RU")}&nbsp;₽</span>
 
-                                            <div
-                                                className="surface-soft flex h-10 w-28 shrink-0 items-center justify-between rounded-full p-1">
+                                            <div className="surface-soft flex h-10 w-28 shrink-0 items-center justify-between rounded-full p-1">
                                                 <button
-                                                    className="ghost-button flex h-8 w-8 cursor-pointer items-center justify-center rounded-full duration-200 hover:scale-115 hover:text-warning disabled:opacity-50">
+                                                    onClick={() => decrementItem(item.id)}
+                                                    aria-label={`Уменьшить количество ${item.name}`}
+                                                    className="ghost-button flex h-8 w-8 cursor-pointer items-center justify-center rounded-full duration-200 hover:scale-115 hover:text-warning disabled:opacity-50"
+                                                >
                                                     <Minus size={14} strokeWidth={2.5}/>
                                                 </button>
 
-                                                <span className="w-6 text-center text-sm font-bold">{2}</span>
+                                                <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
 
                                                 <button
-                                                    className="ghost-button flex h-8 w-8 cursor-pointer items-center justify-center rounded-full duration-200 hover:scale-115 hover:text-warning">
+                                                    onClick={() => incrementItem(item.id)}
+                                                    aria-label={`Увеличить количество ${item.name}`}
+                                                    className="ghost-button flex h-8 w-8 cursor-pointer items-center justify-center rounded-full duration-200 hover:scale-115 hover:text-warning"
+                                                >
                                                     <Plus size={14} strokeWidth={2.5}/>
                                                 </button>
                                             </div>
@@ -125,13 +154,14 @@ export function CartDrawer() {
                 {items.length > 0 && (
                     <div className="shrink-0 border-t border-border px-5 pt-5 pb-8 text-text md:px-8">
                         <div className="mb-5 flex items-end justify-between font-semibold md:text-lg">
-                            <span>{2} товаров на сумму</span>
-                            <span className="font-bold">{123}&nbsp;₽</span>
+                            <span>
+                                {totalQuantity} {getProductPlural(totalQuantity)} на сумму
+                            </span>
+                            <span className="font-bold">{totalPrice.toLocaleString("ru-RU")}&nbsp;₽</span>
                         </div>
 
-                        <button
-                            className="w-full cursor-pointer rounded-full bg-warning py-4 text-center text-lg font-bold text-text-on-primary">
-                            Оформить за {346}&nbsp;₽
+                        <button className="w-full cursor-pointer rounded-full bg-warning py-4 text-center text-lg font-bold text-text-on-primary">
+                            Оформить за {totalPrice.toLocaleString("ru-RU")}&nbsp;₽
                         </button>
                     </div>
                 )}

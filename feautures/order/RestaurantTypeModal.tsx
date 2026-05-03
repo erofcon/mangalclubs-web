@@ -6,6 +6,7 @@ import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {PICKUP_POINT} from "@/mocks/mocks-data";
 import {MapPin, Phone, Clock} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
+import {useOrderStore} from "@/store/order-store";
 
 const RestaurantMap = dynamic(
     () =>
@@ -24,10 +25,15 @@ export function RestaurantTypeModal() {
     const isOpen = useUIStore((state) => state.isRestaurantTypeModalOpen);
     const closeRestaurantTypeModal = useUIStore((state) => state.closeRestaurantTypeModal);
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
+    const selectRestaurant = useOrderStore((state) => state.selectRestaurant);
 
     const handleSelect = () => {
-        closeRestaurantTypeModal();
-        closeOrderTypeModal();
+        const isSelected = selectRestaurant(PICKUP_POINT);
+
+        if (isSelected) {
+            closeRestaurantTypeModal();
+            closeOrderTypeModal();
+        }
     };
 
     if (!isOpen) return null;

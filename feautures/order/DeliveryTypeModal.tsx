@@ -6,6 +6,7 @@ import {LoaderCircle, Navigation} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {PICKUP_POINT} from "@/mocks/mocks-data";
 import {useUIStore} from "@/store/ui-store";
+import {useOrderStore} from "@/store/order-store";
 
 const RestaurantMap = dynamic(
     () =>
@@ -154,8 +155,20 @@ export function DeliveryTypeModal() {
     const isOpen = useUIStore((state) => state.isDeliveryTypeModalOpen);
     const closeDeliveryTypeModal = useUIStore((state) => state.closeDeliveryTypeModal);
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
+    const selectedDelivery = useOrderStore((state) => state.delivery);
+    const selectDelivery = useOrderStore((state) => state.selectDelivery);
 
-    const [form, setForm] = useState<DeliveryFormState>(initialForm);
+    const [form, setForm] = useState<DeliveryFormState>(() => (
+        selectedDelivery
+            ? {
+                address: selectedDelivery.address,
+                entrance: selectedDelivery.entrance,
+                floor: selectedDelivery.floor,
+                apartment: selectedDelivery.apartment,
+                comment: selectedDelivery.comment,
+            }
+            : initialForm
+    ));
     const [mapCoordinates, setMapCoordinates] = useState<CoordinatesState>({
         latitude: PICKUP_POINT.coordinates.latitude,
         longitude: PICKUP_POINT.coordinates.longitude,
@@ -168,6 +181,39 @@ export function DeliveryTypeModal() {
     const addressAbortRef = useRef<AbortController | null>(null);
 
     const {locate, isLocating, locationError} = useGeolocation();
+
+    /* eslint-disable react-hooks/set-state-in-effect */
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if (!selectedDelivery) {
+            lastResolvedAddressRef.current = "";
+            setResolvedAddress("");
+            setAddressError(null);
+            setForm(initialForm);
+            setMapCoordinates({
+                latitude: PICKUP_POINT.coordinates.latitude,
+                longitude: PICKUP_POINT.coordinates.longitude,
+            });
+            return;
+        }
+
+        lastResolvedAddressRef.current = selectedDelivery.address;
+        setResolvedAddress(selectedDelivery.address);
+        setAddressError(null);
+        setForm({
+            address: selectedDelivery.address,
+            entrance: selectedDelivery.entrance,
+            floor: selectedDelivery.floor,
+            apartment: selectedDelivery.apartment,
+            comment: selectedDelivery.comment,
+        });
+        setMapCoordinates({
+            latitude: selectedDelivery.coordinates.latitude,
+            longitude: selectedDelivery.coordinates.longitude,
+        });
+    }, [isOpen, selectedDelivery]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const applyResolvedAddress = useCallback((resolved: ResolvedAddress) => {
         lastResolvedAddressRef.current = resolved.address;
@@ -325,8 +371,16 @@ export function DeliveryTypeModal() {
     };
 
     const handleSave = () => {
-        closeDeliveryTypeModal();
-        closeOrderTypeModal();
+        const isSelected = selectDelivery({
+            ...form,
+            address: trimmedAddress,
+            coordinates: mapCoordinates,
+        });
+
+        if (isSelected) {
+            closeDeliveryTypeModal();
+            closeOrderTypeModal();
+        }
     };
 
     const isResolvingLocation = isLocating || isAddressResolving;

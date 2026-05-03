@@ -3,6 +3,7 @@
 import Image from "next/image";
 import React, {useRef} from "react";
 import {MenuItem as MenuItemType} from "@/types/products";
+import {useCartStore} from "@/store/cart-store";
 
 interface MenuItemProps {
     item: MenuItemType;
@@ -10,9 +11,11 @@ interface MenuItemProps {
 
 export function MenuItem({item}: MenuItemProps) {
     const imageWrapperRef = useRef<HTMLDivElement | null>(null);
+    const addItem = useCartStore((state) => state.addItem);
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
+        addItem(item);
 
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
