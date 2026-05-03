@@ -1,6 +1,11 @@
+"use client";
+
 import {ArrowRight, X, ClipboardCheck} from 'lucide-react';
+import {useUIStore} from "@/store/ui-store";
 
 export function CompletedOrders() {
+    const openShowOrderModal = useUIStore((state) => state.openShowOrderModal);
+
     return (
         <section
             className="
@@ -17,6 +22,7 @@ export function CompletedOrders() {
 
             <button
                 type="button"
+                onClick={openShowOrderModal}
                 className="
                     group
                     w-full
@@ -92,6 +98,7 @@ export function CompletedOrders() {
 
             <button
                 type="button"
+                onClick={openShowOrderModal}
                 className="
                     group
                     w-full

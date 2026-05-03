@@ -7,6 +7,7 @@ type UIStore = {
     isOrderTypeModalOpen: boolean;
     isRestaurantTypeModalOpen: boolean;
     isDeliveryTypeModalOpen: boolean;
+    isShowOrderModalOpen: boolean;
 
     openCart: () => void;
     closeCart: () => void;
@@ -32,6 +33,10 @@ type UIStore = {
     closeDeliveryTypeModal: () => void;
     toggleDeliveryTypeModal: () => void;
 
+    openShowOrderModal: () => void;
+    closeShowOrderModal: () => void;
+    toggleShowOrderModal: () => void;
+
     closeAllOverlays: () => void;
 };
 
@@ -42,6 +47,7 @@ export const useUIStore = create<UIStore>((set) => ({
     isOrderTypeModalOpen: false,
     isRestaurantTypeModalOpen: false,
     isDeliveryTypeModalOpen: false,
+    isShowOrderModalOpen: false,
 
     openCart: () =>
         set({
@@ -51,6 +57,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: false,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 
     closeCart: () => set({isCartOpen: false}),
@@ -63,6 +70,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: !state.isCartOpen ? false : state.isOrderTypeModalOpen,
             isRestaurantTypeModalOpen: !state.isCartOpen ? false : state.isRestaurantTypeModalOpen,
             isDeliveryTypeModalOpen: !state.isCartOpen ? false : state.isDeliveryTypeModalOpen,
+            isShowOrderModalOpen: !state.isCartOpen ? false : state.isShowOrderModalOpen,
         })),
 
     openAuthModal: () =>
@@ -73,6 +81,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: false,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 
     closeAuthModal: () => set({isAuthModalOpen: false}),
@@ -85,6 +94,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: !state.isAuthModalOpen ? false : state.isOrderTypeModalOpen,
             isRestaurantTypeModalOpen: !state.isAuthModalOpen ? false : state.isRestaurantTypeModalOpen,
             isDeliveryTypeModalOpen: !state.isAuthModalOpen ? false : state.isDeliveryTypeModalOpen,
+            isShowOrderModalOpen: !state.isAuthModalOpen ? false : state.isShowOrderModalOpen,
         })),
 
     openAuthCodeConfirm: () =>
@@ -95,6 +105,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: false,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 
     closeAuthCodeConfirm: () => set({isAuthCodeConfirmOpen: false}),
@@ -107,6 +118,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: !state.isAuthCodeConfirmOpen ? false : state.isOrderTypeModalOpen,
             isRestaurantTypeModalOpen: !state.isAuthCodeConfirmOpen ? false : state.isRestaurantTypeModalOpen,
             isDeliveryTypeModalOpen: !state.isAuthCodeConfirmOpen ? false : state.isDeliveryTypeModalOpen,
+            isShowOrderModalOpen: !state.isAuthCodeConfirmOpen ? false : state.isShowOrderModalOpen,
         })),
 
     openOrderTypeModal: () =>
@@ -117,6 +129,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: true,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 
     closeOrderTypeModal: () => set({isOrderTypeModalOpen: false}),
@@ -129,6 +142,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isAuthCodeConfirmOpen: !state.isOrderTypeModalOpen ? false : state.isAuthCodeConfirmOpen,
             isRestaurantTypeModalOpen: !state.isOrderTypeModalOpen ? false : state.isRestaurantTypeModalOpen,
             isDeliveryTypeModalOpen: !state.isOrderTypeModalOpen ? false : state.isDeliveryTypeModalOpen,
+            isShowOrderModalOpen: !state.isOrderTypeModalOpen ? false : state.isShowOrderModalOpen,
         })),
 
     openRestaurantTypeModal: () =>
@@ -139,6 +153,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: true,
             isRestaurantTypeModalOpen: true,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 
     closeRestaurantTypeModal: () => set({isRestaurantTypeModalOpen: false}),
@@ -151,6 +166,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isAuthCodeConfirmOpen: !state.isRestaurantTypeModalOpen ? false : state.isAuthCodeConfirmOpen,
             isOrderTypeModalOpen: !state.isRestaurantTypeModalOpen ? true : state.isOrderTypeModalOpen,
             isDeliveryTypeModalOpen: !state.isRestaurantTypeModalOpen ? false : state.isDeliveryTypeModalOpen,
+            isShowOrderModalOpen: !state.isRestaurantTypeModalOpen ? false : state.isShowOrderModalOpen,
         })),
 
     openDeliveryTypeModal: () =>
@@ -161,6 +177,7 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: true,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: true,
+            isShowOrderModalOpen: false,
         }),
 
     closeDeliveryTypeModal: () => set({isDeliveryTypeModalOpen: false}),
@@ -173,6 +190,31 @@ export const useUIStore = create<UIStore>((set) => ({
             isAuthCodeConfirmOpen: !state.isDeliveryTypeModalOpen ? false : state.isAuthCodeConfirmOpen,
             isOrderTypeModalOpen: !state.isDeliveryTypeModalOpen ? true : state.isOrderTypeModalOpen,
             isRestaurantTypeModalOpen: !state.isDeliveryTypeModalOpen ? false : state.isRestaurantTypeModalOpen,
+            isShowOrderModalOpen: !state.isDeliveryTypeModalOpen ? false : state.isShowOrderModalOpen,
+        })),
+
+    openShowOrderModal: () =>
+        set({
+            isCartOpen: false,
+            isAuthModalOpen: false,
+            isAuthCodeConfirmOpen: false,
+            isOrderTypeModalOpen: false,
+            isRestaurantTypeModalOpen: false,
+            isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: true,
+        }),
+
+    closeShowOrderModal: () => set({isShowOrderModalOpen: false}),
+
+    toggleShowOrderModal: () =>
+        set((state) => ({
+            isShowOrderModalOpen: !state.isShowOrderModalOpen,
+            isCartOpen: !state.isShowOrderModalOpen ? false : state.isCartOpen,
+            isAuthModalOpen: !state.isShowOrderModalOpen ? false : state.isAuthModalOpen,
+            isAuthCodeConfirmOpen: !state.isShowOrderModalOpen ? false : state.isAuthCodeConfirmOpen,
+            isOrderTypeModalOpen: !state.isShowOrderModalOpen ? false : state.isOrderTypeModalOpen,
+            isRestaurantTypeModalOpen: !state.isShowOrderModalOpen ? false : state.isRestaurantTypeModalOpen,
+            isDeliveryTypeModalOpen: !state.isShowOrderModalOpen ? false : state.isDeliveryTypeModalOpen,
         })),
 
     closeAllOverlays: () =>
@@ -183,5 +225,6 @@ export const useUIStore = create<UIStore>((set) => ({
             isOrderTypeModalOpen: false,
             isRestaurantTypeModalOpen: false,
             isDeliveryTypeModalOpen: false,
+            isShowOrderModalOpen: false,
         }),
 }));

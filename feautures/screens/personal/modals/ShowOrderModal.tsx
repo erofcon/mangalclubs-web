@@ -1,12 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {menus} from "@/mocks/mocks-data";
+import {useUIStore} from "@/store/ui-store";
 
 export function ShowOrderModal() {
+    const isOpen = useUIStore((state) => state.isShowOrderModalOpen);
+    const closeShowOrderModal = useUIStore((state) => state.closeShowOrderModal);
+    const orderItem = menus[0].items[0];
+
+    if (!isOpen) return null;
+
     return (
         <ModalSkeleton
-            onClose={() => {
-            }}
+            onClose={closeShowOrderModal}
             className="
                 w-full
                 sm:h-125
@@ -61,13 +69,14 @@ export function ShowOrderModal() {
                                 overflow-hidden rounded-xl
                             "
                         >
-                            <Image
-                                src={menus[0].items[0].image}
-                                alt={menus[0].items[0].name}
-                                fill
-                                className="object-contain"
-
-                            />
+                            {orderItem.image ? (
+                                <Image
+                                    src={orderItem.image}
+                                    alt={orderItem.name}
+                                    fill
+                                    className="object-contain"
+                                />
+                            ) : null}
                         </div>
 
                         <div className="min-w-0 flex flex-1 flex-col gap-1.5 sm:gap-2">
@@ -79,7 +88,7 @@ export function ShowOrderModal() {
                                     truncate
                                 "
                             >
-                                {menus[0].items[0].name}
+                                {orderItem.name}
                             </span>
 
                             <div className="flex flex-wrap gap-x-2 gap-y-1 items-center">
@@ -88,7 +97,7 @@ export function ShowOrderModal() {
                                 </span>
 
                                 <span className="font-semibold text-sm sm:text-base">
-                                    {menus[0].items[0].price}
+                                    {orderItem.price}
                                 </span>
                             </div>
                         </div>
