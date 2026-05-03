@@ -46,8 +46,8 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
 
     return (
-        <ModalSkeleton onClose={onClose} className="sm:h-[500px]">
-            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:flex-row sm:rounded-[32px]">
+        <ModalSkeleton onClose={onClose} className="sm:h-125">
+            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:flex-row sm:rounded-4xl">
                 {/* Image */}
                 <div
                     ref={imageWrapperRef}
