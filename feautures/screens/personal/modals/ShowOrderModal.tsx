@@ -48,7 +48,7 @@ export function ShowOrderModal() {
                     className="
                         flex flex-col gap-3 sm:gap-4
                         p-2
-                        rounded-2xl bg-card
+
                         mt-5 sm:mt-8
                     "
                 >
@@ -57,7 +57,7 @@ export function ShowOrderModal() {
                             flex items-center gap-3 sm:gap-4
                             p-3 sm:p-4
                             w-full
-                            bg-background
+                            bg-card
                             border border-border
                             rounded-2xl
                         "

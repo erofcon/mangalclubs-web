@@ -32,7 +32,7 @@ export default function WelcomeBookingBanner() {
     }, []);
 
     return (
-        <section className="mb-6 md:mb-8 mx-auto w-full max-w-374 px-7">
+        <section className="mb-6 md:mb-8 mx-auto w-full max-w-374 px-4 md:px-7">
             <div className="flex flex-col gap-4">
                 <h2 className="text-xl md:text-2xl font-extrabold leading-none text-text">
                     Приходите к нам!

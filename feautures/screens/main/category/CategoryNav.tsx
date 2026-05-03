@@ -182,7 +182,7 @@ export function CategoriesNav() {
 
     return (
         <>
-            <nav className="sticky top-0 z-30 py-4 backdrop-blur-md mx-auto w-full max-w-374 px-7">
+            <nav className="sticky top-0 z-30 py-4 backdrop-blur-md mx-auto w-full max-w-374 px-4 md:px-7">
                 <div className="flex items-center justify-between gap-4">
                     <ul
                         ref={categoryListRef}

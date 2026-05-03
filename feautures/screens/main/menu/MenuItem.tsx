@@ -33,7 +33,7 @@ export function MenuItem({item}: MenuItemProps) {
     };
 
     return (
-        <div className="mb-10">
+        <div>
             <article
                 className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border p-3 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)]"
             >

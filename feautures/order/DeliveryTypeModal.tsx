@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ChangeEvent, useState } from "react";
-import { LoaderCircle, Navigation } from "lucide-react";
-import { ModalSkeleton } from "@/components/ui/ModalSkeleton";
-import { PICKUP_POINT } from "@/mocks/mocks-data";
-import { useUIStore } from "@/store/ui-store";
+import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
+import {LoaderCircle, Navigation} from "lucide-react";
+import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
+import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {useUIStore} from "@/store/ui-store";
 
 const RestaurantMap = dynamic(
     () =>
@@ -15,7 +15,7 @@ const RestaurantMap = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-full w-full animate-pulse bg-card" />
+            <div className="h-full w-full animate-pulse bg-card"/>
         ),
     }
 );
@@ -33,6 +33,16 @@ type CoordinatesState = {
     longitude: number;
 };
 
+type ResolvedAddress = {
+    address: string;
+    city: string;
+    street: string;
+    house: string;
+    latitude: number;
+    longitude: number;
+    hasHouseNumber: boolean;
+};
+
 const initialForm: DeliveryFormState = {
     address: "",
     entrance: "",
@@ -45,51 +55,92 @@ function useGeolocation() {
     const [isLocating, setIsLocating] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
 
-    const locate = (onSuccess: (coordinates: CoordinatesState) => void) => {
-        if (isLocating) return;
-
-        if (!navigator.geolocation) {
-            setLocationError("Ваш браузер не поддерживает определение местоположения.");
-            return;
+    const getPermissionState = async () => {
+        if (!navigator.permissions?.query) {
+            return null;
         }
 
-        setIsLocating(true);
-        setLocationError(null);
+        try {
+            const permission = await navigator.permissions.query({
+                name: "geolocation" as PermissionName,
+            });
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                onSuccess({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                });
-
-                setIsLocating(false);
-            },
-            (error) => {
-                let message = "Не удалось определить местоположение. Попробуйте еще раз.";
-
-                if (error.code === error.PERMISSION_DENIED) {
-                    message = "Разрешите доступ к геолокации, чтобы мы могли определить ваш адрес.";
-                }
-
-                if (error.code === error.POSITION_UNAVAILABLE) {
-                    message = "Местоположение сейчас недоступно. Проверьте GPS или интернет.";
-                }
-
-                if (error.code === error.TIMEOUT) {
-                    message = "Определение местоположения заняло слишком много времени.";
-                }
-
-                setLocationError(message);
-                setIsLocating(false);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            }
-        );
+            return permission.state;
+        } catch {
+            return null;
+        }
     };
+
+    const locate = useCallback(
+        async (onSuccess: (coordinates: CoordinatesState) => void) => {
+            if (isLocating) return;
+
+            if (!navigator.geolocation) {
+                setLocationError(
+                    "Ваш браузер не поддерживает определение местоположения."
+                );
+                return;
+            }
+
+            if (!window.isSecureContext) {
+                setLocationError(
+                    "Геолокация работает только на HTTPS, localhost или 127.0.0.1. Если открываете сайт с телефона по локальному IP, нужен HTTPS."
+                );
+                return;
+            }
+
+            setIsLocating(true);
+            setLocationError(null);
+
+            const permissionState = await getPermissionState();
+
+            if (permissionState === "denied") {
+                setLocationError(
+                    "Геолокация уже заблокирована для этого сайта. Откройте настройки сайта в браузере и разрешите доступ к геолокации."
+                );
+                setIsLocating(false);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    onSuccess({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+
+                    setIsLocating(false);
+                },
+                (error) => {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        setLocationError(
+                            "Доступ к геолокации запрещен. Разрешите геолокацию в настройках сайта или браузера."
+                        );
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        setLocationError(
+                            "Местоположение сейчас недоступно. Проверьте GPS или интернет."
+                        );
+                    } else if (error.code === error.TIMEOUT) {
+                        setLocationError(
+                            "Определение местоположения заняло слишком много времени. Попробуйте еще раз."
+                        );
+                    } else {
+                        setLocationError(
+                            "Не удалось определить местоположение. Попробуйте еще раз."
+                        );
+                    }
+
+                    setIsLocating(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0,
+                }
+            );
+        },
+        [isLocating]
+    );
 
     return {
         locate,
@@ -108,14 +159,154 @@ export function DeliveryTypeModal() {
         latitude: PICKUP_POINT.coordinates.latitude,
         longitude: PICKUP_POINT.coordinates.longitude,
     });
+    const [addressError, setAddressError] = useState<string | null>(null);
+    const [isAddressResolving, setIsAddressResolving] = useState(false);
 
-    const { locate, isLocating, locationError } = useGeolocation();
+    const lastResolvedAddressRef = useRef("");
+    const addressAbortRef = useRef<AbortController | null>(null);
+
+    const {locate, isLocating, locationError} = useGeolocation();
+
+    const applyResolvedAddress = useCallback((resolved: ResolvedAddress) => {
+        lastResolvedAddressRef.current = resolved.address;
+
+        setForm((prev) => ({
+            ...prev,
+            address: resolved.address,
+        }));
+
+        setMapCoordinates({
+            latitude: resolved.latitude,
+            longitude: resolved.longitude,
+        });
+
+        setAddressError(
+            resolved.hasHouseNumber ? null : "Укажите номер дома"
+        );
+    }, []);
+
+    const reverseGeocodeCoordinates = useCallback(
+        async (coordinates: CoordinatesState) => {
+            setAddressError(null);
+            setIsAddressResolving(true);
+
+            try {
+                const params = new URLSearchParams({
+                    lat: String(coordinates.latitude),
+                    lon: String(coordinates.longitude),
+                });
+
+                const response = await fetch(`/api/geocode/reverse?${params}`);
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => null);
+                    throw new Error(
+                        error?.message || "Не удалось определить адрес"
+                    );
+                }
+
+                const resolved = (await response.json()) as ResolvedAddress;
+                applyResolvedAddress(resolved);
+            } catch (error) {
+                setAddressError(
+                    error instanceof Error
+                        ? error.message
+                        : "Не удалось определить адрес"
+                );
+            } finally {
+                setIsAddressResolving(false);
+            }
+        },
+        [applyResolvedAddress]
+    );
+
+    const geocodeAddress = useCallback(
+        async (address: string, signal: AbortSignal) => {
+            setAddressError(null);
+            setIsAddressResolving(true);
+
+            try {
+                const params = new URLSearchParams({
+                    text: address,
+                    lat: String(mapCoordinates.latitude),
+                    lon: String(mapCoordinates.longitude),
+                });
+
+                const response = await fetch(`/api/geocode/search?${params}`, {
+                    signal,
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => null);
+                    throw new Error(error?.message || "Не удалось найти адрес");
+                }
+
+                const resolved = (await response.json()) as ResolvedAddress;
+
+                if (signal.aborted) return;
+
+                applyResolvedAddress(resolved);
+            } catch (error) {
+                if (signal.aborted) return;
+
+                setAddressError(
+                    error instanceof Error
+                        ? error.message
+                        : "Не удалось найти адрес"
+                );
+            } finally {
+                if (!signal.aborted) {
+                    setIsAddressResolving(false);
+                }
+            }
+        },
+        [
+            applyResolvedAddress,
+            mapCoordinates.latitude,
+            mapCoordinates.longitude,
+        ]
+    );
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const address = form.address.trim();
+
+        if (!address || address.length < 6) {
+            addressAbortRef.current?.abort();
+            return;
+        }
+
+        if (address === lastResolvedAddressRef.current) {
+            return;
+        }
+
+        const controller = new AbortController();
+        addressAbortRef.current?.abort();
+        addressAbortRef.current = controller;
+
+        const timeoutId = window.setTimeout(() => {
+            void geocodeAddress(address, controller.signal);
+        }, 700);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+            controller.abort();
+        };
+    }, [form.address, geocodeAddress, isOpen]);
 
     if (!isOpen) return null;
 
     const handleChange =
         (field: keyof DeliveryFormState) =>
             (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+                if (field === "address") {
+                    addressAbortRef.current?.abort();
+                    setAddressError(null);
+                    setIsAddressResolving(false);
+                    lastResolvedAddressRef.current = "";
+                }
+
                 setForm((prev) => ({
                     ...prev,
                     [field]: event.target.value,
@@ -125,11 +316,7 @@ export function DeliveryTypeModal() {
     const handleLocate = () => {
         locate((coordinates) => {
             setMapCoordinates(coordinates);
-
-            // Позже здесь можно добавить reverse geocoding:
-            // 1. отправить coordinates в API
-            // 2. получить адрес
-            // 3. записать его в form.address
+            void reverseGeocodeCoordinates(coordinates);
         });
     };
 
@@ -138,13 +325,16 @@ export function DeliveryTypeModal() {
         closeOrderTypeModal();
     };
 
+    const isResolvingLocation = isLocating || isAddressResolving;
+
     return (
         <ModalSkeleton
             onClose={closeDeliveryTypeModal}
-            className="h-dvh w-full p-0 sm:h-[560px] sm:w-[calc(100vw-32px)] sm:max-w-8xl"
+            className="h-dvh w-full p-0 sm:h-140 sm:w-[calc(100vw-32px)] sm:max-w-8xl"
         >
-            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:rounded-[32px] md:flex-row">
-                <div className="order-1 relative h-[40dvh] min-h-[320px] w-full shrink-0 overflow-hidden md:order-2 md:h-full md:flex-1">
+            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:rounded-4xl md:flex-row">
+                <div
+                    className="order-1 relative h-[40dvh] min-h-80 w-full shrink-0 overflow-hidden md:order-2 md:h-full md:flex-1">
                     <RestaurantMap
                         key={`${mapCoordinates.latitude}-${mapCoordinates.longitude}`}
                         name="Адрес доставки"
@@ -152,11 +342,11 @@ export function DeliveryTypeModal() {
                         coordinates={mapCoordinates}
                     />
 
-                    <div className="absolute right-5 bottom-5 z-[1000] md:right-10 md:bottom-8">
+                    <div className="absolute right-5 bottom-5 z-1000 md:right-10 md:bottom-8">
                         <button
                             type="button"
                             onClick={handleLocate}
-                            disabled={isLocating}
+                            disabled={isResolvingLocation}
                             aria-label="Определить местоположение"
                             className="
                                 group flex h-14 w-14 items-center justify-center rounded-full
@@ -167,16 +357,17 @@ export function DeliveryTypeModal() {
                                 cursor-pointer
                             "
                         >
-                            {isLocating ? (
-                                <LoaderCircle className="h-6 w-6 animate-spin" />
+                            {isResolvingLocation ? (
+                                <LoaderCircle className="h-6 w-6 animate-spin"/>
                             ) : (
-                                <Navigation className="h-6 w-6" />
+                                <Navigation className="h-6 w-6"/>
                             )}
                         </button>
                     </div>
                 </div>
 
-                <div className="order-2 flex min-h-0 flex-1 flex-col border-t border-white/6 bg-linear-to-b from-background to-surface px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
+                <div
+                    className="order-2 flex min-h-0 flex-1 flex-col border-t border-white/6 bg-linear-to-b from-background to-surface px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
                     <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                         <div className="max-w-xl">
                             <h2 className="text-xl font-bold text-text md:text-2xl">
@@ -191,12 +382,13 @@ export function DeliveryTypeModal() {
                                     value={form.address}
                                     onChange={handleChange("address")}
                                     placeholder="Город, улица, дом"
+                                    autoComplete="street-address"
                                     className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
                                 />
 
-                                {locationError && (
+                                {(locationError || addressError) && (
                                     <p className="mt-2 text-sm font-medium text-red-500">
-                                        {locationError}
+                                        {locationError || addressError}
                                     </p>
                                 )}
                             </div>

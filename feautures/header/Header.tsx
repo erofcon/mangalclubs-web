@@ -37,7 +37,7 @@ export default function Header() {
     }, [isOpen]);
 
     return (
-        <header className="mb-8 mx-auto w-full max-w-374 px-7">
+        <header className="mb-8 mx-auto w-full max-w-374 px-1 md:px-7">
             <TopNav/>
 
             <div className="mx-auto flex items-end justify-between max-md:hidden">
@@ -50,7 +50,7 @@ export default function Header() {
                 </div>
             </div>
 
-            <div className="relative z-[60] flex h-15 items-end justify-between px-4 pt-2 mb-2 md:hidden">
+            <div className="relative z-60 flex h-15 items-end justify-between px-4 pt-2 mb-2 md:hidden">
                 <Logo size="mobile"/>
                 <button
                     type="button"

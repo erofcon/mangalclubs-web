@@ -24,7 +24,7 @@ export function BookingSelectedScreen() {
             <main className="overflow-hidden pt-26">
                 <div className="page--restaurant">
                     <section className="py-8">
-                        <div className="mx-auto w-full max-w-374 px-7">
+                        <div className="mx-auto w-full max-w-374 px-4 md:px-7">
                             <div className="mb-12.5 flex items-center justify-between gap-6 lg:mb-16">
                                 <div className="text-[30px] font-medium lg:text-[40px]">
                                     {booking.title}
@@ -73,7 +73,7 @@ export function BookingSelectedScreen() {
                     </section>
 
                     <section className="py-8">
-                        <div className="mx-auto w-full max-w-374 px-7">
+                        <div className="mx-auto w-full max-w-374 px-4 md:px-7">
                             <div className="mb-12.5 lg:mb-16">
                                 <div
                                     className="text-[30px] font-medium leading-9.25 tracking-[0.005em] lg:text-[40px] lg:leading-12.25">

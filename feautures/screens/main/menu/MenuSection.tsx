@@ -13,14 +13,14 @@ export function MenuSection() {
 
     return (
         <>
-            <div className="mt-4 space-y-12 mx-auto w-full max-w-374 px-7 mb-38">
+            <div className="mt-4 space-y-12 mx-auto w-full max-w-374 px-4 md:px-7">
                 {menus.map((menu) => (
                     <section
                         key={menu.id}
                         id={`menu-${menu.id}`}
                         className="relative"
                     >
-                        <div className="md:mb-8 mb-4  md:py-4">
+                        <div className="md:mb-8 mb-4 md:py-4">
                             <h2 className="text-text text-base md:text-lg font-semibold tracking-wide">
                                 {menu.title}
                             </h2>

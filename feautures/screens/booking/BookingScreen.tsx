@@ -195,7 +195,7 @@ export function BookingScreen() {
                 </div>
             </section>
 
-            <section className="py-10 xl:py-17.5 mx-auto w-full max-w-374 px-7">
+            <section className="py-10 xl:py-17.5 mx-auto w-full max-w-374 px-4 md:px-7">
                 <div className="mx-auto w-full max-w-374 px-4 xl:px-7">
                     <div className="element-fade mb-12.5 xl:mb-25">
                         <h1 className="text-[30px] font-medium leading-9.25 tracking-[0.005em] xl:text-[40px] xl:leading-12.25">

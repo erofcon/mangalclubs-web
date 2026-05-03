@@ -28,7 +28,7 @@ export function PersonalScreen() {
 
     return (
         <>
-            <main className="min-h-screen w-full overflow-x-hidden px-4 pt-6 sm:px-7 sm:pt-10">
+            <main className="min-h-screen w-full overflow-x-hidden pt-6 px-4 md:px-7 sm:pt-10">
                 <div className="mx-auto grid w-full max-w-270 gap-6 lg:grid-cols-[minmax(0,1fr)_190px] lg:gap-12">
                     <div className="min-w-0 space-y-5">
 
