@@ -8,7 +8,7 @@ import {HeroSection} from "@/feautures/screens/main/hero/HeroSection";
 
 export function MainScreen() {
     return (
-        <main className="bg-[#070808]">
+        <main>
             <HeroSection/>
             <Stories/>
             <CategoriesNav/>

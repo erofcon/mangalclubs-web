@@ -51,7 +51,7 @@ export default function FloatingButton() {
             </button>
 
             <button
-                data-cart-target="true"
+                data-cart-target="floating"
                 onClick={(e) => {
                     e.stopPropagation();
                     openCart();

@@ -203,25 +203,45 @@ export default function Stories() {
 
     return (
         <>
-            <section className="relative mx-auto -mt-10 w-full max-w-[1210px] px-5 pb-8 pt-6 text-[#f5efe5] sm:px-6 lg:px-0">
-                <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-linear-to-r from-transparent via-[#5f472b] to-transparent sm:inset-x-6 lg:inset-x-0"/>
+            <section
+                className="relative mx-auto -mt-10 w-full max-w-[1210px] px-5 pb-8 pt-6 text-text sm:px-6 lg:px-0">
+                <div
+                    className="pointer-events-none absolute inset-x-5 top-0 h-px bg-linear-to-r
+                    from-transparent via-[#5f472b] to-transparent sm:inset-x-6 lg:inset-x-0"/>
                 <h2
-                    className="mb-5 text-[20px] font-normal leading-none text-[#fff7ec]"
+                    className="mb-5 text-[20px] font-normal leading-none text-text"
                     style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                 >
-                    Истории из Grill & Mangal
+                    Mangal Clubs в деталях
                 </h2>
 
-                <div className="flex items-start justify-between gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div
+                    className="flex items-start justify-between gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {StoriesData.map((story, index) => (
                         <button
                             key={story.id}
                             type="button"
                             onClick={() => openStory(index)}
-                            className="group flex min-w-[94px] flex-col items-center gap-3 text-center"
+                            className="group flex min-w-[94px] flex-col items-center gap-3 text-center cursor-pointer"
                         >
-                            <span className="relative h-[92px] w-[92px] overflow-hidden rounded-full border border-[#b68442] bg-[#111314] p-[3px] shadow-[0_18px_40px_rgba(0,0,0,0.42)] transition duration-300 group-hover:scale-105 group-hover:border-[#e0b56f] group-hover:shadow-[0_22px_48px_rgba(214,173,104,0.16)]">
-                                <span className="relative block h-full w-full overflow-hidden rounded-full bg-black">
+                            <span
+                                className={`
+                                    relative h-[92px] w-[92px] overflow-hidden rounded-full border border-primary
+                                    bg-[#111314] p-[3px] shadow-[0_18px_40px_rgba(0,0,0,0.42)]
+                                    transition duration-300
+                                    group-hover:scale-105
+                                    group-hover:shadow-[0_22px_48px_rgba(214,173,104,0.16)]
+                                    ${
+                                    index === 0
+                                        ? "origin-left"
+                                        : index === StoriesData.length - 1
+                                            ? "origin-right"
+                                            : "origin-center"
+                                }
+                                    `}
+                            >
+                                <span
+                                    className="relative block h-full w-full overflow-hidden rounded-full bg-black">
                                     <Image
                                         src={story.previewImage}
                                         alt={story.title ?? "История"}
@@ -232,9 +252,8 @@ export default function Stories() {
                                     />
                                 </span>
                             </span>
-                            <span className="text-[13px] leading-none text-[#c8c0b5]">
-                                {story.title}
-                            </span>
+
+                            <span className="text-[13px] leading-none text-text">{story.title}</span>
                         </button>
                     ))}
                 </div>
@@ -245,13 +264,14 @@ export default function Stories() {
                     <button
                         type="button"
                         onClick={prev}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-white/70 transition hover:text-white md:block"
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-text transition hover:text-white md:block"
                         aria-label="Предыдущая история"
                     >
                         <ChevronLeft className="h-10 w-10"/>
                     </button>
 
-                    <div className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
+                    <div
+                        className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
                         <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
                             {activeStory.slides.map((_, index) => (
                                 <div
@@ -276,7 +296,8 @@ export default function Stories() {
                         <button
                             type="button"
                             onClick={close}
-                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-white"
+                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer
+                             items-center justify-center rounded-full border-0 bg-black/45 text-text"
                             aria-label="Закрыть историю"
                         >
                             <X className="h-5 w-5"/>
@@ -350,17 +371,19 @@ export default function Stories() {
                         )}
 
                         {(isMediaLoading || hasMediaError) && (
-                            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
+                            <div
+                                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
                                 {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
                             </div>
                         )}
 
-                        <div className="absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
+                        <div
+                            className="absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
                             <button
                                 type="button"
                                 onClick={prev}
                                 aria-label="Предыдущий слайд"
-                                className="rounded-full bg-black/55 p-2 text-white"
+                                className="rounded-full bg-black/55 p-2 text-text"
                             >
                                 <ChevronLeft className="h-5 w-5"/>
                             </button>
@@ -369,7 +392,7 @@ export default function Stories() {
                                 type="button"
                                 onClick={next}
                                 aria-label="Следующий слайд"
-                                className="rounded-full bg-black/55 p-2 text-white"
+                                className="rounded-full bg-black/55 p-2 text-text"
                             >
                                 <ChevronRight className="h-5 w-5"/>
                             </button>
@@ -393,7 +416,7 @@ export default function Stories() {
                     <button
                         type="button"
                         onClick={next}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-white/70 transition hover:text-white md:block"
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-text transition hover:text-white md:block"
                         aria-label="Следующая история"
                     >
                         <ChevronRight className="h-10 w-10"/>

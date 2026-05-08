@@ -2,9 +2,10 @@
 
 import {useEffect, useRef, useState} from "react";
 import Image from "next/image";
-import Link from "next/link";
-import {ChevronRight} from "lucide-react";
+import {ShoppingCart} from "lucide-react";
 import {categories} from "@/mocks/mocks-data";
+import {useCartStore} from "@/store/cart-store";
+import {useUIStore} from "@/store/ui-store";
 
 const FLY_ANIMATION_DURATION_MS = 1650;
 
@@ -27,9 +28,52 @@ type FlyingItem = {
     };
 };
 
+const isCartTargetVisible = (element: HTMLElement | null) => {
+    if (!element) return false;
+
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+
+    return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight &&
+        rect.right > 0 &&
+        rect.left < window.innerWidth &&
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.pointerEvents !== "none" &&
+        Number(style.opacity) > 0
+    );
+};
+
+const getCartTargetRect = (selector: string) => {
+    const element = document.querySelector<HTMLElement>(selector);
+
+    if (!element || !isCartTargetVisible(element)) return null;
+
+    return element.getBoundingClientRect();
+};
+
+const getVisibleCartButtonRect = () => {
+    return (
+        getCartTargetRect('[data-cart-target="category"]') ??
+        getCartTargetRect('[data-cart-target="header"]') ??
+        getCartTargetRect('[data-cart-target="floating"]')
+    );
+};
+
 export function CategoriesNav() {
     const [activeId, setActiveId] = useState<string | number | null>(
         categories[0]?.id ?? null
+    );
+
+    const [isHeaderCartVisible, setIsHeaderCartVisible] = useState(true);
+
+    const openCart = useUIStore((state) => state.openCart);
+    const totalItems = useCartStore((state) =>
+        state.items.reduce((sum, item) => sum + item.quantity, 0),
     );
 
     const categoryListRef = useRef<HTMLUListElement | null>(null);
@@ -56,20 +100,6 @@ export function CategoriesNav() {
             left,
             behavior: "smooth",
         });
-    };
-
-    const getVisibleCartButtonRect = () => {
-        const cartButtons = Array.from(
-            document.querySelectorAll<HTMLElement>('[data-cart-target="true"]')
-        );
-
-        const visibleCartButton = cartButtons.find((button) => {
-            const rect = button.getBoundingClientRect();
-
-            return rect.width > 0 && rect.height > 0;
-        });
-
-        return visibleCartButton?.getBoundingClientRect() ?? null;
     };
 
     useEffect(() => {
@@ -162,6 +192,26 @@ export function CategoriesNav() {
         };
     }, []);
 
+    useEffect(() => {
+        const updateHeaderCartVisibility = () => {
+            const headerCartButton = document.querySelector<HTMLElement>(
+                '[data-cart-target="header"]'
+            );
+
+            setIsHeaderCartVisible(isCartTargetVisible(headerCartButton));
+        };
+
+        updateHeaderCartVisibility();
+
+        window.addEventListener("scroll", updateHeaderCartVisibility, {passive: true});
+        window.addEventListener("resize", updateHeaderCartVisibility);
+
+        return () => {
+            window.removeEventListener("scroll", updateHeaderCartVisibility);
+            window.removeEventListener("resize", updateHeaderCartVisibility);
+        };
+    }, []);
+
     const scrollToCategory = (categoryId: string | number) => {
         const section = document.getElementById(`menu-${categoryId}`);
 
@@ -181,11 +231,15 @@ export function CategoriesNav() {
 
     return (
         <>
-            <nav className="sticky top-0 z-30 border-y border-[#1d1914] bg-[#070808]/92 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-md">
-                <div className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 px-5 py-3 sm:px-6 lg:px-0">
+            <nav
+                className="sticky top-0 z-30 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-md mx-auto w-full max-w-[1210px]"
+            >
+                <div
+                    className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 px-5 py-3 sm:px-6 lg:px-0">
                     <ul
                         ref={categoryListRef}
-                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap
+                        scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-4"
                     >
                         {categories.map((category) => {
                             const isActive = activeId === category.id;
@@ -200,10 +254,10 @@ export function CategoriesNav() {
                                     <button
                                         type="button"
                                         onClick={() => scrollToCategory(category.id)}
-                                        className={`h-10 rounded-full px-7 text-[14px] transition duration-300 ${
+                                        className={`h-10 rounded-full px-7 text-[14px] transition duration-300 cursor-pointer ${
                                             isActive
-                                                ? "border border-[#b68442] bg-[#d6ad68]/10 text-[#d6ad68] shadow-[0_0_22px_rgba(214,173,104,0.12)]"
-                                                : "border border-[#272421] bg-black/20 text-[#bfb6aa] hover:border-[#72542e] hover:bg-white/[0.03] hover:text-[#f5efe5]"
+                                                ? "border border-border text-primary bg-background shadow-[0_0_22px_rgba(214,173,104,0.12)]"
+                                                : "border border-[#272421] bg-black/20 text-text hover:border-border hover:text-primary"
                                         }`}
                                     >
                                         {category.title}
@@ -213,13 +267,31 @@ export function CategoriesNav() {
                         })}
                     </ul>
 
-                    <Link
-                        href="#menu-99"
-                        className="hidden shrink-0 items-center gap-3 text-[14px] text-[#c8c0b5] transition duration-300 hover:text-[#d6ad68] md:inline-flex"
+                    <button
+                        type="button"
+                        data-cart-target="category"
+                        tabIndex={isHeaderCartVisible ? -1 : 0}
+                        onClick={openCart}
+                        className={`relative cursor-pointer inline-flex h-10 w-10
+                        items-center justify-center text-primary transition duration-300 hover:scale-105
+                        ${
+                            isHeaderCartVisible
+                                ? "pointer-events-none opacity-0"
+                                : "pointer-events-auto opacity-100"
+                        }
+                        `}
+                        aria-label="Открыть корзину"
                     >
-                        Смотреть все меню
-                        <ChevronRight className="h-5 w-5 text-[#d6ad68]"/>
-                    </Link>
+                        <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
+                        {totalItems > 0 && (
+                            <span
+                                className="absolute right-0 top-0 flex h-5 min-w-5
+                                items-center justify-center rounded-full
+                                bg-primary px-1 text-[11px] font-semibold text-on-primary">
+                                {totalItems}
+                            </span>
+                        )}
+                    </button>
                 </div>
             </nav>
 
@@ -247,7 +319,8 @@ export function CategoriesNav() {
                                 className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.45)]"
                             />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center rounded-[8px] bg-[#d6ad68] text-sm font-bold text-[#17110b]">
+                            <div
+                                className="flex h-full w-full items-center justify-center rounded-[8px] bg-[#d6ad68] text-sm font-bold text-[#17110b]">
                                 {item.name}
                             </div>
                         )}

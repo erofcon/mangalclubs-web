@@ -44,19 +44,20 @@ export default function Header() {
     }, [isOpen]);
 
     return (
-        <header className="relative z-50 bg-[#070808] text-[#d8d0c5]">
-            <div className="mx-auto flex h-[104px] w-full max-w-[1210px] items-center justify-between px-5 sm:px-6 lg:px-0">
+        <header className="relative z-50 text-text">
+            <div
+                className="mx-auto flex h-[104px] w-full max-w-[1210px] items-center justify-between px-5 sm:px-6 lg:px-0">
                 <div className="hidden items-center gap-12 md:flex">
                     <Logo size="desktop"/>
                     <DeliverySelector/>
                 </div>
 
-                <nav className="hidden items-center gap-[54px] text-[14px] font-medium md:flex">
+                <nav className="hidden gap-[54px] text-[14px] font-medium md:flex">
                     {topLinks.map((link) => (
                         <Link
                             key={link.label}
                             href={link.href}
-                            className="transition duration-300 hover:text-[#c99a55]"
+                            className="relative inline-block after:absolute after:left-0 after:-bottom-1 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100"
                         >
                             {link.label}
                         </Link>
@@ -66,19 +67,23 @@ export default function Header() {
                 <div className="hidden items-center gap-6 md:flex">
                     <button
                         type="button"
-                        data-cart-target="true"
+                        data-cart-target="header"
                         onClick={openCart}
-                        className="relative inline-flex h-10 w-10 items-center justify-center text-[#c99a55] transition duration-300 hover:text-[#e3bd78]"
+                        className="relative cursor-pointer inline-flex h-10 w-10
+                        items-center justify-center text-primary transition duration-300 hover:scale-105"
                         aria-label="Открыть корзину"
                     >
                         <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
                         {totalItems > 0 && (
-                            <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#d6ad68] px-1 text-[11px] font-semibold text-[#17110b]">
+                            <span
+                                className="absolute right-0 top-0 flex h-5 min-w-5
+                                items-center justify-center rounded-full
+                                bg-primary px-1 text-[11px] font-semibold text-on-primary">
                                 {totalItems}
                             </span>
                         )}
                     </button>
-                    <div className="h-8 w-px bg-[#302b25]"/>
+                    <div className="h-8 w-px"/>
                     <LoginButton/>
                 </div>
 
@@ -89,7 +94,7 @@ export default function Header() {
                             type="button"
                             aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
                             onClick={() => setIsOpen((value) => !value)}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#302b25] text-[#f5efe5]"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-[6px] border border-border text-text"
                         >
                             {isOpen ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}
                         </button>
