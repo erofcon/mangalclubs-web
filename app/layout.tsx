@@ -12,7 +12,7 @@ const myFont = Open_Sans({
 });
 
 export const metadata: Metadata = {
-    title: "Grill & Mangal",
+    title: "Mangal Clubs",
     description: "Гриль-ресторан с доставкой и бронированием в Грозном",
 };
 
