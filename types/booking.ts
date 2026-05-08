@@ -3,4 +3,5 @@ export type Booking = {
     title?: string;
     description?: string;
     image?: string;
+    images?: string[];
 }

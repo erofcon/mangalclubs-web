@@ -1,256 +1,132 @@
 "use client";
 
-import React, {useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {BookingMocks} from "@/mocks/mocks-data";
+import {ArrowRight} from "lucide-react";
+import {BookingMocks, PICKUP_POINT} from "@/mocks/mocks-data";
 
-type RestaurantSpan = 2 | 3 | 4 | 6;
-
-type Booking = Readonly<{
-    id: string;
-    title: string;
-    description: string;
-    image: string;
-}>;
-
-type BookingCard = Booking & {
-    span: RestaurantSpan;
-};
-
-const TABLET_BREAKPOINT = 1279;
-const RESTAURANT_MATRIX_BREAKPOINT = 1280;
-
-const desktopSpanPattern: RestaurantSpan[] = [
-    3, 3,
-    2, 2, 2,
-    3, 3,
-    6,
-];
-
-const getBookingSpan = (index: number): RestaurantSpan => {
-    return desktopSpanPattern[index % desktopSpanPattern.length];
-};
-
-const getBookingsRows = (items: BookingCard[]) => {
-    const rows: BookingCard[][] = [];
-    let currentRow: BookingCard[] = [];
-    let currentSum = 0;
-
-    items.forEach((item) => {
-        if (currentSum + item.span > 6) {
-            rows.push(currentRow);
-            currentRow = [];
-            currentSum = 0;
-        }
-
-        currentRow.push(item);
-        currentSum += item.span;
-    });
-
-    if (currentRow.length > 0) {
-        rows.push(currentRow);
-    }
-
-    return rows;
-};
-
-const restaurantSpanClass: Record<RestaurantSpan, string> = {
-    2: "xl:w-1/3",
-    3: "xl:w-1/2",
-    4: "xl:w-2/3",
-    6: "xl:w-full",
-};
+const bookingCount = BookingMocks.length;
 
 export function BookingScreen() {
-    const rootRef = useRef<HTMLElement | null>(null);
-    const matrixRef = useRef<HTMLDivElement | null>(null);
-
-    const [isMobileLayout, setIsMobileLayout] = useState(false);
-
-    const bookings = useMemo<BookingCard[]>(() => {
-        return BookingMocks.map((booking, index): BookingCard => ({
-            id: String(booking.id),
-            title: booking.title ?? "",
-            description: booking.description ?? "",
-            image: booking.image ?? "",
-            span: getBookingSpan(index),
-        }));
-    }, []);
-
-    const bookingRows = useMemo(() => {
-        if (isMobileLayout) {
-            return bookings.map((booking) => [booking]);
-        }
-
-        return getBookingsRows(bookings);
-    }, [bookings, isMobileLayout]);
-
-    useEffect(() => {
-        const updateViewportState = () => {
-            setIsMobileLayout(window.innerWidth <= TABLET_BREAKPOINT);
-        };
-
-        updateViewportState();
-        window.addEventListener("resize", updateViewportState);
-
-        return () => window.removeEventListener("resize", updateViewportState);
-    }, []);
-
-    useEffect(() => {
-        const root = rootRef.current;
-        if (!root || typeof IntersectionObserver === "undefined") return;
-
-        const items = root.querySelectorAll<HTMLElement>(".element-fade");
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (!entry.isIntersecting) return;
-
-                    entry.target.classList.add("fade-in-up");
-                    observer.unobserve(entry.target);
-                });
-            },
-            {
-                threshold: 0.16,
-                rootMargin: "0px 0px -8% 0px",
-            },
-        );
-
-        items.forEach((item) => observer.observe(item));
-
-        return () => observer.disconnect();
-    }, [isMobileLayout]);
-
-
-    useEffect(() => {
-        const list = matrixRef.current;
-        if (!list) return;
-
-        let frameId = 0;
-
-        const calculateTransform = () => {
-            frameId = 0;
-
-            const selector =
-                window.innerWidth <= RESTAURANT_MATRIX_BREAKPOINT
-                    ? ".js-restaurant-card"
-                    : ".js-restaurant-row";
-
-            const nodes = list.querySelectorAll<HTMLElement>(selector);
-
-            nodes.forEach((node) => {
-                const rect = node.getBoundingClientRect();
-                const height = Math.max(rect.height, 1);
-                const percent = Math.floor(((window.innerHeight - rect.top) * 100) / height);
-
-                const scale = Math.max(1, 1.1 - percent * 0.001);
-                const translateY = Math.max(0, 50 - percent * 0.5);
-                const opacity = Math.max(0, Math.min(1, percent / 100));
-
-                node.style.transform = `matrix(${scale}, 0, 0, ${scale}, 0, ${translateY})`;
-                node.style.opacity = String(opacity);
-            });
-        };
-
-        const scheduleTransform = () => {
-            if (frameId) return;
-            frameId = window.requestAnimationFrame(calculateTransform);
-        };
-
-        calculateTransform();
-        window.addEventListener("scroll", scheduleTransform, {passive: true});
-        window.addEventListener("resize", scheduleTransform);
-
-        return () => {
-            if (frameId) window.cancelAnimationFrame(frameId);
-            window.removeEventListener("scroll", scheduleTransform);
-            window.removeEventListener("resize", scheduleTransform);
-        };
-    }, [isMobileLayout]);
-
     return (
-        <main
-            ref={rootRef}
-            className="min-h-screen overflow-hidden scroll-smooth bg-background font-sans text-text"
-        >
-            <section className="relative mb-5 h-auto pt-14.25 xl:mb-10 xl:h-screen xl:p-0">
-                <div className="h-full w-full">
-                    <div
-                        className="static inset-0 z-0 h-full w-full overflow-hidden bg-background xl:absolute xl:max-h-screen">
-                        <video
-                            key="/booking/header/header.mp4"
-                            className="block h-auto w-full object-fill xl:h-full xl:object-cover"
-                            playsInline
-                            loop
-                            autoPlay
-                            muted
-                            preload="metadata"
+        <main className="min-h-screen overflow-hidden bg-background pt-26 text-text">
+            <section className="relative isolate mx-auto w-full max-w-[1210px] overflow-hidden">
+                <video
+                    className="absolute inset-0 -z-30 h-full w-full object-cover"
+                    playsInline
+                    loop
+                    autoPlay
+                    muted
+                    preload="metadata"
+                >
+                    <source src="/booking/header/header.mp4" type="video/mp4"/>
+                </video>
+
+                <div className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.96)_28%,rgba(5,5,5,0.72)_56%,rgba(5,5,5,0.32)_100%)]"/>
+                <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_46%,#070808_100%)]"/>
+
+                <div className="flex min-h-[560px] items-end px-5 pb-12 pt-16 sm:px-6 lg:px-0">
+                    <div className="max-w-[660px]">
+                        <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
+                            Бронирование
+                        </p>
+
+                        <h1
+                            className="max-w-[650px] text-[45px] font-normal leading-[0.98] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[76px]"
+                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
-                            <source src="/booking/header/header.mp4" type="video/mp4"/>
-                            Тег video не поддерживается вашим браузером.
-                        </video>
+                            Кабинки для спокойного вечера.
+                        </h1>
+
+                        <p className="mt-6 max-w-[520px] text-[15px] leading-7 text-text/82 sm:text-[16px]">
+                            Выберите приватную зону, а мы поможем забронировать удобное время в Mangal Club.
+                        </p>
+
+                        <div className="mt-9 grid max-w-[620px] overflow-hidden rounded-[8px] border border-border/70 bg-black/30 backdrop-blur-md sm:grid-cols-3">
+                            <HeroMetric label="кабинки" value={`${bookingCount}`}/>
+                            <HeroMetric label="работаем" value={PICKUP_POINT.schedule.replace("Ежедневно с ", "")}/>
+                            <HeroMetric label="адрес" value={PICKUP_POINT.city}/>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section className="py-10 xl:py-17.5 mx-auto w-full max-w-374 px-4 md:px-7">
-                <div className="mx-auto w-full max-w-374 px-4 xl:px-7">
-                    <div className="element-fade mb-12.5 xl:mb-25">
-                        <h1 className="text-[30px] font-medium leading-9.25 tracking-[0.005em] xl:text-[40px] xl:leading-12.25">
-                            Наши <span className="text-text-secondary">VIP</span> кабинки
-                        </h1>
-
-                        <p className="mt-7.5 text-lg leading-6.25 xl:mt-12.5 xl:text-[21px]">
-                            Приватная зона для своей компании — отдых, общение и максимум комфорта без лишних глаз
+            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
+                <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Выбор зоны
                         </p>
+                        <h2
+                            className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
+                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                        >
+                            Наши VIP-кабинки
+                        </h2>
                     </div>
+                    <p className="max-w-[380px] text-[14px] leading-6 text-text/68">
+                        Каждая зона отличается атмосферой, но сохраняет общий настрой: приватно, спокойно, без лишнего шума.
+                    </p>
+                </div>
 
-                    <div ref={matrixRef} className="xl:-mb-20">
-                        {bookingRows.map((row, rowIndex) => (
-                            <div
-                                className="js-restaurant-row -mx-3 flex origin-top flex-wrap will-change-[transform,opacity] xl:-mx-7"
-                                key={rowIndex}
-                            >
-                                {row.map((booking) => (
-                                    <article
-                                        className={`js-restaurant-card relative mb-7.5 min-h-px w-full px-3 xl:mb-20 xl:px-7 ${
-                                            restaurantSpanClass[booking.span]
-                                        }`}
-                                        key={booking.id}
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {BookingMocks.map((booking) => (
+                        <Link
+                            key={booking.id}
+                            href={`/booking/${booking.id}`}
+                            className="group block overflow-hidden rounded-[8px] border border-border/70 transition duration-300 hover:border-primary/70"
+                        >
+                            <span className="relative block aspect-[1.34] overflow-hidden bg-black">
+                                {booking.image && (
+                                    <Image
+                                        src={booking.image}
+                                        alt={booking.title ?? "VIP-кабинка"}
+                                        fill
+                                        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                                        className="object-cover transition duration-500 group-hover:scale-[1.035]"
+                                    />
+                                )}
+                                <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_42%,rgba(0,0,0,0.78)_100%)]"/>
+                            </span>
+
+                            <span className="flex min-h-34 items-end justify-between gap-5 border-t border-border/55 px-5 py-5">
+                                <span className="min-w-0">
+                                    <span
+                                        className="block wrap-break-word text-[22px] font-normal leading-7 text-text"
+                                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                                     >
-                                        <Link
-                                            href={`booking/${booking.id}`}
-                                            className="group relative block min-h-60 overflow-hidden rounded-[20px] bg-background text-text xl:min-h-84 2xl:min-h-84 [@media(min-width:1280px)_and_(max-width:1400px)]:min-h-71"
-                                        >
-                                            <span
-                                                className="absolute -inset-px z-0 overflow-hidden transition duration-700 before:absolute before:inset-0 before:z-1 before:bg-linear-to-b before:from-transparent before:from-[58.99%] before:to-black/60 before:content-[''] after:absolute after:inset-0 after:z-1 after:bg-black/30 after:transition-opacity after:duration-300 after:content-[''] group-hover:scale-[1.035] group-hover:after:opacity-70">
-                                                <Image
-                                                    src={booking.image}
-                                                    alt={booking.title}
-                                                    fill
-                                                    sizes="(max-width: 1279px) 100vw, 50vw"
-                                                    className="object-cover"
-                                                />
-                                            </span>
-
-                                            <span className="absolute inset-0 z-2 p-8">
-                                                <span className="absolute bottom-8 left-8 right-8">
-                                                    <span
-                                                        className="block text-[26px] font-medium leading-8 xl:text-[30px] xl:leading-9.25">
-                                                        {booking.title}
-                                                    </span>
-                                                </span>
-                                            </span>
-                                        </Link>
-                                    </article>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
+                                        {booking.title}
+                                    </span>
+                                    <span className="mt-2 block line-clamp-2 text-[14px] leading-6 text-text/68">
+                                        {booking.description}
+                                    </span>
+                                </span>
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-border/70 text-primary transition duration-300 group-hover:border-primary">
+                                    <ArrowRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5" strokeWidth={1.8}/>
+                                </span>
+                            </span>
+                        </Link>
+                    ))}
                 </div>
             </section>
         </main>
+    );
+}
+
+type HeroMetricProps = {
+    label: string;
+    value: string;
+};
+
+function HeroMetric({label, value}: HeroMetricProps) {
+    return (
+        <div className="border-b border-border/50 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
+            <div className="text-[16px] font-semibold leading-none text-text sm:text-[19px]">
+                {value}
+            </div>
+            <div className="mt-2 text-[12px] leading-none text-text/60">
+                {label}
+            </div>
+        </div>
     );
 }

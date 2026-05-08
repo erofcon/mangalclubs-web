@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import {useRouter} from "next/navigation";
 import {useState} from "react";
-import {ArrowLeft, ChevronRight, MapPin} from "lucide-react";
+import {ChevronRight} from "lucide-react";
 import {deliveryPickupPoints, deliveryZones} from "@/mocks/mocks-data";
 import {RestaurantInfoModal} from "@/feautures/order/RestaurantInfoModal";
 
@@ -11,10 +9,6 @@ const formatPrice = (price: number | null) => (
     price ? `${price.toLocaleString("ru-RU")} ₽` : "без минимума"
 );
 
-const firstDeliveryZone = deliveryZones[0];
-const lastDeliveryZone = deliveryZones[deliveryZones.length - 1];
-const minDeliveryPrice = Math.min(...deliveryZones.map((zone) => zone.price));
-const maxDeliveryDistance = lastDeliveryZone ? `до ${lastDeliveryZone.id.split("-")[1]} км` : "";
 const pickupFallback = {
     city: "г. Грозный",
     address: "ул. Светлая улица, 105А",
@@ -31,7 +25,6 @@ const getDeliveryTime = (zoneId: string) => {
 };
 
 export function DeliveryScreen() {
-    const router = useRouter();
     const [isRestaurantInfoOpen, setRestaurantInfoOpen] = useState(false);
 
     return (
@@ -134,25 +127,6 @@ export function DeliveryScreen() {
                 onClose={() => setRestaurantInfoOpen(false)}
             />
         </>
-    );
-}
-
-type HeroMetricProps = {
-    label: string;
-    value: string;
-};
-
-function HeroMetric({label, value}: HeroMetricProps) {
-    return (
-        <div
-            className="border-b border-white/[0.08] px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
-            <div className="text-[16px] font-semibold leading-none text-[#f5efe5] sm:text-[19px]">
-                {value}
-            </div>
-            <div className="mt-2 text-[12px] leading-none text-text/60">
-                {label}
-            </div>
-        </div>
     );
 }
 
