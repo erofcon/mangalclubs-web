@@ -16,7 +16,7 @@ const RestaurantMap = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-full w-full animate-pulse bg-card"/>
+            <div className="h-full w-full animate-pulse bg-background"/>
         ),
     }
 );
@@ -396,7 +396,7 @@ export function DeliveryTypeModal() {
             onClose={closeDeliveryTypeModal}
             className="h-dvh w-full p-0 sm:h-140 sm:w-[calc(100vw-32px)] sm:max-w-8xl"
         >
-            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:rounded-4xl md:flex-row">
+            <div className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:rounded-[8px] sm:border md:flex-row">
                 <div
                     className="order-1 relative h-[40dvh] min-h-80 w-full shrink-0 overflow-hidden md:order-2 md:h-full md:flex-1">
                     <RestaurantMap
@@ -413,10 +413,10 @@ export function DeliveryTypeModal() {
                             disabled={isResolvingLocation}
                             aria-label="Определить местоположение"
                             className="
-                                group flex h-14 w-14 items-center justify-center rounded-full
-                                border border-white/10 bg-card/95 text-text shadow-xl shadow-black/20
+                                group flex h-12 w-12 items-center justify-center rounded-[6px]
+                                border border-border bg-background text-text
                                 backdrop-blur-md transition-all duration-200
-                                hover:scale-105
+                                hover:border-primary hover:text-primary
                                 active:scale-95 disabled:pointer-events-none disabled:opacity-80
                                 cursor-pointer
                             "
@@ -431,10 +431,16 @@ export function DeliveryTypeModal() {
                 </div>
 
                 <div
-                    className="order-2 flex min-h-0 flex-1 flex-col border-t border-white/6 bg-linear-to-b from-background to-surface px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
+                    className="order-2 flex min-h-0 flex-1 flex-col border-t border-border bg-background px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
                     <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                         <div className="max-w-xl">
-                            <h2 className="text-xl font-bold text-text md:text-2xl">
+                            <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                                Доставка
+                            </p>
+                            <h2
+                                className="text-[28px] font-normal leading-tight text-text"
+                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                            >
                                 Укажи адрес
                             </h2>
                         </div>
@@ -447,7 +453,7 @@ export function DeliveryTypeModal() {
                                     onChange={handleChange("address")}
                                     placeholder="Город, улица, дом"
                                     autoComplete="street-address"
-                                    className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
+                                    className="h-12 w-full rounded-[6px] border border-border bg-background px-5 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                                 />
 
                                 {(locationError || addressError) && (
@@ -465,7 +471,7 @@ export function DeliveryTypeModal() {
                                         value={form.entrance}
                                         onChange={handleChange("entrance")}
                                         placeholder="Подъезд"
-                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
+                                        className="h-12 w-full rounded-[6px] border border-border bg-background px-5 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                                     />
                                 </div>
 
@@ -476,7 +482,7 @@ export function DeliveryTypeModal() {
                                         value={form.floor}
                                         onChange={handleChange("floor")}
                                         placeholder="Этаж"
-                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
+                                        className="h-12 w-full rounded-[6px] border border-border bg-background px-5 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                                     />
                                 </div>
 
@@ -487,7 +493,7 @@ export function DeliveryTypeModal() {
                                         value={form.apartment}
                                         onChange={handleChange("apartment")}
                                         placeholder="Квартира"
-                                        className="h-12 w-full rounded-xl border border-border bg-card px-5 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
+                                        className="h-12 w-full rounded-[6px] border border-border bg-background px-5 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                                     />
                                 </div>
                             </div>
@@ -497,7 +503,7 @@ export function DeliveryTypeModal() {
                                     value={form.comment}
                                     onChange={handleChange("comment")}
                                     placeholder="Комментарий курьеру"
-                                    className="min-h-30 w-full resize-none rounded-xl border border-border bg-card px-5 py-4 text-sm text-text outline-none transition placeholder:text-text-secondary focus:border-warning"
+                                    className="min-h-30 w-full resize-none rounded-[6px] border border-border bg-background px-5 py-4 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                                 />
                             </div>
                         </div>
@@ -507,7 +513,7 @@ export function DeliveryTypeModal() {
                         type="button"
                         onClick={handleSave}
                         disabled={!canSaveAddress}
-                        className="mt-6 h-14 w-full cursor-pointer rounded-full bg-warning text-base font-bold text-text-on-primary transition disabled:cursor-not-allowed disabled:opacity-50"
+                        className="mt-6 h-12 w-full cursor-pointer rounded-[6px] bg-primary text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Сохранить адрес
                     </button>

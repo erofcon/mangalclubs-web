@@ -40,7 +40,7 @@ export default function FloatingButton() {
             <button
                 onClick={scrollToTop}
                 aria-label="Вернуться наверх"
-                className={`fixed right-5 bottom-26 z-10 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-text shadow-lg shadow-black/10 transition-all duration-300 hover:scale-115 hover:text-warning md:right-8 md:bottom-34
+                className={`fixed right-5 bottom-26 z-10 flex h-12 w-12 cursor-pointer items-center justify-center rounded-[6px] border border-border bg-background text-text transition-all duration-300 hover:border-primary hover:text-primary md:right-8 md:bottom-34
                 ${
                     isVisible
                         ? "pointer-events-auto translate-y-0 opacity-100"
@@ -56,7 +56,7 @@ export default function FloatingButton() {
                     e.stopPropagation();
                     openCart();
                 }}
-                className={`fixed right-5 bottom-10 z-[90] flex cursor-pointer items-center gap-2 rounded-full bg-warning py-3 pl-4 pr-5 text-sm font-bold text-text-on-primary transition-all duration-300 hover:scale-110 md:bottom-14 md:hidden ${
+                className={`fixed right-5 bottom-10 z-[90] flex h-12 cursor-pointer items-center gap-2 rounded-[6px] bg-primary px-5 text-sm font-semibold text-on-primary transition-all duration-300 hover:-translate-y-0.5 md:bottom-14 md:hidden ${
                     !isVisible ? "md:pointer-events-none md:translate-y-4 md:opacity-0" : ""
                 }`}
             >

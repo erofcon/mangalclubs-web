@@ -59,7 +59,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
     return (
         <ModalSkeleton onClose={onClose} className="sm:h-125">
-            <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:flex-row sm:rounded-4xl">
+            <div className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
                 <div
                     ref={imageWrapperRef}
                     className="relative flex h-[42dvh] min-h-[260px] w-full shrink-0 items-center justify-center overflow-hidden bg-background sm:h-full sm:min-h-0 sm:w-1/2"
@@ -74,17 +74,23 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                             className="bg-background object-contain p-8 sm:p-12"
                         />
                     ) : (
-                        <div className="text-gray-400">Нет фото</div>
+                        <div className="text-sm text-text/60">Нет фото</div>
                     )}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col sm:w-1/2">
                     <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-8">
-                        <h2 className="pr-12 text-center text-2xl font-black leading-tight text-text sm:text-3xl md:text-left">
+                        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Блюдо
+                        </p>
+                        <h2
+                            className="pr-12 text-center text-[28px] font-normal leading-tight text-text sm:text-[34px] md:text-left"
+                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                        >
                             {item.name}
                         </h2>
 
-                        <p className="mt-4 text-sm leading-relaxed text-text-secondary sm:text-base">
+                        <p className="mt-4 text-sm leading-6 text-text/68 sm:text-base">
                             {item.description}
                         </p>
 
@@ -93,53 +99,61 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                                 Пищевая ценность
                             </h3>
 
-                            <div className="mt-3 grid grid-cols-4 gap-3 rounded-2xl bg-card p-4 text-center">
+                            <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[8px] border border-border/70 text-center sm:grid-cols-4">
                                 <div>
-                                    <div className="text-xs font-semibold text-text-secondary">
+                                    <div className="border-b border-border/50 px-3 py-3 sm:border-b-0 sm:border-r">
+                                    <div className="text-xs font-semibold text-text/60">
                                         кКал
                                     </div>
                                     <div className="text-base font-semibold text-text">
                                         {item.calories ?? "—"}
                                     </div>
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <div className="text-xs font-semibold text-text-secondary">
+                                    <div className="border-b border-border/50 px-3 py-3 sm:border-b-0 sm:border-r">
+                                    <div className="text-xs font-semibold text-text/60">
                                         Жиры
                                     </div>
                                     <div className="text-base font-semibold text-text">
                                         {item.fats ?? "—"} г
                                     </div>
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <div className="text-xs font-semibold text-text-secondary">
+                                    <div className="border-r border-border/50 px-3 py-3">
+                                    <div className="text-xs font-semibold text-text/60">
                                         Белки
                                     </div>
                                     <div className="text-base font-semibold text-text">
                                         {item.proteins ?? "—"} г
                                     </div>
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <div className="text-xs font-semibold text-text-secondary">
+                                    <div className="px-3 py-3">
+                                    <div className="text-xs font-semibold text-text/60">
                                         Углеводы
                                     </div>
                                     <div className="text-base font-semibold text-text">
                                         {item.carbs ?? "—"}
+                                    </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="shrink-0 border-t border-black/5 bg-background p-5 sm:p-8">
+                    <div className="shrink-0 border-t border-border bg-background p-5 sm:p-8">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-14 w-32 shrink-0 items-center justify-between rounded-full bg-card p-1">
+                            <div className="flex h-12 w-32 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
                                 <button
                                     onClick={decreaseQuantity}
                                     disabled={quantity <= 1}
-                                    className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-text transition hover:text-warning disabled:opacity-50"
+                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[4px] text-text transition hover:text-primary disabled:opacity-50"
                                     aria-label="Уменьшить количество"
                                 >
                                     <Minus className="h-5 w-5"/>
@@ -151,7 +165,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
                                 <button
                                     onClick={increaseQuantity}
-                                    className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-text transition hover:text-warning"
+                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[4px] text-text transition hover:text-primary"
                                     aria-label="Увеличить количество"
                                 >
                                     <Plus className="h-5 w-5"/>
@@ -160,7 +174,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
                             <button
                                 onClick={handleAddToCart}
-                                className="flex h-14 flex-1 cursor-pointer items-center justify-center rounded-full bg-warning px-6 text-sm md:text-base font-bold text-text-on-primary transition"
+                                className="flex h-12 flex-1 cursor-pointer items-center justify-center rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 md:text-base"
                             >
                                 Добавить за {(item.price * quantity).toLocaleString("ru-RU")}&nbsp;₽
                             </button>

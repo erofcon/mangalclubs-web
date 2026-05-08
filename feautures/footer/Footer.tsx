@@ -67,24 +67,24 @@ export function Footer() {
                     <div className="md:w-79">
                         <div className="flex flex-col gap-6">
                             <div>
-                                <p className="text-[12px] text-text-secondary">Телефон:</p>
+                                <p className="text-[12px] text-text/60">Телефон:</p>
                                 <a
                                     href={`tel:${PICKUP_POINT.phone}`}
-                                    className="text-[14px] font-medium hover:text-text-secondary transition-all duration-300 inline-block hover:scale-105"
+                                    className="inline-block text-[14px] font-medium transition duration-300 hover:text-primary"
                                 >
                                     {PICKUP_POINT.phone}
                                 </a>
                             </div>
 
                             <div>
-                                <p className="text-[12px] text-text-secondary">Адрес:</p>
+                                <p className="text-[12px] text-text/60">Адрес:</p>
                                 <div className="text-[14px] font-medium">
                                     {PICKUP_POINT.address}
                                 </div>
                             </div>
 
                             <div>
-                                <p className="text-[12px] text-text-secondary">График работы:</p>
+                                <p className="text-[12px] text-text/60">График работы:</p>
                                 <div className="text-[14px] font-medium">
                                     {PICKUP_POINT.schedule}
                                 </div>
@@ -100,31 +100,31 @@ export function Footer() {
                         <ul className="space-y-5">
                             <li>
                                 <Link href="/about"
-                                      className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
+                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
                                     О нас
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/contacts"
-                                      className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
+                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
                                     Контакты
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/booking"
-                                      className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
+                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
                                     Бронирование
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/delivery"
-                                      className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
+                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
                                     Доставка
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/booking"
-                                      className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
+                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
                                     Правовая информация
                                 </Link>
                             </li>
@@ -135,9 +135,9 @@ export function Footer() {
                             <p className="text-[16px] font-medium">Мобильные приложения</p>
 
                             <div className="flex flex-col gap-4">
-                                <a href="#" className="hover:scale-105 duration-300">
+                                <a href="#" className="transition duration-300 hover:-translate-y-0.5">
                                     <div
-                                        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-3">
+                                        className="flex items-center gap-4 rounded-[8px] border border-border bg-background p-3 transition duration-300 hover:border-primary">
                                         <Image
                                             src="/icons/GooglePlayIcon.svg"
                                             alt="Google Play"
@@ -152,9 +152,9 @@ export function Footer() {
                                     </div>
                                 </a>
 
-                                <a href="#" className="hover:scale-105 duration-300">
+                                <a href="#" className="transition duration-300 hover:-translate-y-0.5">
                                     <div
-                                        className="flex items-center gap-4 rounded-2xl border border-border bg-card p-3">
+                                        className="flex items-center gap-4 rounded-[8px] border border-border bg-background p-3 transition duration-300 hover:border-primary">
                                         <Image
                                             src="/icons/AppleAppStore.svg"
                                             alt="App Store"

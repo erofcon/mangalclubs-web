@@ -10,7 +10,7 @@ export function TopNav() {
                         <Link
                             key={link.label}
                             href={link.href}
-                            className="inline-flex items-center gap-2 hover:text-warning hover:scale-105 duration-300"
+                            className="inline-flex items-center gap-2 transition duration-300 hover:text-primary"
                         >
                             {link.label}
                         </Link>

@@ -1,115 +1,62 @@
-"use client"
+"use client";
 
-
-import {useEffect, useState} from "react";
+import {Clock, MapPin} from "lucide-react";
 import {useRouter} from "next/navigation";
+import {useState} from "react";
 import {RestaurantInfoModal} from "@/feautures/order/RestaurantInfoModal";
-
-const bookingTexts = [
-    "Забронируй уютное место\nВыбери удобное время заранее!",
-    "Лучшие места уходят быстро\nУспей забронировать!",
-    "Планируй отдых заранее\nМы позаботимся об остальном",
-    "Комфорт начинается с брони\nВыбери удобное время!",
-    "Отдыхай без ожидания\nЗабронируй место заранее!"
-];
+import {PICKUP_POINT} from "@/mocks/mocks-data";
 
 export default function WelcomeBookingBanner() {
-    const [textIndex, setTextIndex] = useState(0);
-    const [fade, setFade] = useState(true);
     const [isRestaurantInfoOpen, setRestaurantInfoOpen] = useState(false);
-
     const router = useRouter();
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setFade(false);
-
-            setTimeout(() => {
-                setTextIndex((prev) => (prev + 1) % bookingTexts.length);
-                setFade(true);
-            }, 500);
-        }, 3500);
-
-        return () => clearInterval(interval);
-    }, []);
 
     return (
         <>
-            <section className="mb-6 md:mb-8 mx-auto w-full max-w-374 px-4 md:px-7">
-                <div className="flex flex-col gap-4">
-                    <h2 className="text-xl md:text-2xl font-extrabold leading-none text-text">
-                        Приходите к нам!
-                    </h2>
-
-                    <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-                        <div
-                            className="flex items-center justify-between rounded-xl bg-card px-5 py-6 hover:scale-105 duration-300"
-                            style={{
-                                background: `linear-gradient(
-                                90deg,
-                                rgba(255, 106, 0, 0.18) 0%,
-                                rgba(244, 144, 12, 0.14) 50%,
-                                rgba(221, 46, 68, 0.18) 100%
-                            )`
-                            }}
-                        >
-                            <div>
-                                <p className="text-sm leading-none text-text-secondary font-semibold">
+            <section className="mx-auto mb-8 w-full max-w-[1210px] px-5 sm:px-6 lg:px-0">
+                <div className="grid overflow-hidden rounded-[8px] border border-border/70 lg:grid-cols-[1fr_1.2fr]">
+                    <button
+                        type="button"
+                        onClick={() => setRestaurantInfoOpen(true)}
+                        className="group flex min-h-32 cursor-pointer items-center justify-between gap-5 border-b border-border/55 px-5 py-5 text-left transition duration-300 hover:border-primary lg:border-b-0 lg:border-r"
+                    >
+                        <span className="flex min-w-0 gap-4">
+                            <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8}/>
+                            <span className="min-w-0">
+                                <span className="block text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">
                                     Мы находимся
-                                </p>
-                                <p className="mt-2 text-sm md:text-lg font-bold leading-none text-text">
-                                    г. Грозный
-                                </p>
-                            </div>
+                                </span>
+                                <span className="mt-2 block wrap-break-word text-[18px] font-semibold leading-6 text-text">
+                                    {PICKUP_POINT.city}, {PICKUP_POINT.address}
+                                </span>
+                            </span>
+                        </span>
+                        <Clock className="h-5 w-5 shrink-0 text-text/60 transition duration-300 group-hover:text-primary" strokeWidth={1.8}/>
+                    </button>
 
-                            <button
-                                type="button"
-                                onClick={() => setRestaurantInfoOpen(true)}
-                                aria-haspopup="dialog"
-                                className="inline-flex hover:scale-105 duration-300 h-10 md:h-12 cursor-pointer items-center justify-center rounded-full bg-white px-6 text-sm md:text-base font-semibold text-black transition hover:bg-neutral-50"
+                    <div className="flex min-h-32 flex-col justify-between gap-5 px-5 py-5 sm:flex-row sm:items-center">
+                        <div>
+                            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                Бронирование
+                            </p>
+                            <h2
+                                className="mt-2 text-[26px] font-normal leading-tight text-text"
+                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
-                                Часы работы
-                            </button>
+                                Забронируйте удобное место заранее.
+                            </h2>
                         </div>
 
-                        <div
-                            className="relative overflow-hidden rounded-xl p-4  hover:scale-105 duration-300"
-                            style={{
-                                background: `linear-gradient(
-                                135deg,
-                                rgba(255, 106, 0, 0.35) 0%,
-                                rgba(221, 46, 68, 0.25) 100%
-                            )`
-                            }}
+                        <button
+                            type="button"
+                            onClick={() => router.push("/booking")}
+                            className="inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-[6px] bg-primary px-5 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 sm:w-auto"
                         >
-                            <div
-                                className="absolute inset-0 bg-linear-to-r from-primary/20 via-secondary/10 to-accent/20 blur-xl opacity-60 pointer-events-none"/>
-
-                            <div className="relative flex flex-col md:flex-row h-full items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <p
-                                        className={`text-sm md:text-base text-text font-bold whitespace-pre-line transition-all duration-300 ease-in-out ${
-                                            fade
-                                                ? "opacity-100 translate-y-0"
-                                                : "opacity-0 translate-y-2"
-                                        }`}
-                                    >
-                                        {bookingTexts[textIndex]}
-                                    </p>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => router.push("/booking")}
-                                    className="inline-flex hover:scale-105 duration-300 w-full md:w-max px-4 cursor-pointer md:h-12 shrink-0 items-center justify-center rounded-full md:px-7 py-2 font-semibold text-black bg-white"
-                                >
-                                    Забронировать
-                                </button>
-                            </div>
-                        </div>
+                            Забронировать
+                        </button>
                     </div>
                 </div>
             </section>
+
             <RestaurantInfoModal
                 isOpen={isRestaurantInfoOpen}
                 onClose={() => setRestaurantInfoOpen(false)}

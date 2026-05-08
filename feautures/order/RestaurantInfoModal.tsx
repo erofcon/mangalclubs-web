@@ -15,7 +15,7 @@ const RestaurantMap = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-full w-full animate-pulse rounded-2xl bg-muted"/>
+            <div className="h-full w-full animate-pulse bg-background"/>
         ),
     }
 );
@@ -38,7 +38,7 @@ export function RestaurantInfoModal({
             onClose={onClose}
             className="h-155 w-[calc(100vw-32px)] max-w-4xl p-0 sm:h-120"
         >
-            <div className="flex h-full flex-col overflow-hidden bg-background md:rounded-2xl sm:flex-row">
+            <div className="flex h-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
                 <div className="order-2 flex flex-[0_0_45%] flex-col p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8">
                     <div className="space-y-5 text-text">
                         <div>
@@ -50,44 +50,47 @@ export function RestaurantInfoModal({
                                     height={284}
                                     className="h-10 w-auto"
                                 />
-                                <span className="translate-y-1 text-xl font-bold md:text-2xl">
+                                <span
+                                    className="translate-y-1 text-xl font-normal md:text-2xl"
+                                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                                >
                                     {PICKUP_POINT.name}
                                 </span>
                             </div>
 
-                            <p className="mt-4 text-sm">
+                            <p className="mt-4 text-sm text-text/68">
                                 {PICKUP_POINT.city}
                             </p>
                         </div>
 
                         <div className="space-y-4 text-sm md:mt-10 md:space-y-6">
                             <div className="flex items-center gap-4">
-                                <MapPin className="mt-0.5 size-5 shrink-0"/>
+                                <MapPin className="mt-0.5 size-5 shrink-0 text-primary"/>
                                 <div>
-                                    <p className="hidden font-medium md:block">Адрес</p>
-                                    <p>
+                                    <p className="hidden text-text/55 md:block">Адрес</p>
+                                    <p className="font-semibold">
                                         {PICKUP_POINT.address}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <Clock className="mt-0.5 size-5 shrink-0"/>
+                                <Clock className="mt-0.5 size-5 shrink-0 text-primary"/>
                                 <div>
-                                    <p className="hidden font-medium md:block">Время работы</p>
-                                    <p>
+                                    <p className="hidden text-text/55 md:block">Время работы</p>
+                                    <p className="font-semibold">
                                         {PICKUP_POINT.schedule}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <Phone className="mt-0.5 size-5 shrink-0"/>
+                                <Phone className="mt-0.5 size-5 shrink-0 text-primary"/>
                                 <div>
-                                    <p className="hidden font-medium md:block">Телефон</p>
+                                    <p className="hidden text-text/55 md:block">Телефон</p>
                                     <a
                                         href={`tel:${PICKUP_POINT.phone.replace(/\D/g, "")}`}
-                                        className="hover:text-warning underline"
+                                        className="font-semibold underline transition duration-300 hover:text-primary"
                                     >
                                         {PICKUP_POINT.phone}
                                     </a>

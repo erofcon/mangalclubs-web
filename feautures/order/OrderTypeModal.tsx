@@ -22,13 +22,19 @@ export function OrderTypeModal() {
             onClose={closeOrderTypeModal}
             className="sm:max-w-md sm:h-70"
         >
-            <div className="flex h-full w-full flex-col bg-background px-6 py-8 pb-6 sm:rounded-4xl sm:px-10 sm:py-10">
+            <div className="flex h-full w-full flex-col border-border bg-background px-6 py-8 pb-6 sm:rounded-[8px] sm:border sm:px-10 sm:py-10">
                 <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col gap-2 text-center">
-                        <h1 className="text-2xl font-bold text-text">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Заказ
+                        </p>
+                        <h1
+                            className="text-[28px] font-normal leading-tight text-text"
+                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                        >
                             Как хотите получить заказ?
                         </h1>
-                        <p className="text-text-secondary">
+                        <p className="text-sm leading-6 text-text/68">
                             Покажем доступные блюда и актуальные цены
                         </p>
                     </div>
@@ -39,10 +45,10 @@ export function OrderTypeModal() {
                         type="button"
                         onClick={openDeliveryTypeModal}
                         className={`
-                            flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3.5 font-bold transition
+                            flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] border px-5 text-sm font-semibold transition duration-300
                             ${isDeliverySelected
-                            ? "bg-warning text-text-on-primary shadow-lg shadow-warning/20"
-                            : "bg-stroke text-text hover:bg-warning hover:text-text-on-primary"}
+                            ? "border-primary bg-primary text-on-primary"
+                            : "border-border bg-background text-text hover:border-primary hover:text-primary"}
                         `}
                     >
                         <Bike width={24} height={24}/>
@@ -54,10 +60,10 @@ export function OrderTypeModal() {
                         type="button"
                         onClick={openRestaurantTypeModal}
                         className={`
-                            flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3.5 font-bold transition
+                            flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] border px-5 text-sm font-semibold transition duration-300
                             ${isRestaurantSelected
-                            ? "bg-warning text-text-on-primary shadow-lg shadow-warning/20"
-                            : "bg-stroke text-text hover:bg-warning hover:text-text-on-primary"}
+                            ? "border-primary bg-primary text-on-primary"
+                            : "border-border bg-background text-text hover:border-primary hover:text-primary"}
                         `}
                     >
                         <Utensils width={16} height={16}/>

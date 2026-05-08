@@ -120,13 +120,19 @@ export function AuthCodeConfirm() {
             className="sm:max-w-md sm:h-135"
         >
             <div
-                className="flex h-full w-full flex-col bg-background px-6 py-8 pb-7 sm:rounded-4xl sm:px-10 sm:py-10 transition-transform duration-300 ease-in-out">
+                className="flex h-full w-full flex-col border-border bg-background px-6 py-8 pb-7 transition-transform duration-300 ease-in-out sm:rounded-[8px] sm:border sm:px-10 sm:py-10">
                 <div className="flex flex-1 flex-col items-center">
-                    <h1 className="text-center text-[32px] font-extrabold leading-none text-text">
+                    <p className="mb-4 text-center text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                        Подтверждение
+                    </p>
+                    <h1
+                        className="text-center text-[28px] font-normal leading-tight text-text"
+                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                    >
                         Введите код
                     </h1>
 
-                    <p className="mt-6 max-w-75 text-center text-lg font-semibold leading-7 text-text-secondary">
+                    <p className="mt-4 max-w-80 text-center text-sm leading-6 text-text/68">
                         Код уже в пути! Проверьте Telegram или СМС на {pendingPhone}
                     </p>
 
@@ -149,10 +155,10 @@ export function AuthCodeConfirm() {
                                 aria-label={`Цифра кода ${index + 1}`}
                                 placeholder="_"
                                 className={`
-                                    h-15 w-15 cursor-pointer rounded-2xl bg-background
+                                    h-14 w-14 cursor-pointer rounded-[6px] bg-background
                                     text-center text-2xl font-bold text-text outline-none transition
-                                    placeholder:text-text-secondary caret-transparent
-                                    ${activeIndex === index ? "border border-warning ring-2 ring-warning/30" : "border border-border"}
+                                    placeholder:text-text/45 caret-transparent
+                                    ${activeIndex === index ? "border border-primary ring-2 ring-primary/20" : "border border-border"}
                                 `}
                             />
                         ))}
@@ -166,13 +172,13 @@ export function AuthCodeConfirm() {
                             <button
                                 type="button"
                                 onClick={resetTimer}
-                                className="text-xl font-semibold text-text-secondary cursor-pointer underline"
+                                className="cursor-pointer text-sm font-semibold text-primary underline"
                             >
                                 Нажмите для повторной отправки
                             </button>
                         </div>
                     ) : (
-                        <div className="mt-8 text-center text-xl font-semibold text-text-secondary">
+                        <div className="mt-8 text-center text-sm font-semibold text-text/60">
                             Для повторной отправки ожидайте {timeLeft} секунд
                         </div>
                     )}
@@ -182,7 +188,7 @@ export function AuthCodeConfirm() {
                     type="button"
                     onClick={handleConfirm}
                     disabled={!canConfirm}
-                    className="mt-4 h-18.5 w-full cursor-pointer rounded-full bg-warning px-6 text-xl font-extrabold text-text-on-primary transition hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+                    className="mt-4 h-12 w-full cursor-pointer rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
                     Подтвердить
                 </button>

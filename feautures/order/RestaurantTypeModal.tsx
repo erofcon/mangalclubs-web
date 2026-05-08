@@ -27,7 +27,7 @@ export function RestaurantTypeModal() {
             action={(
                 <button
                     onClick={handleSelect}
-                    className="h-12 w-full cursor-pointer rounded-full bg-warning text-base font-semibold text-text-on-primary"
+                    className="h-12 w-full cursor-pointer rounded-[6px] bg-primary text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
                 >
                     Выбрать
                 </button>
