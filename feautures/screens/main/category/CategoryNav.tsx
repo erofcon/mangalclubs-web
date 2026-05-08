@@ -181,8 +181,8 @@ export function CategoriesNav() {
 
     return (
         <>
-            <nav className="sticky top-0 z-30 bg-[#070808]/92 backdrop-blur-md">
-                <div className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 border-t border-[#26211b] px-5 py-3 sm:px-6 lg:px-0">
+            <nav className="sticky top-0 z-30 border-y border-[#1d1914] bg-[#070808]/92 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-md">
+                <div className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 px-5 py-3 sm:px-6 lg:px-0">
                     <ul
                         ref={categoryListRef}
                         className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -202,8 +202,8 @@ export function CategoriesNav() {
                                         onClick={() => scrollToCategory(category.id)}
                                         className={`h-10 rounded-full px-7 text-[14px] transition duration-300 ${
                                             isActive
-                                                ? "border border-[#b68442] text-[#d6ad68]"
-                                                : "border border-[#272421] text-[#bfb6aa] hover:border-[#72542e] hover:text-[#f5efe5]"
+                                                ? "border border-[#b68442] bg-[#d6ad68]/10 text-[#d6ad68] shadow-[0_0_22px_rgba(214,173,104,0.12)]"
+                                                : "border border-[#272421] bg-black/20 text-[#bfb6aa] hover:border-[#72542e] hover:bg-white/[0.03] hover:text-[#f5efe5]"
                                         }`}
                                     >
                                         {category.title}

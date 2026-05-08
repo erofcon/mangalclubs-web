@@ -203,9 +203,10 @@ export default function Stories() {
 
     return (
         <>
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-7 pt-4 text-[#f5efe5] sm:px-6 lg:px-0">
+            <section className="relative mx-auto -mt-10 w-full max-w-[1210px] px-5 pb-8 pt-6 text-[#f5efe5] sm:px-6 lg:px-0">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-linear-to-r from-transparent via-[#5f472b] to-transparent sm:inset-x-6 lg:inset-x-0"/>
                 <h2
-                    className="mb-3 text-[20px] font-normal leading-none"
+                    className="mb-5 text-[20px] font-normal leading-none text-[#fff7ec]"
                     style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                 >
                     Истории из Grill & Mangal
@@ -219,7 +220,7 @@ export default function Stories() {
                             onClick={() => openStory(index)}
                             className="group flex min-w-[94px] flex-col items-center gap-3 text-center"
                         >
-                            <span className="relative h-[92px] w-[92px] overflow-hidden rounded-full border border-[#b68442] bg-[#111314] p-[3px] transition duration-300 group-hover:scale-105 group-hover:border-[#e0b56f]">
+                            <span className="relative h-[92px] w-[92px] overflow-hidden rounded-full border border-[#b68442] bg-[#111314] p-[3px] shadow-[0_18px_40px_rgba(0,0,0,0.42)] transition duration-300 group-hover:scale-105 group-hover:border-[#e0b56f] group-hover:shadow-[0_22px_48px_rgba(214,173,104,0.16)]">
                                 <span className="relative block h-full w-full overflow-hidden rounded-full bg-black">
                                     <Image
                                         src={story.previewImage}
