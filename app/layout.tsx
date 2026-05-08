@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ru">
-        <body className={`${myFont.className} min-h-dvh overflow-x-hidden bg-[#070808]`}>
+        <body className={`${myFont.className} min-h-dvh overflow-x-hidden bg-background`}>
         {children}
         <Footer/>
         </body>

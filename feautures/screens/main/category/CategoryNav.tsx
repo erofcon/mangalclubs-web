@@ -232,14 +232,16 @@ export function CategoriesNav() {
     return (
         <>
             <nav
-                className="sticky top-0 z-30 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-md mx-auto w-full max-w-[1210px]"
+                className="sticky top-0 z-30 shadow-[0_18px_45px_rgba(0,0,0,0.34)]
+                backdrop-blur-md mx-auto w-full max-w-302.5 border-b border-border/50"
             >
                 <div
-                    className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 px-5 py-3 sm:px-6 lg:px-0">
+                    className="mx-auto flex w-full max-w-302.5 items-center
+                    justify-between gap-4 px-5 py- sm:px-6 lg:px-0">
                     <ul
                         ref={categoryListRef}
                         className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap
-                        scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-4"
+                        scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2"
                     >
                         {categories.map((category) => {
                             const isActive = activeId === category.id;
@@ -299,7 +301,7 @@ export function CategoriesNav() {
                 return (
                     <div
                         key={item.id}
-                        className="pointer-events-none fixed z-9999 h-28 w-28 rounded-[8px] bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
+                        className="pointer-events-none fixed z-9999 h-28 w-28 rounded-lg bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
                         onAnimationEnd={() => {
                             setFlyingItems((prev) => prev.filter((flyingItem) => flyingItem.id !== item.id));
                             item.onComplete?.();
@@ -320,7 +322,7 @@ export function CategoriesNav() {
                             />
                         ) : (
                             <div
-                                className="flex h-full w-full items-center justify-center rounded-[8px] bg-[#d6ad68] text-sm font-bold text-[#17110b]">
+                                className="flex h-full w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-[#17110b]">
                                 {item.name}
                             </div>
                         )}

@@ -17,6 +17,7 @@
     /*--color-stroke: rgba(255, 255, 255, 0.06);*/
     /*Text colors*/
     --color-text: #d8d0c5;
+    --color-text-secondary: #8f867b;
     --color-hover: #c99a55;
     --color-on-primary: #18130c;
 
@@ -32,7 +33,6 @@
     /*--color-success: #33AC71;*/
     /*--color-warning: #FCC21B;*/
     /*--color-info: #BAE2FD;*/
-
     /*!*Additional useful colors*!*/
     /*--color-white: #FFFFFF;*/
     /*--color-black: #000000;*/

@@ -26,11 +26,11 @@ export function HeroSection() {
             <div
                 className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_76%_36%,rgba(214,173,104,0.22),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent_45%,#050505_100%)]"/>
 
-            <div className="mx-auto flex min-h-[620px] w-full items-center px-5 py-14 sm:px-6 md:min-h-[580px] lg:px-0">
-                <div className="max-w-[590px]">
+            <div className="mx-auto flex min-h-155 w-full items-center px-5 py-14 sm:px-6 md:min-h-145 lg:px-0">
+                <div className="max-w-147.5">
 
                     <h1
-                        className="max-w-[560px] text-[46px] font-normal leading-[0.96] tracking-[-0.035em] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[78px]"
+                        className="max-w-140 text-[46px] font-normal leading-[0.96] tracking-[-0.035em] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[78px]"
                         style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Искусство живого огня.

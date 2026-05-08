@@ -1,208 +1,134 @@
 "use client";
 
-import {useState} from "react";
+import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {ArrowLeftIcon, ChevronDown, MapPin, Truck, BadgeDollarSign} from "lucide-react";
+import {useState} from "react";
+import {ArrowLeft, ChevronRight, MapPin} from "lucide-react";
 import {deliveryPickupPoints, deliveryZones} from "@/mocks/mocks-data";
 import {RestaurantInfoModal} from "@/feautures/order/RestaurantInfoModal";
 
 const formatPrice = (price: number | null) => (
-    price ? `${price.toLocaleString("ru-RU")} ₽` : "нет"
+    price ? `${price.toLocaleString("ru-RU")} ₽` : "без минимума"
 );
 
-const minDeliveryPrice = Math.min(...deliveryZones.map((zone) => zone.price));
+const firstDeliveryZone = deliveryZones[0];
 const lastDeliveryZone = deliveryZones[deliveryZones.length - 1];
-const maxDeliveryDistance = lastDeliveryZone ? `0-${lastDeliveryZone.id.split("-")[1]} км` : "";
+const minDeliveryPrice = Math.min(...deliveryZones.map((zone) => zone.price));
+const maxDeliveryDistance = lastDeliveryZone ? `до ${lastDeliveryZone.id.split("-")[1]} км` : "";
+const pickupFallback = {
+    city: "г. Грозный",
+    address: "ул. Светлая улица, 105А",
+};
+
+const getDeliveryTime = (zoneId: string) => {
+    const [, distanceTo] = zoneId.split("-").map(Number);
+
+    if (!distanceTo || distanceTo <= 3) {
+        return "от 45 минут";
+    }
+
+    return `от ${45 + (distanceTo - 3) * 5} минут`;
+};
 
 export function DeliveryScreen() {
     const router = useRouter();
-    const [openedZoneId, setOpenedZoneId] = useState(deliveryZones[0]?.id ?? "");
     const [isRestaurantInfoOpen, setRestaurantInfoOpen] = useState(false);
 
     return (
         <>
-        <main className="min-h-screen w-full overflow-x-hidden px-4 pt-2 text-text md:px-7 md:pt-4">
-            <div className="mx-auto w-full max-w-270">
-                <div className="mb-12.5 flex items-center justify-between gap-6 lg:mb-16">
-                    <div className="text-[30px] font-medium lg:text-[40px]">
-                        Условия доставки
-                    </div>
-
-                    <button
-                        onClick={() => router.back()}
-                        className="inline-flex items-center group cursor-pointer"
-                    >
-                                    <span
-                                        className="mr-2 flex h-10 w-10
-                                        items-center justify-center rounded-full bg-card
-                                        transition-transform duration-300
-                                        group-hover:-translate-x-2
-                                        "
+            <main className="min-h-screen overflow-hidden bg-background text-text">
+                <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
+                    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_330px]">
+                        <div className="min-w-0">
+                            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                                <div>
+                                    <h2
+                                        className="mt-2 text-[28px] font-normal leading-tight text-[#f5efe5] sm:text-[34px]"
+                                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                                     >
-                                        <ArrowLeftIcon/>
-                                    </span>
-                        <span className="group-hover:scale-115 duration-300">Назад</span>
-                    </button>
-                </div>
+                                        Условия доставки
+                                    </h2>
+                                </div>
+                            </div>
 
-                <section className="mb-6 grid gap-3 sm:grid-cols-3 sm:gap-4">
-                    <div className="rounded-xl border border-border bg-card p-4">
-                        <div
-                            className="mb-4 flex h-12 w-12 items-center
-                            justify-center rounded-full
-                            bg-background
-                            ">
-                            <Truck size={28} strokeWidth={2.6}/>
-                        </div>
-                        <p className="text-sm font-semibold text-text-secondary">Зоны доставки</p>
-                        <p className="mt-1 text-lg font-bold tracking-[0.18rem]">{maxDeliveryDistance}</p>
-                    </div>
+                            <div className="overflow-hidden rounded-[10px] border border-border/70">
+                                <div
+                                    className="hidden grid-cols-[1.1fr_1fr_1fr_1fr] border-b border-border/60 bg-black/25 px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#8f867b] md:grid">
+                                    <span>Расстояние</span>
+                                    <span>Минимум</span>
+                                    <span>Доставка</span>
+                                    <span>Время</span>
+                                </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4">
-                        <div
-                            className="mb-4 flex h-12 w-12 items-center
-                            justify-center rounded-full
-                            bg-background
-                            ">
-                            <BadgeDollarSign size={28} strokeWidth={2.6}/>
-                        </div>
-                        <p className="text-sm font-semibold text-text-secondary">Стоимость</p>
-                        <p className="mt-1 text-lg font-bold tracking-[0.18rem]">от {formatPrice(minDeliveryPrice)}</p>
-                    </div>
-
-                    <div className="rounded-xl border border-border bg-card p-4">
-                        <div
-                            className="mb-4 flex h-12 w-12 items-center
-                            justify-center rounded-full
-                            bg-background
-                            ">
-                            <Truck size={28} strokeWidth={2.6}/>
-                        </div>
-                        <p className="text-sm font-semibold text-text-secondary">Время доставки</p>
-                        <p className="mt-1 text-lg font-bold tracking-[0.18rem]">от 45 минут</p>
-                    </div>
-                </section>
-
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                    <section className="min-w-0">
-                        <h2 className="text-[20px] font-medium lg:text-[28px] my-4 mb-8">
-                            Детали доставки по зонам
-                        </h2>
-
-                        <div className="space-y-3">
-                            {deliveryZones.map((zone) => {
-                                const isOpen = openedZoneId === zone.id;
-
-                                return (
-                                    <article
+                                {deliveryZones.map((zone) => (
+                                    <div
                                         key={zone.id}
-                                        className="overflow-hidden rounded-xl border border-border bg-card hover:scale-105
-                                        duration-200
-                                        "
+                                        className="grid gap-4 border-b border-border/45 px-5 py-4 last:border-b-0 md:grid-cols-[1.1fr_1fr_1fr_1fr] md:items-center"
                                     >
-                                        <button
-                                            type="button"
-                                            onClick={() => setOpenedZoneId(isOpen ? "" : zone.id)}
-                                            aria-expanded={isOpen}
-                                            className="flex min-h-18 w-full cursor-pointer
-                                            items-center justify-between gap-3 px-4 py-3 text-left
-                                            duration-300 hover:bg-surface sm:px-5
-                                            "
-                                        >
-                                            <span className="flex min-w-0 items-center gap-3">
-                                                <span
-                                                    className="flex h-10 w-10 shrink-0
-                                                    items-center justify-center rounded-full bg-background text-text-secondary
-                                                    ">
-                                                    <MapPin size={22} strokeWidth={2.8}/>
-                                                </span>
-                                                <span className="min-w-0">
-                                                    <span
-                                                        className="block wrap-break-word text-base font-semibold tracking-wider">
-                                                        {zone.title}
-                                                    </span>
-                                                    <span
-                                                        className="mt-0.5 block text-sm font-semibold text-text-secondary">
-                                                        Доставка {formatPrice(zone.price)}
-                                                    </span>
-                                                </span>
-                                            </span>
-
-                                            <span className="flex shrink-0 items-center gap-3">
-                                                <span
-                                                    className="hidden rounded-full bg-background
-                                                     px-4 py-2 text-sm font-extrabold
-                                                     sm:inline-flex">
-                                                    {formatPrice(zone.price)}
-                                                </span>
-                                                <ChevronDown
-                                                    size={22}
-                                                    strokeWidth={3}
-                                                    className={`duration-300 ${isOpen ? "rotate-180 " : ""}`}
-                                                />
-                                            </span>
-                                        </button>
-
-                                        {isOpen && (
-                                            <div
-                                                className="grid gap-3 border-t border-border bg-background/40 p-4 sm:grid-cols-2">
-                                                <DeliveryDetail
-                                                    label="Минимальная сумма заказа"
-                                                    value={formatPrice(zone.minOrder)}
-                                                />
-                                                <DeliveryDetail
-                                                    label="Стоимость доставки"
-                                                    value={formatPrice(zone.price)}
-                                                />
-                                                <DeliveryDetail
-                                                    label="Бесплатная доставка"
-                                                    value={formatPrice(zone.freeDeliveryFrom)}
-                                                />
-                                                <DeliveryDetail
-                                                    label="Время доставки"
-                                                    value={zone.deliveryTime}
-                                                />
-                                            </div>
-                                        )}
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    </section>
-
-                    <aside className="min-w-0 lg:mt-22">
-                        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 lg:sticky lg:top-4">
-                            <h2 className="text-lg font-semibold tracking-wider">
-                                Самовывоз
-                            </h2>
-
-                            <div className="mt-5 space-y-3">
-                                {deliveryPickupPoints.map((point) => (
-                                    <button
-                                        type="button"
-                                        key={point.id}
-                                        onClick={() => setRestaurantInfoOpen(true)}
-                                        className="flex w-full min-w-0 gap-3 rounded-xl items-center bg-background p-4 text-left
-                                        hover:scale-105 duration-200 cursor-pointer
-                                        "
-                                    >
-                                        <MapPin className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2.8}/>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-text-secondary">
-                                                {point.city}
+                                        <div>
+                                            <p className="text-[16px] font-semibold text-[#f5efe5]">
+                                                {zone.id} км
                                             </p>
-                                            <p className="mt-1 wrap-break-word text-base tracking-wider">
-                                                {point.address}
+                                            <p className="mt-1 text-[13px] text-[#8f867b] md:hidden">
+                                                Расстояние
                                             </p>
                                         </div>
-                                    </button>
+
+                                        <DeliveryValue label="Минимум" value={formatPrice(zone.minOrder)}/>
+                                        <DeliveryValue label="Доставка" value={formatPrice(zone.price)}/>
+                                        <DeliveryValue label="Время" value={getDeliveryTime(zone.id)}/>
+                                    </div>
                                 ))}
                             </div>
                         </div>
-                    </aside>
-                </div>
-            </div>
-        </main>
+
+                        <aside className="min-w-0 mt-0 md:mt-18">
+                            <div className="border-t border-border/70 pt-6 lg:sticky lg:top-6">
+                                <p className="text-[10px] md:text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                                    Самовывоз
+                                </p>
+                                <h2
+                                    className="mt-2 text-[20px] md:text-[28px] font-normal leading-tight text-[#f5efe5]"
+                                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                                >
+                                    Забрать в ресторане
+                                </h2>
+                                <p className="mt-2 md:mt-4 text-[14px] leading-6 text-[#b8afa5]">
+                                    Заказ можно забрать самостоятельно.
+                                </p>
+
+                                <div className="mt-7 space-y-3">
+                                    {deliveryPickupPoints.map((point) => (
+                                        <button
+                                            type="button"
+                                            key={point.id}
+                                            onClick={() => setRestaurantInfoOpen(true)}
+                                            className="group flex w-full min-w-0 cursor-pointer items-center justify-between gap-4 border-b border-border/55 pb-4 text-left transition duration-300 hover:border-primary/70"
+                                        >
+                                            <span className="flex min-w-0 gap-3">
+                                                <span className="min-w-0">
+                                                    <span className="block text-[13px] text-text-secondary">
+                                                        {pickupFallback.city}
+                                                    </span>
+                                                    <span
+                                                        className="mt-1 block wrap-break-word text-[15px] leading-6 text-[#f5efe5]">
+                                                        {point.address || pickupFallback.address}
+                                                    </span>
+                                                </span>
+                                            </span>
+
+                                            <ChevronRight
+                                                className="h-5 w-5 shrink-0 text-primary transition duration-300 group-hover:translate-x-1"
+                                                strokeWidth={1.8}/>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+            </main>
+
             <RestaurantInfoModal
                 isOpen={isRestaurantInfoOpen}
                 onClose={() => setRestaurantInfoOpen(false)}
@@ -211,18 +137,37 @@ export function DeliveryScreen() {
     );
 }
 
-type DeliveryDetailProps = {
+type HeroMetricProps = {
     label: string;
     value: string;
 };
 
-function DeliveryDetail({label, value}: DeliveryDetailProps) {
+function HeroMetric({label, value}: HeroMetricProps) {
     return (
-        <div className="rounded-xl bg-card p-4">
-            <p className="text-xs font-semibold text-text-secondary">
+        <div
+            className="border-b border-white/[0.08] px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
+            <div className="text-[16px] font-semibold leading-none text-[#f5efe5] sm:text-[19px]">
+                {value}
+            </div>
+            <div className="mt-2 text-[12px] leading-none text-text/60">
+                {label}
+            </div>
+        </div>
+    );
+}
+
+type DeliveryValueProps = {
+    label: string;
+    value: string;
+};
+
+function DeliveryValue({label, value}: DeliveryValueProps) {
+    return (
+        <div>
+            <p className="text-[13px] text-[#8f867b] md:hidden">
                 {label}
             </p>
-            <p className="mt-2 text-base font-semibold text-text">
+            <p className="mt-1 text-[15px] font-semibold text-text md:mt-0">
                 {value}
             </p>
         </div>
