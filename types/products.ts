@@ -12,6 +12,7 @@ export interface MenuItem {
     price: number;
     image?: string;
     isHit: boolean;
+    weight?: string;
     calories?: string | number;
     fats?: string | number;
     proteins?: string | number;

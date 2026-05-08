@@ -11,8 +11,8 @@ const myFont = Open_Sans({
 });
 
 export const metadata: Metadata = {
-    title: "Мангалы Клабс",
-    description: "Сеть премиальных мясных ресторанов",
+    title: "Grill & Mangal",
+    description: "Гриль-ресторан с доставкой и бронированием в Грозном",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ru">
-        <body className={`${myFont.className} bg-background min-h-dvh`}>
+        <body className={`${myFont.className} min-h-dvh overflow-x-hidden bg-[#070808]`}>
         {children}
         <Footer/>
         </body>

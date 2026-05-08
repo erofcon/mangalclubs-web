@@ -8,8 +8,8 @@ import {
     useRef,
     useState,
 } from "react";
+import {ChevronLeft, ChevronRight, X} from "lucide-react";
 import {StoriesData} from "@/mocks/mocks-data";
-import {ChevronLeft, ChevronRight} from "lucide-react";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 
 const DEFAULT_IMAGE_DURATION = 5000;
@@ -48,7 +48,6 @@ export default function Stories() {
         activeStoryIndex !== null ? StoriesData[activeStoryIndex] : null;
 
     const activeSlide = activeStory?.slides[activeSlideIndex] ?? null;
-
     const isViewerOpen = Boolean(activeStory && activeSlide);
 
     useBodyScrollLock(isViewerOpen);
@@ -67,7 +66,6 @@ export default function Stories() {
 
     const close = useCallback(() => {
         videoRef.current?.pause();
-
         setActiveStoryIndex(null);
         setActiveSlideIndex(0);
         setProgress(0);
@@ -203,54 +201,56 @@ export default function Stories() {
         video.load();
     }, [activeSlide, activeMediaType]);
 
-
     return (
         <>
-            <div
-                className="flex gap-3 mb-8 mx-auto
-                w-full max-w-374 px-4 md:px-7 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {StoriesData.map((story, index) => (
-                    <button
-                        key={story.id}
-                        type="button"
-                        onClick={() => openStory(index)}
-                        className="relative aspect-4/5 min-w-37.5 cursor-pointer overflow-hidden rounded-[18px] border-0 bg-neutral-200 p-0 text-left transition-transform active:scale-95 md:min-w-45"
-                    >
-                        <Image
-                            src={story.previewImage}
-                            alt={story.title ?? "Story preview"}
-                            fill
-                            sizes="(max-width: 768px) 150px, 180px"
-                            className="object-cover"
-                            priority={index < 3}
-                        />
+            <section className="mx-auto w-full max-w-[1210px] px-5 pb-7 pt-4 text-[#f5efe5] sm:px-6 lg:px-0">
+                <h2
+                    className="mb-3 text-[20px] font-normal leading-none"
+                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                >
+                    Истории из Grill & Mangal
+                </h2>
 
-                        <div
-                            className="absolute inset-0 bg-linear-to-t from-black/45 via-transparent to-transparent"/>
-
-                        {story.title && (
-                            <span
-                                className="absolute bottom-4.5 left-4.5 max-w-35 text-xl font-extrabold leading-none text-white lowercase md:text-2xl">
-                                    {story.title}
+                <div className="flex items-start justify-between gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {StoriesData.map((story, index) => (
+                        <button
+                            key={story.id}
+                            type="button"
+                            onClick={() => openStory(index)}
+                            className="group flex min-w-[94px] flex-col items-center gap-3 text-center"
+                        >
+                            <span className="relative h-[92px] w-[92px] overflow-hidden rounded-full border border-[#b68442] bg-[#111314] p-[3px] transition duration-300 group-hover:scale-105 group-hover:border-[#e0b56f]">
+                                <span className="relative block h-full w-full overflow-hidden rounded-full bg-black">
+                                    <Image
+                                        src={story.previewImage}
+                                        alt={story.title ?? "История"}
+                                        fill
+                                        sizes="92px"
+                                        className="object-cover"
+                                        priority={index < 4}
+                                    />
                                 </span>
-                        )}
-                    </button>
-                ))}
-            </div>
+                            </span>
+                            <span className="text-[13px] leading-none text-[#c8c0b5]">
+                                {story.title}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </section>
 
             {activeStory && activeSlide && (
                 <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black">
                     <button
                         type="button"
                         onClick={prev}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
-                        aria-label="Previous story"
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-white/70 transition hover:text-white md:block"
+                        aria-label="Предыдущая история"
                     >
-                        ‹
+                        <ChevronLeft className="h-10 w-10"/>
                     </button>
 
-                    <div
-                        className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
+                    <div className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
                         <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
                             {activeStory.slides.map((_, index) => (
                                 <div
@@ -275,10 +275,10 @@ export default function Stories() {
                         <button
                             type="button"
                             onClick={close}
-                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-3xl leading-none text-white"
-                            aria-label="Close story"
+                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-white"
+                            aria-label="Закрыть историю"
                         >
-                            ×
+                            <X className="h-5 w-5"/>
                         </button>
 
                         {activeMediaType === "video" ? (
@@ -307,9 +307,7 @@ export default function Stories() {
                                         setHasMediaError(true);
                                     }
                                 }}
-                                onWaiting={() => {
-                                    setIsMediaLoading(true);
-                                }}
+                                onWaiting={() => setIsMediaLoading(true)}
                                 onPlaying={() => {
                                     setIsMediaLoading(false);
                                     setHasMediaError(false);
@@ -333,7 +331,7 @@ export default function Stories() {
                             <Image
                                 key={activeSlide.src}
                                 src={activeSlide.src}
-                                alt={activeStory.title ?? "Story image"}
+                                alt={activeStory.title ?? "История"}
                                 fill
                                 sizes="100vw"
                                 className="object-cover"
@@ -351,60 +349,53 @@ export default function Stories() {
                         )}
 
                         {(isMediaLoading || hasMediaError) && (
-                            <div
-                                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
+                            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
                                 {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
                             </div>
                         )}
 
-                        <div
-                            className="pointer-events-none absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
+                        <div className="absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
                             <button
                                 type="button"
                                 onClick={prev}
-                                aria-label="Previous slide"
-                                className={'rounded-full p-2 bg-black/55'}
+                                aria-label="Предыдущий слайд"
+                                className="rounded-full bg-black/55 p-2 text-white"
                             >
-                                <ChevronLeft
-                                    className={'h-5 w-5 text-text '}
-                                />
+                                <ChevronLeft className="h-5 w-5"/>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={next}
-                                aria-label="Previous slide"
-                                className={'rounded-full p-2 bg-black/55'}
+                                aria-label="Следующий слайд"
+                                className="rounded-full bg-black/55 p-2 text-white"
                             >
-                                <ChevronRight
-                                    className={'h-5 w-5 text-text '}
-                                />
+                                <ChevronRight className="h-5 w-5"/>
                             </button>
-
                         </div>
 
                         <button
                             type="button"
                             onClick={prev}
                             className="absolute bottom-0 left-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                            aria-label="Previous slide"
+                            aria-label="Предыдущий слайд"
                         />
 
                         <button
                             type="button"
                             onClick={next}
                             className="absolute bottom-0 right-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                            aria-label="Next slide"
+                            aria-label="Следующий слайд"
                         />
                     </div>
 
                     <button
                         type="button"
                         onClick={next}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-6xl text-white/70 hover:text-white md:block"
-                        aria-label="Next story"
+                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-white/70 transition hover:text-white md:block"
+                        aria-label="Следующая история"
                     >
-                        ›
+                        <ChevronRight className="h-10 w-10"/>
                     </button>
                 </div>
             )}

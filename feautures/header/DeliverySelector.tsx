@@ -1,6 +1,6 @@
 "use client";
 
-import {MapPin, Pencil} from "lucide-react";
+import {ChevronDown, MapPin} from "lucide-react";
 import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
 
@@ -10,38 +10,24 @@ export function DeliverySelector() {
     const delivery = useOrderStore((state) => state.delivery);
     const restaurant = useOrderStore((state) => state.restaurant);
 
-    const hasDelivery = orderType === "delivery" && Boolean(delivery);
-    const hasRestaurant = orderType === "restaurant" && Boolean(restaurant);
-    const hasSelectedOrderType = hasDelivery || hasRestaurant;
-    const title = hasRestaurant ? "В ресторане" : "Доставка";
-    const address =
-        hasRestaurant && restaurant
-            ? `${restaurant.city}, ${restaurant.address}`
-            : hasDelivery && delivery
-                ? delivery.address
-                : "Выберите адрес и способ получения";
+    const label =
+        orderType === "delivery" && delivery
+            ? delivery.address
+            : orderType === "restaurant" && restaurant
+                ? `${restaurant.city}, ${restaurant.address}`
+                : "г. Грозный";
 
     return (
         <button
             type="button"
             onClick={openOrderTypeModal}
-            className="group px-4 pt-4 text-start font-bold leading-tight text-text duration-300 hover:scale-105 hover:text-warning md:px-0 md:pt-0 cursor-pointer"
+            className="group inline-flex h-10 min-w-[160px] max-w-[230px] items-center justify-between gap-3 rounded-[7px] border border-[#3f3020] bg-[#0b0c0d]/70 px-4 text-[13px] text-[#cfc6ba] transition duration-300 hover:border-[#c99a55] hover:text-[#f5efe5]"
         >
-            <span className="flex items-center gap-2">
-                <span className="text-base md:text-lg">
-                    {hasSelectedOrderType ? title : "Доставка или в ресторане"}
-                </span>
-                <Pencil className="h-4 w-4 shrink-0 duration-300 group-hover:scale-110"/>
+            <span className="inline-flex min-w-0 items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-[#c99a55]"/>
+                <span className="truncate">{label}</span>
             </span>
-
-            <span className="mt-1 flex max-w-72 items-center gap-1.5 text-sm font-semibold text-text-secondary duration-300 group-hover:text-warning/80">
-                {hasSelectedOrderType && (
-                    <MapPin className="h-3.5 w-3.5 shrink-0"/>
-                )}
-                <span className="truncate">
-                    {address}
-                </span>
-            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-[#c99a55] transition duration-300 group-hover:translate-y-0.5"/>
         </button>
     );
 }

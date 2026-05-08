@@ -6,9 +6,8 @@ import {Booking} from "@/types/booking";
 export const categories: Category[] = [
     {
         id: "99",
-        title: "Стейки из Мраморной Говядины",
+        title: "Стейки из мраморной говядины",
         icon: "steak",
-
     },
     {
         id: "98",
@@ -31,8 +30,9 @@ export const menus: MenuCategory[] = [
             {
                 id: "1",
                 name: "Томагавк",
-                description: "Премиальный мраморный стейк на кости, напоминающий топор индейцев",
-                price: 1490,
+                description: "Премиальный стейк из мраморной говядины",
+                weight: "600 г",
+                price: 4490,
                 image: "/menu/no-background/Мраморный стейк томагавк.png",
                 isHit: true,
                 calories: 1200,
@@ -43,8 +43,9 @@ export const menus: MenuCategory[] = [
             {
                 id: "2",
                 name: "Рибай",
-                description: "Премиальный мраморный стейк, маринованный способом сухого вызревания",
-                price: 2490,
+                description: "Сочный стейк зернового откорма",
+                weight: "400 г",
+                price: 2990,
                 image: "/menu/no-background/Мраморный стейк Рибай.png",
                 isHit: false,
             },
@@ -57,50 +58,38 @@ export const menus: MenuCategory[] = [
         items: [
             {
                 id: "3",
-                name: "Антрекоты",
-                description: "Нежные антрекоты прямо с огня",
-                price: 2490,
-                image: "/menu/no-background/Антрекоты.png",
+                name: "Люля-кебаб из говядины",
+                description: "Нежный люля-кебаб с луком и специями",
+                weight: "230 г",
+                price: 590,
+                image: "/menu/no-background/Шашлык из говядины.png",
                 isHit: false,
             },
             {
                 id: "4",
-                name: "Мангал Бургер",
-                description: "Сочная котлета на мангале, фирменный лаваш, начинка из грибного соуса",
-                price: 2490,
-                image: "/menu/no-background/Мангал бургер.png",
+                name: "Шашлык куриный",
+                description: "Куриный шашлык с дымным ароматом",
+                weight: "300 г",
+                price: 550,
+                image: "/menu/no-background/Куриные крылышки.png",
                 isHit: false,
             },
             {
                 id: "5",
-                name: "Шашлык из говядины",
-                description: "Шампур изумительной говядины",
-                price: 2490,
+                name: "Люля-кебаб из баранины",
+                description: "Сочный люля-кебаб из баранины",
+                weight: "230 г",
+                price: 650,
                 image: "/menu/no-background/Шашлык из говядины.png",
                 isHit: true,
             },
             {
                 id: "6",
-                name: "Домашние колбаски чили из говядины",
-                description: "Сочные фермерские говяжьи колбаски местного производства",
-                price: 2490,
-                image: "/menu/no-background/Домашние колбаски чили.png",
-                isHit: false,
-            },
-            {
-                id: "7",
-                name: "Дорадо",
-                description: "Нежная рыба с хрустящей корочкой, подается с запеченными овощами",
-                price: 2490,
-                image: "/menu/no-background/Дорадо на мангале.png",
-                isHit: true,
-            },
-            {
-                id: "8",
-                name: "Крылышки",
-                description: "Крылышки куриные обжаренные на мангале до золотистой корочки",
-                price: 2490,
-                image: "/menu/no-background/Куриные крылышки.png",
+                name: "Стейк из говядины",
+                description: "Стейк с овощами на гриле",
+                weight: "320 г",
+                price: 890,
+                image: "/menu/no-background/Антрекоты.png",
                 isHit: false,
             },
         ],
@@ -111,134 +100,114 @@ export const menus: MenuCategory[] = [
         icon: "grill",
         items: [
             {
-                id: "9",
-                name: "Антрекоты",
-                description: "Нежные антрекоты прямо с огня",
-                price: 2490,
-                image: "/menu/no-background/Антрекоты.png",
-                isHit: false,
-            },
-            {
-                id: "10",
-                name: "Мангал Бургер",
-                description: "Сочная котлета на мангале, фирменный лаваш, начинка из грибного соуса",
-                price: 2490,
-                image: "/menu/no-background/Мангал бургер.png",
-                isHit: false,
-            },
-            {
-                id: "11",
-                name: "Шашлык из говядины",
-                description: "Шампур изумительной говядины",
-                price: 2490,
-                image: "/menu/no-background/Шашлык из говядины.png",
-                isHit: true,
-            },
-            {
-                id: "12",
-                name: "Домашние колбаски чили из говядины",
-                description: "Сочные фермерские говяжьи колбаски местного производства",
-                price: 2490,
+                id: "7",
+                name: "Домашние колбаски чили",
+                description: "Говяжьи колбаски с легкой остротой",
+                weight: "260 г",
+                price: 690,
                 image: "/menu/no-background/Домашние колбаски чили.png",
                 isHit: false,
             },
             {
-                id: "13",
-                name: "Дорадо",
-                description: "Нежная рыба с хрустящей корочкой, подается с запеченными овощами",
-                price: 2490,
+                id: "8",
+                name: "Дорадо на мангале",
+                description: "Дорадо с хрустящей корочкой",
+                weight: "1 шт",
+                price: 990,
                 image: "/menu/no-background/Дорадо на мангале.png",
                 isHit: true,
             },
             {
-                id: "14",
-                name: "Крылышки",
-                description: "Крылышки куриные обжаренные на мангале до золотистой корочки",
-                price: 2490,
-                image: "/menu/no-background/Куриные крылышки.png",
+                id: "9",
+                name: "Мангал бургер",
+                description: "Фирменный бургер с котлетой на огне",
+                weight: "350 г",
+                price: 790,
+                image: "/menu/no-background/Мангал бургер.png",
                 isHit: false,
             },
-        ],
-    }
-]
-
-
-export const StoriesData: Story[] = [
-    {
-        id: "1",
-        title: "",
-        previewImage: "/stories/delivery.png",
-        slides: [
             {
-                id: "qww",
-                src: "/stories/delivery.png",
-                type: "image",
-            },
-            {
-                id: "12sas",
-                src: "/stories/delivery_2.png",
-                type: "image",
-            },
-            {
-                id: "4dsdd",
-                src: "/stories/rest_clip.mp4",
-                type: "video",
-                poster: "/stories/delivery.png"
-            },
-        ],
-    },
-    {
-        id: 2,
-        title: "",
-        previewImage: "/stories/barbecue.png",
-        slides: [
-            {
-                id: "4ds2dd",
-                src: "/stories/barbecue_clip.mp4",
-                type: "video",
-                poster: "/stories/delivery.png"
-            },
-            {
-                id: "3dsfsd",
-                src: "/stories/barbecue.png",
-                type: "image"
-            },
-            {
-                id: "2sas",
-                src: "/stories/barbecue2.png",
-                type: "image",
-            },
-        ],
-    },
-    {
-        id: 3,
-        title: "",
-        previewImage: "/stories/rest.png",
-        slides: [
-            {
-                id: "sxdfcwe",
-                src: "/stories/rest.png",
-                type: "image",
-            },
-            {
-                id: "sxdfcwe",
-                src: "/stories/rest2.png",
-                type: "image",
-            },
-            {
-                id: "dsfsd",
-                src: "/stories/rest3.png",
-                type: "image"
-            },
-            {
-                id: "33adasd",
-                src: "/stories/rest4.png",
-                type: "image"
+                id: "10",
+                name: "Куриные крылышки",
+                description: "Крылышки на мангале",
+                weight: "300 г",
+                price: 620,
+                image: "/menu/no-background/Куриные крылышки.png",
+                isHit: false,
             },
         ],
     },
 ];
 
+export const StoriesData: Story[] = [
+    {
+        id: "delivery",
+        title: "Доставка",
+        previewImage: "/stories/delivery.png",
+        slides: [
+            {id: "delivery-1", src: "/stories/delivery.png", type: "image"},
+            {id: "delivery-2", src: "/stories/delivery_2.png", type: "image"},
+            {id: "delivery-3", src: "/stories/rest_clip.mp4", type: "video", poster: "/stories/delivery.png"},
+        ],
+    },
+    {
+        id: "grill",
+        title: "Наш гриль",
+        previewImage: "/stories/barbecue.png",
+        slides: [
+            {id: "grill-1", src: "/stories/barbecue_clip.mp4", type: "video", poster: "/stories/barbecue.png"},
+            {id: "grill-2", src: "/stories/barbecue.png", type: "image"},
+            {id: "grill-3", src: "/stories/barbecue2.png", type: "image"},
+        ],
+    },
+    {
+        id: "menu",
+        title: "Меню",
+        previewImage: "/menu/no-background/Мраморный стейк томагавк.png",
+        slides: [
+            {id: "menu-1", src: "/menu/no-background/Мраморный стейк томагавк.png", type: "image"},
+            {id: "menu-2", src: "/menu/no-background/Мраморный стейк Рибай.png", type: "image"},
+        ],
+    },
+    {
+        id: "guests",
+        title: "Гости",
+        previewImage: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
+        slides: [
+            {id: "guests-1", src: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg", type: "image"},
+            {id: "guests-2", src: "/booking/610002010_18097554682907715_6683000151825881101_n..jpg", type: "image"},
+        ],
+    },
+    {
+        id: "interior",
+        title: "Интерьер",
+        previewImage: "/stories/rest.png",
+        slides: [
+            {id: "interior-1", src: "/stories/rest.png", type: "image"},
+            {id: "interior-2", src: "/stories/rest2.png", type: "image"},
+            {id: "interior-3", src: "/stories/rest3.png", type: "image"},
+            {id: "interior-4", src: "/stories/rest4.png", type: "image"},
+        ],
+    },
+    {
+        id: "events",
+        title: "Мероприятия",
+        previewImage: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg",
+        slides: [
+            {id: "events-1", src: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg", type: "image"},
+            {id: "events-2", src: "/booking/610683031_18097554145907715_1235544446749212874_n..jpg", type: "image"},
+        ],
+    },
+    {
+        id: "new",
+        title: "Новинки",
+        previewImage: "/menu/no-background/Мраморный стейк Рибай.png",
+        slides: [
+            {id: "new-1", src: "/menu/no-background/Мраморный стейк Рибай.png", type: "image"},
+            {id: "new-2", src: "/hero/hero.png", type: "image"},
+        ],
+    },
+];
 
 export const PICKUP_POINT: Organization = {
     name: "Mangal Club",
@@ -246,12 +215,7 @@ export const PICKUP_POINT: Organization = {
     address: "ул. Светлая улица, 105А",
     schedule: "Ежедневно с 10:30 до 01:30",
     phone: "+7 (928) 340-50-50",
-    intro: "Команда Mangal Clubs переосмысливает " +
-        "приватность и комфорт, вдохновляясь духом города и его настроением. " +
-        "Здесь современное гостеприимство встречается с камерной атмосферой, знакомой каждому алматинцу. " +
-        "Каждая кабинка — это уютный островок, где время течёт медленнее, а встречи обретают особый смысл. " +
-        "Пространство, идеальное для деловых завтраков, семейных обедов и неспешных ужинов в кругу близких. " +
-        "Забронируйте свою кабинку и откройте для себя новый формат городского гостеприимства.",
+    intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
     coordinates: {
         latitude: 43.359307,
         longitude: 45.697802,
@@ -259,51 +223,50 @@ export const PICKUP_POINT: Organization = {
     },
 };
 
-
 export const BookingMocks: Booking[] = [
     {
-        id: "3edsfsf",
+        id: "fireplace",
         title: "Каминная",
-        description: "Уютная кабина с атмосферой живого огня — идеальна для тёплых встреч и долгих разговоров",
+        description: "Уютная кабинка с атмосферой живого огня для теплых встреч и долгих разговоров",
         image: "/booking/609686908_18097555516907715_1890579568138563188_n..jpg",
     },
     {
-        id: "5redsfsf",
-        title: "Тёплый угол",
-        description: "Пространство, где хочется задержаться — мягкий свет, комфорт и спокойная атмосфера",
+        id: "warm-corner",
+        title: "Теплый угол",
+        description: "Мягкий свет, комфорт и спокойная атмосфера для неспешного отдыха",
         image: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
     },
     {
-        id: "5re2323dsfsf",
+        id: "loft",
         title: "Лофт-зона",
-        description: "Стильная кабина с кирпичом и мягкими диванами для компании и расслабленного отдыха",
+        description: "Стильная кабинка с кирпичом и мягкими диванами для компании",
         image: "/booking/609982327_18097555342907715_1986147056012483252_n..jpg",
     },
     {
-        id: "4re2323dsfsf",
-        title: "Зелёная гостиная",
-        description: "Живые акценты и тёплое дерево создают ощущение домашнего уюта и уединения",
+        id: "green-room",
+        title: "Зеленая гостиная",
+        description: "Живые акценты и теплое дерево создают ощущение домашнего уюта",
         image: "/booking/610002010_18097554682907715_6683000151825881101_n..jpg",
     },
     {
-        id: "56tedre2323dsfsf",
+        id: "private-club",
         title: "Закрытый клуб",
-        description: "Приватная зона для своей компании — отдых, общение и максимум комфорта без лишних глаз",
+        description: "Приватная зона для своей компании без лишних глаз",
         image: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg",
     },
     {
-        id: "udfftedre2323dsfsf",
+        id: "soft-zone",
         title: "Мягкая зона",
-        description: "Просторная кабина с удобными диванами для больших компаний и долгих посиделок",
+        description: "Просторная кабинка с удобными диванами для больших компаний",
         image: "/booking/610683031_18097554145907715_1235544446749212874_n..jpg",
     },
     {
-        id: "56tedre2323dsf34r5weffdwsf",
+        id: "cinema-room",
         title: "Кино-комната",
-        description: "Идеальное место для отдыха с экраном, приставкой и любимыми фильмами",
+        description: "Место для отдыха с экраном, приставкой и любимыми фильмами",
         image: "/booking/611264128_18097554673907715_2049357468313814860_n..jpg",
     },
-]
+];
 
 export type DeliveryZone = {
     id: string;
@@ -315,110 +278,19 @@ export type DeliveryZone = {
 };
 
 export const deliveryZones: DeliveryZone[] = [
-    {
-        id: "0-3",
-        title: "Зона 0-3 км",
-        minOrder: null,
-        price: 200,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 45 минут",
-    },
-    {
-        id: "3-4",
-        title: "Зона 3-4 км",
-        minOrder: 800,
-        price: 250,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 50 минут",
-    },
-    {
-        id: "4-5",
-        title: "Зона 4-5 км",
-        minOrder: 900,
-        price: 300,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 55 минут",
-    },
-    {
-        id: "5-6",
-        title: "Зона 5-6 км",
-        minOrder: 1000,
-        price: 350,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 60 минут",
-    },
-    {
-        id: "6-7",
-        title: "Зона 6-7 км",
-        minOrder: 1100,
-        price: 400,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 65 минут",
-    },
-    {
-        id: "7-8",
-        title: "Зона 7-8 км",
-        minOrder: 1200,
-        price: 450,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 70 минут",
-    },
-    {
-        id: "8-9",
-        title: "Зона 8-9 км",
-        minOrder: 1300,
-        price: 500,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 75 минут",
-    },
-    {
-        id: "9-10",
-        title: "Зона 9-10 км",
-        minOrder: 1400,
-        price: 550,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 80 минут",
-    },
-    {
-        id: "10-11",
-        title: "Зона 10-11 км",
-        minOrder: 1500,
-        price: 600,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 85 минут",
-    },
-    {
-        id: "11-12",
-        title: "Зона 11-12 км",
-        minOrder: 1600,
-        price: 650,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 90 минут",
-    },
-    {
-        id: "12-13",
-        title: "Зона 12-13 км",
-        minOrder: 1700,
-        price: 700,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 95 минут",
-    },
-    {
-        id: "13-14",
-        title: "Зона 13-14 км",
-        minOrder: 1800,
-        price: 750,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 100 минут",
-    },
-    {
-        id: "14-15",
-        title: "Зона 14-15 км",
-        minOrder: 1900,
-        price: 800,
-        freeDeliveryFrom: null,
-        deliveryTime: "от 105 минут",
-    },
+    {id: "0-3", title: "Зона 0-3 км", minOrder: null, price: 200, freeDeliveryFrom: null, deliveryTime: "от 45 минут"},
+    {id: "3-4", title: "Зона 3-4 км", minOrder: 800, price: 250, freeDeliveryFrom: null, deliveryTime: "от 50 минут"},
+    {id: "4-5", title: "Зона 4-5 км", minOrder: 900, price: 300, freeDeliveryFrom: null, deliveryTime: "от 55 минут"},
+    {id: "5-6", title: "Зона 5-6 км", minOrder: 1000, price: 350, freeDeliveryFrom: null, deliveryTime: "от 60 минут"},
+    {id: "6-7", title: "Зона 6-7 км", minOrder: 1100, price: 400, freeDeliveryFrom: null, deliveryTime: "от 65 минут"},
+    {id: "7-8", title: "Зона 7-8 км", minOrder: 1200, price: 450, freeDeliveryFrom: null, deliveryTime: "от 70 минут"},
+    {id: "8-9", title: "Зона 8-9 км", minOrder: 1300, price: 500, freeDeliveryFrom: null, deliveryTime: "от 75 минут"},
+    {id: "9-10", title: "Зона 9-10 км", minOrder: 1400, price: 550, freeDeliveryFrom: null, deliveryTime: "от 80 минут"},
+    {id: "10-11", title: "Зона 10-11 км", minOrder: 1500, price: 600, freeDeliveryFrom: null, deliveryTime: "от 85 минут"},
+    {id: "11-12", title: "Зона 11-12 км", minOrder: 1600, price: 650, freeDeliveryFrom: null, deliveryTime: "от 90 минут"},
+    {id: "12-13", title: "Зона 12-13 км", minOrder: 1700, price: 700, freeDeliveryFrom: null, deliveryTime: "от 95 минут"},
+    {id: "13-14", title: "Зона 13-14 км", minOrder: 1800, price: 750, freeDeliveryFrom: null, deliveryTime: "от 100 минут"},
+    {id: "14-15", title: "Зона 14-15 км", minOrder: 1900, price: 800, freeDeliveryFrom: null, deliveryTime: "от 105 минут"},
 ];
 
 export const deliveryPickupPoints = [

@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
 import {useEffect, useRef, useState} from "react";
-import {categories} from "@/mocks/mocks-data";
 import Image from "next/image";
-import {CategoryIcons} from "@/types/products";
-import {useUIStore} from "@/store/ui-store";
-import {useCartStore} from "@/store/cart-store";
+import Link from "next/link";
+import {ChevronRight} from "lucide-react";
+import {categories} from "@/mocks/mocks-data";
 
 const FLY_ANIMATION_DURATION_MS = 1650;
 
@@ -34,15 +33,9 @@ export function CategoriesNav() {
     );
 
     const categoryListRef = useRef<HTMLUListElement | null>(null);
-
-    const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
-
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
 
-    const openCart = useUIStore((state) => state.openCart);
-    const totalItems = useCartStore((state) =>
-        state.items.reduce((sum, item) => sum + item.quantity, 0),
-    );
+    const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
 
     const scrollActiveCategoryIntoView = (categoryId: string | number) => {
         const list = categoryListRef.current;
@@ -64,7 +57,6 @@ export function CategoriesNav() {
             behavior: "smooth",
         });
     };
-
 
     const getVisibleCartButtonRect = () => {
         const cartButtons = Array.from(
@@ -140,7 +132,7 @@ export function CategoriesNav() {
 
                 const sectionTop = section.getBoundingClientRect().top;
 
-                if (sectionTop <= 120) {
+                if (sectionTop <= 150) {
                     currentId = category.id;
                 }
             });
@@ -157,7 +149,7 @@ export function CategoriesNav() {
 
             scrollTimeout = setTimeout(() => {
                 updateActiveCategory();
-            }, 150);
+            }, 120);
         };
 
         updateActiveCategory();
@@ -178,7 +170,7 @@ export function CategoriesNav() {
         setActiveId(categoryId);
         scrollActiveCategoryIntoView(categoryId);
 
-        const yOffset = -100;
+        const yOffset = -104;
         const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
 
         window.scrollTo({
@@ -189,11 +181,12 @@ export function CategoriesNav() {
 
     return (
         <>
-            <nav className="sticky top-0 z-30 py-4 backdrop-blur-md mx-auto w-full max-w-374 px-4 md:px-7">
-                <div className="flex items-center justify-between gap-4">
+            <nav className="sticky top-0 z-30 bg-[#070808]/92 backdrop-blur-md">
+                <div className="mx-auto flex w-full max-w-[1210px] items-center justify-between gap-4 border-t border-[#26211b] px-5 py-3 sm:px-6 lg:px-0">
                     <ul
                         ref={categoryListRef}
-                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
                         {categories.map((category) => {
                             const isActive = activeId === category.id;
 
@@ -203,38 +196,30 @@ export function CategoriesNav() {
                                     ref={(element) => {
                                         categoryRefs.current[String(category.id)] = element;
                                     }}
-                                    onClick={() => scrollToCategory(category.id)}
-                                    className={`flex shrink-0 cursor-pointer items-center gap-4 rounded-full px-3 py-1 font-semibold transition-all ${
-                                        isActive
-                                            ? "bg-text text-primary-foreground shadow-md"
-                                            : "border border-border bg-card text-text hover:bg-text hover:text-text-on-primary"
-                                    }`}
                                 >
-                                    <div className="rounded-full bg-surface p-1">
-                                        <Image
-                                            src={CategoryIcons[category.icon]}
-                                            alt="icon"
-                                            width={28}
-                                            height={28}
-                                        />
-                                    </div>
-
-                                    {category.title}
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollToCategory(category.id)}
+                                        className={`h-10 rounded-full px-7 text-[14px] transition duration-300 ${
+                                            isActive
+                                                ? "border border-[#b68442] text-[#d6ad68]"
+                                                : "border border-[#272421] text-[#bfb6aa] hover:border-[#72542e] hover:text-[#f5efe5]"
+                                        }`}
+                                    >
+                                        {category.title}
+                                    </button>
                                 </li>
                             );
                         })}
                     </ul>
 
-                    <button
-                        data-cart-target="true"
-                        onClick={openCart}
-                        className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-full bg-warning px-5 py-2 font-semibold text-text-on-primary hover:opacity-90 md:flex"
+                    <Link
+                        href="#menu-99"
+                        className="hidden shrink-0 items-center gap-3 text-[14px] text-[#c8c0b5] transition duration-300 hover:text-[#d6ad68] md:inline-flex"
                     >
-                        Корзина
-                        {totalItems > 0 && (
-                            <span className="rounded-full bg-card px-2 text-text">{totalItems}</span>
-                        )}
-                    </button>
+                        Смотреть все меню
+                        <ChevronRight className="h-5 w-5 text-[#d6ad68]"/>
+                    </Link>
                 </div>
             </nav>
 
@@ -242,7 +227,7 @@ export function CategoriesNav() {
                 return (
                     <div
                         key={item.id}
-                        className="pointer-events-none fixed z-9999 h-28 w-28 rounded-2xl bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
+                        className="pointer-events-none fixed z-9999 h-28 w-28 rounded-[8px] bg-linear-to-t from-black/70 to-transparent p-3 shadow-2xl"
                         onAnimationEnd={() => {
                             setFlyingItems((prev) => prev.filter((flyingItem) => flyingItem.id !== item.id));
                             item.onComplete?.();
@@ -262,8 +247,7 @@ export function CategoriesNav() {
                                 className="h-full w-full object-contain drop-shadow-[0_15px_20px_rgba(0,0,0,0.45)]"
                             />
                         ) : (
-                            <div
-                                className="flex h-full w-full items-center justify-center rounded-xl bg-warning text-sm font-bold text-text-on-primary">
+                            <div className="flex h-full w-full items-center justify-center rounded-[8px] bg-[#d6ad68] text-sm font-bold text-[#17110b]">
                                 {item.name}
                             </div>
                         )}
