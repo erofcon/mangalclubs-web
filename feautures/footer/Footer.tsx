@@ -99,13 +99,13 @@ export function Footer() {
                         {/* Навигация */}
                         <ul className="space-y-5">
                             <li>
-                                <Link href="#"
+                                <Link href="/about"
                                       className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
                                     О нас
                                 </Link>
                             </li>
                             <li>
-                                <Link href="#"
+                                <Link href="/contacts"
                                       className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
                                     Контакты
                                 </Link>
@@ -117,7 +117,7 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/booking"
+                                <Link href="/delivery"
                                       className="text-[15px] hover:text-text-secondary transition hover:scale-110 inline-block duration-300">
                                     Доставка
                                 </Link>
