@@ -16,7 +16,7 @@ export const categories: Category[] = [
     },
     {
         id: "97",
-        title: "Тест",
+        title: "Салаты",
         icon: "grill",
     },
 ];
@@ -33,7 +33,7 @@ export const menus: MenuCategory[] = [
                 description: "Премиальный стейк из мраморной говядины",
                 weight: "600 г",
                 price: 4490,
-                image: "/menu/no-background/Мраморный стейк томагавк.png",
+                image: "/menu/steak/Мраморный стейк томагавк.jpg",
                 isHit: true,
                 calories: 1200,
                 carbs: 24,
@@ -46,8 +46,12 @@ export const menus: MenuCategory[] = [
                 description: "Сочный стейк зернового откорма",
                 weight: "400 г",
                 price: 2990,
-                image: "/menu/no-background/Мраморный стейк Рибай.png",
+                image: "/menu/steak/Мраморный стейк Рибай.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
         ],
     },
@@ -62,8 +66,12 @@ export const menus: MenuCategory[] = [
                 description: "Нежный люля-кебаб с луком и специями",
                 weight: "230 г",
                 price: 590,
-                image: "/menu/no-background/Шашлык из говядины.png",
+                image: "/menu/mangal/Люля кебаб говядина.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
             {
                 id: "4",
@@ -71,8 +79,12 @@ export const menus: MenuCategory[] = [
                 description: "Куриный шашлык с дымным ароматом",
                 weight: "300 г",
                 price: 550,
-                image: "/menu/no-background/Куриные крылышки.png",
+                image: "/menu/mangal/Куриные крылышки.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
             {
                 id: "5",
@@ -80,8 +92,12 @@ export const menus: MenuCategory[] = [
                 description: "Сочный люля-кебаб из баранины",
                 weight: "230 г",
                 price: 650,
-                image: "/menu/no-background/Шашлык из говядины.png",
+                image: "/menu/mangal/Люля кебаб баранина.jpg",
                 isHit: true,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
             {
                 id: "6",
@@ -89,8 +105,12 @@ export const menus: MenuCategory[] = [
                 description: "Стейк с овощами на гриле",
                 weight: "320 г",
                 price: 890,
-                image: "/menu/no-background/Антрекоты.png",
+                image: "/menu/mangal/Антрекоты.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
         ],
     },
@@ -100,40 +120,69 @@ export const menus: MenuCategory[] = [
         icon: "grill",
         items: [
             {
-                id: "7",
-                name: "Домашние колбаски чили",
-                description: "Говяжьи колбаски с легкой остротой",
-                weight: "260 г",
-                price: 690,
-                image: "/menu/no-background/Домашние колбаски чили.png",
+                id: "11",
+                name: "Салат с бурратой",
+                description: "Буратта, микс салата, томаты",
+                weight: "230 г",
+                price: 590,
+                image: "/menu/salats/Салат с бураттой.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
             {
-                id: "8",
-                name: "Дорадо на мангале",
-                description: "Дорадо с хрустящей корочкой",
-                weight: "1 шт",
-                price: 990,
-                image: "/menu/no-background/Дорадо на мангале.png",
-                isHit: true,
-            },
-            {
-                id: "9",
-                name: "Мангал бургер",
-                description: "Фирменный бургер с котлетой на огне",
-                weight: "350 г",
-                price: 790,
-                image: "/menu/no-background/Мангал бургер.png",
-                isHit: false,
-            },
-            {
-                id: "10",
-                name: "Куриные крылышки",
-                description: "Крылышки на мангале",
+                id: "14",
+                name: "Греческий салат",
+                description: "Помидоры, огурцы, болгарский перец, лук маслины и оливки, сыр фета",
                 weight: "300 г",
-                price: 620,
-                image: "/menu/no-background/Куриные крылышки.png",
+                price: 550,
+                image: "/menu/salats/Греческий салат.jpg",
                 isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
+            },
+            {
+                id: "15",
+                name: "Салат Капрезе",
+                description: "Томаты, базилик, моцарелла",
+                weight: "230 г",
+                price: 650,
+                image: "/menu/salats/Салат капрезе.jpg",
+                isHit: true,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
+            },
+            {
+                id: "16",
+                name: "Салат из хрустящих баклажанов",
+                description: "Салат из хрустящих баклажанов, со спелыми помидорами черри, миксом",
+                weight: "320 г",
+                price: 890,
+                image: "/menu/salats/Салат из хрустящих баклажанов.jpg",
+                isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
+            },
+            {
+                id: "116",
+                name: "Свежий салат",
+                description: "Помидоры, огурцы, лук",
+                weight: "320 г",
+                price: 890,
+                image: "/menu/salats/Свежий салат.jpg",
+                isHit: false,
+                calories: 1200,
+                carbs: 24,
+                fats: 64,
+                proteins: 80,
             },
         ],
     },
@@ -143,68 +192,97 @@ export const StoriesData: Story[] = [
     {
         id: "delivery",
         title: "Доставка",
-        previewImage: "/stories/delivery.png",
+        previewImage: "/stories/delivery/story-save.com_Instagram_mangalclubs_3834710151765166617.jpg",
         slides: [
-            {id: "delivery-1", src: "/stories/delivery.png", type: "image"},
-            {id: "delivery-2", src: "/stories/delivery_2.png", type: "image"},
-            {id: "delivery-3", src: "/stories/rest_clip.mp4", type: "video", poster: "/stories/delivery.png"},
+            {
+                id: "delivery-1",
+                src: "/stories/delivery/story-save.com_Instagram_mangalclubs_3524636564161616270.jpg",
+                type: "image"
+            },
+            {
+                id: "delivery-2",
+                src: "/stories/delivery/story-save.com_Instagram_mangalclubs_3834710202994431662.jpg",
+                type: "image"
+            },
+            {
+                id: "delivery-3",
+                src: "/stories/delivery/story-save.com_Instagram_mangalclubs_3834710151765166617.jpg",
+                type: "image"
+            },
+            {
+                id: "delivery-4",
+                src: "/stories/delivery/story-save.com_Instagram_mangalclubs_3834710048291748543.jpg",
+                type: "image"
+            },
+            {
+                id: "delivery-5",
+                src: "/stories/delivery/story-save.com_Instagram_mangalclubs_3834709189977711846.jpg",
+                type: "image"
+            },
         ],
     },
     {
-        id: "grill",
-        title: "Наш гриль",
-        previewImage: "/stories/barbecue.png",
+        id: "sauna",
+        title: "Сауна Mangal",
+        previewImage: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130753218028097.jpg",
         slides: [
-            {id: "grill-1", src: "/stories/barbecue_clip.mp4", type: "video", poster: "/stories/barbecue.png"},
-            {id: "grill-2", src: "/stories/barbecue.png", type: "image"},
-            {id: "grill-3", src: "/stories/barbecue2.png", type: "image"},
+            {
+                id: "sauna-1",
+                src: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130753352259742.jpg",
+                type: "image"
+            },
+            {
+                id: "sauna-2",
+                src: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130753218028097.jpg",
+                type: "image"
+            },
+            {
+                id: "sauna-3",
+                src: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130750248452637.jpg",
+                type: "image"
+            },
+            {
+                id: "sauna-4",
+                src: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130748897879169.jpg",
+                type: "image"
+            },
+            {
+                id: "sauna-5",
+                src: "/stories/sauna/story-save.com_Instagram_mangalclubs_3867130748646239697.jpg",
+                type: "image"
+            },
         ],
     },
     {
-        id: "menu",
-        title: "Меню",
-        previewImage: "/menu/no-background/Мраморный стейк томагавк.png",
+        id: "vip-fazenda",
+        title: "VIP FAZENDA",
+        previewImage: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801707989854605294.jpg",
         slides: [
-            {id: "menu-1", src: "/menu/no-background/Мраморный стейк томагавк.png", type: "image"},
-            {id: "menu-2", src: "/menu/no-background/Мраморный стейк Рибай.png", type: "image"},
-        ],
-    },
-    {
-        id: "guests",
-        title: "Гости",
-        previewImage: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
-        slides: [
-            {id: "guests-1", src: "/booking/609720157_18097555507907715_5416527739075581508_n..jpg", type: "image"},
-            {id: "guests-2", src: "/booking/610002010_18097554682907715_6683000151825881101_n..jpg", type: "image"},
-        ],
-    },
-    {
-        id: "interior",
-        title: "Интерьер",
-        previewImage: "/stories/rest.png",
-        slides: [
-            {id: "interior-1", src: "/stories/rest.png", type: "image"},
-            {id: "interior-2", src: "/stories/rest2.png", type: "image"},
-            {id: "interior-3", src: "/stories/rest3.png", type: "image"},
-            {id: "interior-4", src: "/stories/rest4.png", type: "image"},
-        ],
-    },
-    {
-        id: "events",
-        title: "Мероприятия",
-        previewImage: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg",
-        slides: [
-            {id: "events-1", src: "/booking/610633596_18097555435907715_5781624860738448425_n..jpg", type: "image"},
-            {id: "events-2", src: "/booking/610683031_18097554145907715_1235544446749212874_n..jpg", type: "image"},
-        ],
-    },
-    {
-        id: "new",
-        title: "Новинки",
-        previewImage: "/menu/no-background/Мраморный стейк Рибай.png",
-        slides: [
-            {id: "new-1", src: "/menu/no-background/Мраморный стейк Рибай.png", type: "image"},
-            {id: "new-2", src: "/hero/hero.png", type: "image"},
+            {
+                id: "vip-fazenda-1",
+                src: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801707989854605294.jpg",
+                type: "image"
+            },
+            {
+                id: "vip-fazenda-2",
+                src: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801708386996456768.jpg",
+                type: "image"
+            },
+            {
+                id: "vip-fazenda-3",
+                src: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801708283296482743.jpg",
+                type: "image"
+            },
+            {
+                id: "vip-fazenda-4",
+                src: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801708282700931770.jpg",
+                type: "image"
+            },
+            {
+                id: "vip-fazenda-5",
+                src: "/stories/vip-fazenda/story-save.com_Instagram_mangalclubs_3801708280670891279.jpg",
+                type: "image"
+            },
         ],
     },
 ];
@@ -285,12 +363,54 @@ export const deliveryZones: DeliveryZone[] = [
     {id: "6-7", title: "Зона 6-7 км", minOrder: 1100, price: 400, freeDeliveryFrom: null, deliveryTime: "от 65 минут"},
     {id: "7-8", title: "Зона 7-8 км", minOrder: 1200, price: 450, freeDeliveryFrom: null, deliveryTime: "от 70 минут"},
     {id: "8-9", title: "Зона 8-9 км", minOrder: 1300, price: 500, freeDeliveryFrom: null, deliveryTime: "от 75 минут"},
-    {id: "9-10", title: "Зона 9-10 км", minOrder: 1400, price: 550, freeDeliveryFrom: null, deliveryTime: "от 80 минут"},
-    {id: "10-11", title: "Зона 10-11 км", minOrder: 1500, price: 600, freeDeliveryFrom: null, deliveryTime: "от 85 минут"},
-    {id: "11-12", title: "Зона 11-12 км", minOrder: 1600, price: 650, freeDeliveryFrom: null, deliveryTime: "от 90 минут"},
-    {id: "12-13", title: "Зона 12-13 км", minOrder: 1700, price: 700, freeDeliveryFrom: null, deliveryTime: "от 95 минут"},
-    {id: "13-14", title: "Зона 13-14 км", minOrder: 1800, price: 750, freeDeliveryFrom: null, deliveryTime: "от 100 минут"},
-    {id: "14-15", title: "Зона 14-15 км", minOrder: 1900, price: 800, freeDeliveryFrom: null, deliveryTime: "от 105 минут"},
+    {
+        id: "9-10",
+        title: "Зона 9-10 км",
+        minOrder: 1400,
+        price: 550,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 80 минут"
+    },
+    {
+        id: "10-11",
+        title: "Зона 10-11 км",
+        minOrder: 1500,
+        price: 600,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 85 минут"
+    },
+    {
+        id: "11-12",
+        title: "Зона 11-12 км",
+        minOrder: 1600,
+        price: 650,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 90 минут"
+    },
+    {
+        id: "12-13",
+        title: "Зона 12-13 км",
+        minOrder: 1700,
+        price: 700,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 95 минут"
+    },
+    {
+        id: "13-14",
+        title: "Зона 13-14 км",
+        minOrder: 1800,
+        price: 750,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 100 минут"
+    },
+    {
+        id: "14-15",
+        title: "Зона 14-15 км",
+        minOrder: 1900,
+        price: 800,
+        freeDeliveryFrom: null,
+        deliveryTime: "от 105 минут"
+    },
 ];
 
 export const deliveryPickupPoints = [

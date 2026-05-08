@@ -33,7 +33,7 @@ export function ModalSkeleton({
                         right-4 top-4
                         md:-right-12 md:-top-12
                     "
-                    aria-label="Р—Р°РєСЂС‹С‚СЊ"
+                    aria-label="Закрыть"
                 >
                     <X className="h-6 w-6"/>
                 </button>

@@ -56,13 +56,13 @@ export function DeliveryScreen() {
                                 {deliveryZones.map((zone) => (
                                     <div
                                         key={zone.id}
-                                        className="grid gap-4 border-b border-border/45 px-5 py-4 last:border-b-0 md:grid-cols-[1.1fr_1fr_1fr_1fr] md:items-center"
+                                        className="grid grid-cols-2 gap-x-3 gap-y-3 border-b border-border/45 px-4 py-3 last:border-b-0 md:grid-cols-[1.1fr_1fr_1fr_1fr] md:items-center md:gap-4 md:px-5 md:py-4"
                                     >
                                         <div>
                                             <p className="text-[16px] font-semibold text-[#f5efe5]">
                                                 {zone.id} км
                                             </p>
-                                            <p className="mt-1 text-[13px] text-[#8f867b] md:hidden">
+                                            <p className="sr-only">
                                                 Расстояние
                                             </p>
                                         </div>
@@ -137,11 +137,11 @@ type DeliveryValueProps = {
 
 function DeliveryValue({label, value}: DeliveryValueProps) {
     return (
-        <div>
-            <p className="text-[13px] text-[#8f867b] md:hidden">
+        <div className="min-w-0">
+            <p className="text-[12px] leading-4 text-[#8f867b] md:hidden">
                 {label}
             </p>
-            <p className="mt-1 text-[15px] font-semibold text-text md:mt-0">
+            <p className="mt-0.5 whitespace-nowrap text-[14px] font-semibold leading-5 text-text md:mt-0 md:text-[15px] md:leading-normal">
                 {value}
             </p>
         </div>

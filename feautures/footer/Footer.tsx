@@ -2,185 +2,213 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import {type ReactNode} from "react";
+import {ArrowUpRight, Clock, MapPin, Phone} from "lucide-react";
 import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {topLinks} from "@/utils/constants";
+
+const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, "")}`;
 
 export function Footer() {
     return (
-        <footer className="mt-8 pt-9 text-text">
-            <div className="mx-auto w-full max-w-374 px-5 sm:px-7">
-                <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:px-10">
-
-                    {/* Левая колонка */}
-                    <div className="md:w-79 ">
-                        <Link href="/" aria-label="mangal-clubs" className="hidden md:block">
+        <footer className="border-t border-border/70 bg-background text-text">
+            <div className="mx-auto w-full max-w-[1210px] px-5 py-10 sm:px-6 lg:px-0 lg:py-14">
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.95fr)]">
+                    <div className="min-w-0">
+                        <Link href="/" aria-label="Mangal Club" className="inline-flex">
                             <Image
                                 src="/logo.png"
-                                alt="logo"
+                                alt="Mangal Club"
                                 width={473}
                                 height={284}
-                                className="block h-auto w-22 max-w-full md:w-25.5 hover:scale-110 duration-300"
-                                priority
+                                className="h-auto w-24 transition duration-300 hover:scale-105"
                             />
                         </Link>
 
-                        <p className="mt-4.5 text-[14px] leading-relaxed sm:text-[15px]">
-                            © 2026 ИП Гусейнова Парване Махаррамовна <br/><br/>
-                            Мангал Клабс - сеть премиальных мясных ресторанов с индивидуальным отношением
-                            к каждому гостю, вкуснейшей едой и незабываемой атмосферой.
+                        <p className="mt-5 max-w-[420px] text-[14px] leading-6 text-text/70">
+                            Мангал Клабс - сеть мясных ресторанов с приватными кабинками,
+                            живым огнем и внимательным отношением к каждому гостю.
                         </p>
 
-                        <div className="mt-4.5 flex gap-4">
+                        <div className="mt-7 flex flex-wrap gap-3">
                             <a
                                 href="https://www.instagram.com/mangalclubs/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="transition-transform duration-300 hover:scale-110"
+                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
                             >
                                 <Image
                                     src="/icons/Instagram.svg"
-                                    alt="instagram"
-                                    width={256}
-                                    height={256}
-                                    className="w-8"
+                                    alt=""
+                                    width={18}
+                                    height={18}
+                                    className="h-4.5 w-4.5"
                                 />
+                                Instagram
                             </a>
 
                             <a
-                                href={`https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, '')}`}
+                                href={whatsappHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="transition-transform duration-300 hover:scale-110"
+                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
                             >
                                 <Image
                                     src="/icons/WhatsappIcon.svg"
-                                    alt="whatsapp"
-                                    width={256}
-                                    height={258}
-                                    className="w-8"
+                                    alt=""
+                                    width={18}
+                                    height={18}
+                                    className="h-4.5 w-4.5"
                                 />
+                                WhatsApp
                             </a>
                         </div>
                     </div>
 
-                    {/* Контакты */}
-                    <div className="md:w-79">
-                        <div className="flex flex-col gap-6">
-                            <div>
-                                <p className="text-[12px] text-text/60">Телефон:</p>
-                                <a
-                                    href={`tel:${PICKUP_POINT.phone}`}
-                                    className="inline-block text-[14px] font-medium transition duration-300 hover:text-primary"
-                                >
-                                    {PICKUP_POINT.phone}
-                                </a>
-                            </div>
+                    <div className="min-w-0 border-t border-border/70 pt-6 lg:border-t-0 lg:pt-0">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Контакты
+                        </p>
 
-                            <div>
-                                <p className="text-[12px] text-text/60">Адрес:</p>
-                                <div className="text-[14px] font-medium">
-                                    {PICKUP_POINT.address}
-                                </div>
-                            </div>
-
-                            <div>
-                                <p className="text-[12px] text-text/60">График работы:</p>
-                                <div className="text-[14px] font-medium">
-                                    {PICKUP_POINT.schedule}
-                                </div>
-                            </div>
+                        <div className="mt-5 space-y-5">
+                            <FooterInfo
+                                icon={<Phone className="h-4 w-4" strokeWidth={1.8}/>}
+                                label="Телефон"
+                                value={PICKUP_POINT.phone}
+                                href={`tel:${PICKUP_POINT.phone}`}
+                            />
+                            <FooterInfo
+                                icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
+                                label="Адрес"
+                                value={PICKUP_POINT.address}
+                            />
+                            <FooterInfo
+                                icon={<Clock className="h-4 w-4" strokeWidth={1.8}/>}
+                                label="График"
+                                value={PICKUP_POINT.schedule}
+                            />
                         </div>
                     </div>
 
-                    {/* Меню + приложения */}
-                    <div
-                        className="flex w-full flex-col gap-8 text-white sm:flex-row sm:justify-between md:w-auto md:min-w-90 md:gap-12">
+                    <div className="grid min-w-0 gap-8 border-t border-border/70 pt-6 sm:grid-cols-2 lg:border-t-0 lg:pt-0">
+                        <nav>
+                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                                Разделы
+                            </p>
 
-                        {/* Навигация */}
-                        <ul className="space-y-5">
-                            <li>
-                                <Link href="/about"
-                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
-                                    О нас
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/contacts"
-                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
-                                    Контакты
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/booking"
-                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
-                                    Бронирование
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/delivery"
-                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
-                                    Доставка
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/booking"
-                                      className="inline-block text-[15px] transition duration-300 hover:text-primary">
-                                    Правовая информация
-                                </Link>
-                            </li>
-                        </ul>
+                            <ul className="mt-5 space-y-3">
+                                {topLinks.map((link) => (
+                                    <li key={link.href}>
+                                        <Link
+                                            href={link.href}
+                                            className="group inline-flex items-center gap-2 text-[14px] font-semibold text-text/78 transition duration-300 hover:text-primary"
+                                        >
+                                            {link.label}
+                                            <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition duration-300 group-hover:opacity-100"/>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
 
-                        {/* Приложения */}
-                        <div className="flex flex-col gap-4">
-                            <p className="text-[16px] font-medium">Мобильные приложения</p>
+                        <div>
+                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                                Приложение
+                            </p>
 
-                            <div className="flex flex-col gap-4">
-                                <a href="#" className="transition duration-300 hover:-translate-y-0.5">
-                                    <div
-                                        className="flex items-center gap-4 rounded-[8px] border border-border bg-background p-3 transition duration-300 hover:border-primary">
-                                        <Image
-                                            src="/icons/GooglePlayIcon.svg"
-                                            alt="Google Play"
-                                            width={256}
-                                            height={283}
-                                            className="w-10"
-                                        />
-                                        <div>
-                                            <div className="text-[10px]">Скачать из</div>
-                                            <div className="text-[14px] font-semibold">Google Play</div>
-                                        </div>
-                                    </div>
-                                </a>
-
-                                <a href="#" className="transition duration-300 hover:-translate-y-0.5">
-                                    <div
-                                        className="flex items-center gap-4 rounded-[8px] border border-border bg-background p-3 transition duration-300 hover:border-primary">
-                                        <Image
-                                            src="/icons/AppleAppStore.svg"
-                                            alt="App Store"
-                                            width={256}
-                                            height={283}
-                                            className="w-10"
-                                        />
-                                        <div>
-                                            <div className="text-[10px]">Доступно в</div>
-                                            <div className="text-[14px] font-semibold">App Store</div>
-                                        </div>
-                                    </div>
-                                </a>
+                            <div className="mt-5 space-y-3">
+                                <StoreLink
+                                    icon="/icons/GooglePlayIcon.svg"
+                                    label="Скачать из"
+                                    name="Google Play"
+                                />
+                                <StoreLink
+                                    icon="/icons/AppleAppStore.svg"
+                                    label="Доступно в"
+                                    name="App Store"
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <hr className="mt-7 border-border"/>
-
-                <div className="flex items-center justify-center py-6">
-                    <p className="text-center text-[10px] text-white sm:text-[12px]">
-                        © Copyright 2026, Все права защищены
-                    </p>
+                <div className="mt-10 flex flex-col gap-3 border-t border-border/55 pt-5 text-[12px] text-text/52 sm:flex-row sm:items-center sm:justify-between">
+                    <p>© 2026 ИП Гусейнова Парване Махаррамовна</p>
+                    <p>Все права защищены</p>
                 </div>
             </div>
         </footer>
+    );
+}
+
+type FooterInfoProps = {
+    icon: ReactNode;
+    label: string;
+    value: string;
+    href?: string;
+};
+
+function FooterInfo({icon, label, value, href}: FooterInfoProps) {
+    const content = (
+        <>
+            <span className="mt-1 shrink-0 text-primary">
+                {icon}
+            </span>
+            <span className="min-w-0">
+                <span className="block text-[12px] text-text/55">
+                    {label}
+                </span>
+                <span className="mt-1 block wrap-break-word text-[14px] font-semibold leading-6 text-text">
+                    {value}
+                </span>
+            </span>
+        </>
+    );
+
+    const className = "flex min-w-0 gap-3 transition duration-300 hover:text-primary";
+
+    if (href) {
+        return (
+            <a href={href} className={className}>
+                {content}
+            </a>
+        );
+    }
+
+    return (
+        <div className="flex min-w-0 gap-3">
+            {content}
+        </div>
+    );
+}
+
+type StoreLinkProps = {
+    icon: string;
+    label: string;
+    name: string;
+};
+
+function StoreLink({icon, label, name}: StoreLinkProps) {
+    return (
+        <a
+            href="#"
+            className="flex h-13 items-center gap-3 rounded-[6px] border border-border/70 px-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary"
+        >
+            <Image
+                src={icon}
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8"
+            />
+            <span>
+                <span className="block text-[10px] leading-none text-text/58">
+                    {label}
+                </span>
+                <span className="mt-1 block text-[13px] font-semibold leading-none text-text">
+                    {name}
+                </span>
+            </span>
+        </a>
     );
 }

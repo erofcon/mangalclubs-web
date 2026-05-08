@@ -1,5 +1,5 @@
 import React from "react";
-import Header from "@/feautures/header/Header";
+
 import {DeliveryTypeModal} from "@/feautures/order/DeliveryTypeModal";
 import {AuthModal} from "@/feautures/auth/AuthModal";
 import {AuthCodeConfirm} from "@/feautures/auth/AuthCodeConfirm";
@@ -13,7 +13,6 @@ export default function SiteLayout({
 }>) {
     return (
         <>
-            <Header/>
             <OrderTypeModal/>
             <DeliveryTypeModal/>
             <AuthModal/>

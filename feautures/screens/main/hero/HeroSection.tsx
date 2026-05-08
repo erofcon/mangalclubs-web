@@ -1,4 +1,5 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
 import {ArrowRight, CalendarDays} from "lucide-react";
 
@@ -9,19 +10,38 @@ const heroHighlights = [
 ];
 
 export function HeroSection() {
+    const scrollToMenu = () => {
+        const section =
+            document.getElementById("menu-99") ??
+            document.querySelector<HTMLElement>('[id^="menu-"]');
+
+        if (!section) return;
+
+        const yOffset = -104;
+        const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
+
+        window.scrollTo({
+            top: y,
+            behavior: "smooth",
+        });
+    };
+
     return (
-        <section className="relative isolate mx-auto w-full max-w-[1210px] overflow-hidden text-text">
-            <Image
-                src="/hero/hero-v2.png"
-                alt="Стейки на гриле"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 1210px"
-                className="absolute inset-0 -z-30 object-cover object-[64%_center] sm:object-[68%_center]"
-            />
+        <section className="relative isolate mx-auto w-full max-w-302.5 overflow-hidden text-text">
+            <video
+                className="absolute inset-0 -z-30 h-full w-full object-cover object-[64%_center] sm:object-[68%_center]"
+                playsInline
+                loop
+                autoPlay
+                muted
+                preload="metadata"
+                poster="/hero/hero-v2.png"
+            >
+                <source src="/booking/header/header.mp4" type="video/mp4"/>
+            </video>
 
             <div
-                className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.97)_24%,rgba(5,5,5,0.78)_48%,rgba(5,5,5,0.28)_74%,rgba(5,5,5,0.62)_100%)]"/>
+                className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.57)_24%,rgba(5,5,5,0.48)_48%,rgba(5,5,5,0.28)_74%,rgba(5,5,5,0.32)_100%)]"/>
 
             <div
                 className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_76%_36%,rgba(214,173,104,0.22),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent_45%,#050505_100%)]"/>
@@ -49,17 +69,18 @@ export function HeroSection() {
                     </p>
 
                     <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:gap-4">
-                        <Link
-                            href="#menu-99"
+                        <button
+                            type="button"
+                            onClick={scrollToMenu}
                             className="group inline-flex h-12 min-w-[210px] items-center
                              justify-center gap-4 rounded-[6px] bg-primary px-6 text-[14px]
                              font-semibold text-on-primary shadow-[0_18px_42px_rgba(214,173,104,0.24)]
-                             transition duration-300 hover:-translate-y-0.5"
+                             cursor-pointer transition duration-300 hover:-translate-y-0.5"
                         >
                             Смотреть меню
                             <ArrowRight
                                 className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"/>
-                        </Link>
+                        </button>
 
                         <Link
                             href="/booking"

@@ -47,17 +47,16 @@ export function MenuItem({item}: MenuItemProps) {
 
             <div
                 ref={imageWrapperRef}
-                className="relative z-10 flex w-32.5 shrink-0 items-center justify-center overflow-hidden pl-3 pr-1
+                className="relative flex w-32.5 shrink-0 items-center justify-center overflow-hidden pl-3 pr-1
                  sm:w-36.25 lg:w-37.5"
             >
                 {item.image ? (
                     <Image
                         src={item.image}
                         alt={item.name}
-                        width={240}
-                        height={160}
+                        fill
                         sizes="(min-width: 1280px) 150px, (min-width: 640px) 145px, 130px"
-                        className="h-23 w-full object-contain drop-shadow-[0_18px_18px_rgba(0,0,0,0.54)]
+                        className="h-23 w-full object-cover drop-shadow-[0_18px_18px_rgba(0,0,0,0.54)]
                          transition duration-300 group-hover:scale-105 sm:h-25"
                     />
                 ) : (
@@ -65,7 +64,7 @@ export function MenuItem({item}: MenuItemProps) {
                 )}
             </div>
 
-            <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center py-4 pl-2 pr-14.5">
+            <div className="relative flex min-w-0 flex-1 flex-col justify-center py-4 pl-2 pr-14.5">
                 <h3
                     className="line-clamp-2 wrap-break-word text-[15px] font-normal leading-4.75 text-[#f3ede5]"
                     style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
@@ -92,7 +91,7 @@ export function MenuItem({item}: MenuItemProps) {
 
             <button
                 onClick={handleAddToCart}
-                className="absolute bottom-4 right-4 z-20 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[5px] border border-[#4a3925] bg-[#111213] text-[#d6ad68] transition duration-300 hover:border-[#d6ad68] hover:text-[#f5efe5] active:scale-95"
+                className="absolute bottom-4 right-4 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[5px] border border-[#4a3925] bg-[#111213] text-[#d6ad68] transition duration-300 hover:border-[#d6ad68] hover:text-[#f5efe5] active:scale-95"
                 aria-label={`Добавить ${item.name} в корзину`}
             >
                 <ShoppingCart className="h-4.5 w-4.5" strokeWidth={1.8}/>

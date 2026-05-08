@@ -9,8 +9,8 @@ const bookingCount = BookingMocks.length;
 
 export function BookingScreen() {
     return (
-        <main className="min-h-screen overflow-hidden bg-background pt-26 text-text">
-            <section className="relative isolate mx-auto w-full max-w-[1210px] overflow-hidden">
+        <main className="min-h-screen overflow-hidden bg-background text-text">
+            <section className="relative isolate mx-auto w-full max-w-302.5 overflow-hidden">
                 <video
                     className="absolute inset-0 -z-30 h-full w-full object-cover"
                     playsInline
@@ -22,11 +22,13 @@ export function BookingScreen() {
                     <source src="/booking/header/header.mp4" type="video/mp4"/>
                 </video>
 
-                <div className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.96)_28%,rgba(5,5,5,0.72)_56%,rgba(5,5,5,0.32)_100%)]"/>
-                <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_46%,#070808_100%)]"/>
+                <div
+                    className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.96)_28%,rgba(5,5,5,0.72)_56%,rgba(5,5,5,0.32)_100%)]"/>
+                <div
+                    className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_46%,#070808_100%)]"/>
 
-                <div className="flex min-h-[560px] items-end px-5 pb-12 pt-16 sm:px-6 lg:px-0">
-                    <div className="max-w-[660px]">
+                <div className="flex min-h-140 items-end px-5 pb-12 pt-16 sm:px-6 lg:px-0">
+                    <div className="max-w-165">
                         <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
                             Бронирование
                         </p>
@@ -42,8 +44,9 @@ export function BookingScreen() {
                             Выберите приватную зону, а мы поможем забронировать удобное время в Mangal Club.
                         </p>
 
-                        <div className="mt-9 grid max-w-[620px] overflow-hidden rounded-[8px] border border-border/70 bg-black/30 backdrop-blur-md sm:grid-cols-3">
-                            <HeroMetric label="кабинки" value={`${bookingCount}`}/>
+                        <div
+                            className="mt-9 grid max-w-155 overflow-hidden rounded-lg border border-border/70 bg-black/30 backdrop-blur-md sm:grid-cols-3">
+                            <HeroMetric label="кабинок" value={`${bookingCount}`}/>
                             <HeroMetric label="работаем" value={PICKUP_POINT.schedule.replace("Ежедневно с ", "")}/>
                             <HeroMetric label="адрес" value={PICKUP_POINT.city}/>
                         </div>
@@ -64,9 +67,6 @@ export function BookingScreen() {
                             Наши VIP-кабинки
                         </h2>
                     </div>
-                    <p className="max-w-[380px] text-[14px] leading-6 text-text/68">
-                        Каждая зона отличается атмосферой, но сохраняет общий настрой: приватно, спокойно, без лишнего шума.
-                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -86,10 +86,12 @@ export function BookingScreen() {
                                         className="object-cover transition duration-500 group-hover:scale-[1.035]"
                                     />
                                 )}
-                                <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_42%,rgba(0,0,0,0.78)_100%)]"/>
+                                <span
+                                    className="absolute inset-0 bg-[linear-gradient(180deg,transparent_42%,rgba(0,0,0,0.78)_100%)]"/>
                             </span>
 
-                            <span className="flex min-h-34 items-end justify-between gap-5 border-t border-border/55 px-5 py-5">
+                            <span
+                                className="flex min-h-34 items-end justify-between gap-5 border-t border-border/55 px-5 py-5">
                                 <span className="min-w-0">
                                     <span
                                         className="block wrap-break-word text-[22px] font-normal leading-7 text-text"
@@ -101,8 +103,10 @@ export function BookingScreen() {
                                         {booking.description}
                                     </span>
                                 </span>
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-border/70 text-primary transition duration-300 group-hover:border-primary">
-                                    <ArrowRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5" strokeWidth={1.8}/>
+                                <span
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-border/70 text-primary transition duration-300 group-hover:border-primary">
+                                    <ArrowRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5"
+                                                strokeWidth={1.8}/>
                                 </span>
                             </span>
                         </Link>
@@ -120,7 +124,8 @@ type HeroMetricProps = {
 
 function HeroMetric({label, value}: HeroMetricProps) {
     return (
-        <div className="border-b border-border/50 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
+        <div
+            className="border-b border-border/50 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
             <div className="text-[16px] font-semibold leading-none text-text sm:text-[19px]">
                 {value}
             </div>

@@ -41,8 +41,8 @@ export function BookingSelectedScreen() {
 
     if (!booking) {
         return (
-            <main className="min-h-screen bg-background px-5 pt-32 text-text sm:px-6">
-                <div className="mx-auto w-full max-w-[1210px]">
+            <main className="min-h-screen bg-background px-5 text-text sm:px-6">
+                <div className="mx-auto w-full max-w-302.5">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
                         Бронирование
                     </p>
@@ -66,7 +66,7 @@ export function BookingSelectedScreen() {
     }
 
     return (
-        <main className="min-h-screen overflow-hidden bg-background pt-26 text-text">
+        <main className="min-h-screen overflow-hidden bg-background text-text">
             <section className="mx-auto w-full max-w-[1210px] px-5 pb-9 pt-8 sm:px-6 lg:px-0">
                 <button
                     type="button"

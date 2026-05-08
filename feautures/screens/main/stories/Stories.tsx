@@ -216,7 +216,7 @@ export default function Stories() {
                 </h2>
 
                 <div
-                    className="flex items-start justify-between gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    className="flex items-start justify-start gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {StoriesData.map((story, index) => (
                         <button
                             key={story.id}

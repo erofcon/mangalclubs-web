@@ -59,10 +59,11 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
     return (
         <ModalSkeleton onClose={onClose} className="sm:h-125">
-            <div className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
+            <div
+                className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
                 <div
                     ref={imageWrapperRef}
-                    className="relative flex h-[42dvh] min-h-[260px] w-full shrink-0 items-center justify-center overflow-hidden bg-background sm:h-full sm:min-h-0 sm:w-1/2"
+                    className="relative flex h-[42dvh] min-h-65 w-full shrink-0 items-center justify-center overflow-hidden bg-background sm:h-full sm:min-h-0 sm:w-1/2"
                 >
                     {item.image ? (
                         <Image
@@ -71,7 +72,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                             fill
                             priority
                             sizes="(max-width: 640px) 100vw, 450px"
-                            className="bg-background object-contain p-8 sm:p-12"
+                            className="h-full w-full object-cover"
                         />
                     ) : (
                         <div className="text-sm text-text/60">Нет фото</div>
@@ -99,48 +100,49 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                                 Пищевая ценность
                             </h3>
 
-                            <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[8px] border border-border/70 text-center sm:grid-cols-4">
+                            <div
+                                className="mt-3 grid grid-cols-2 overflow-hidden rounded-[8px] border border-border/70 text-center sm:grid-cols-4">
                                 <div>
                                     <div className="border-b border-border/50 px-3 py-3 sm:border-b-0 sm:border-r">
-                                    <div className="text-xs font-semibold text-text/60">
-                                        кКал
-                                    </div>
-                                    <div className="text-base font-semibold text-text">
-                                        {item.calories ?? "—"}
-                                    </div>
+                                        <div className="text-xs font-semibold text-text/60">
+                                            кКал
+                                        </div>
+                                        <div className="text-base font-semibold text-text">
+                                            {item.calories ?? "—"}
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <div className="border-b border-border/50 px-3 py-3 sm:border-b-0 sm:border-r">
-                                    <div className="text-xs font-semibold text-text/60">
-                                        Жиры
-                                    </div>
-                                    <div className="text-base font-semibold text-text">
-                                        {item.fats ?? "—"} г
-                                    </div>
+                                        <div className="text-xs font-semibold text-text/60">
+                                            Жиры
+                                        </div>
+                                        <div className="text-base font-semibold text-text">
+                                            {item.fats ?? "—"} г
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <div className="border-r border-border/50 px-3 py-3">
-                                    <div className="text-xs font-semibold text-text/60">
-                                        Белки
-                                    </div>
-                                    <div className="text-base font-semibold text-text">
-                                        {item.proteins ?? "—"} г
-                                    </div>
+                                        <div className="text-xs font-semibold text-text/60">
+                                            Белки
+                                        </div>
+                                        <div className="text-base font-semibold text-text">
+                                            {item.proteins ?? "—"} г
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <div className="px-3 py-3">
-                                    <div className="text-xs font-semibold text-text/60">
-                                        Углеводы
-                                    </div>
-                                    <div className="text-base font-semibold text-text">
-                                        {item.carbs ?? "—"}
-                                    </div>
+                                        <div className="text-xs font-semibold text-text/60">
+                                            Углеводы
+                                        </div>
+                                        <div className="text-base font-semibold text-text">
+                                            {item.carbs ?? "—"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -149,7 +151,8 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
                     <div className="shrink-0 border-t border-border bg-background p-5 sm:p-8">
                         <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-32 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
+                            <div
+                                className="flex h-12 w-32 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
                                 <button
                                     onClick={decreaseQuantity}
                                     disabled={quantity <= 1}
