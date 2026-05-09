@@ -1,11 +1,11 @@
 "use client";
 
 import {useState, useEffect} from "react";
-import {ChevronUp, Handbag} from "lucide-react";
+import {Handbag} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
 import {useCartStore} from "@/store/cart-store";
 
-export default function FloatingButton() {
+export default function CartButton() {
     const [isVisible, setIsVisible] = useState(false);
 
     const totalItems = useCartStore((state) =>
@@ -27,13 +27,6 @@ export default function FloatingButton() {
 
         return () => window.removeEventListener("scroll", toggleVisibility);
     }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    };
 
     return (
         <>

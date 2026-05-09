@@ -5,6 +5,14 @@ import "leaflet/dist/leaflet.css";
 import React from "react";
 import {Footer} from "@/feautures/footer/Footer";
 import Header from "@/feautures/header/Header";
+import {CartDrawer} from "@/feautures/screens/main/cart/CartDrawer";
+import {DeliveryTypeModal} from "@/feautures/order/DeliveryTypeModal";
+import {AuthModal} from "@/feautures/auth/AuthModal";
+import {AuthCodeConfirm} from "@/feautures/auth/AuthCodeConfirm";
+import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
+import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
+import {ScrollToTop} from "@/feautures/floating-buttons/ScrollToTop";
+
 
 const myFont = Open_Sans({
     subsets: ["cyrillic"],
@@ -27,6 +35,13 @@ export default function RootLayout({
         <Header/>
         {children}
         <Footer/>
+        <OrderTypeModal/>
+        <DeliveryTypeModal/>
+        <AuthModal/>
+        <AuthCodeConfirm/>
+        <RestaurantTypeModal/>
+        <CartDrawer/>
+        <ScrollToTop/>
         </body>
         </html>
     );

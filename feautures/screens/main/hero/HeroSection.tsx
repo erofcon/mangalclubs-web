@@ -95,21 +95,21 @@ export function HeroSection() {
                     </div>
 
                     <div
-                        className="mt-9 grid max-w-[540px] grid-cols-3 overflow-hidden rounded-[10px]
-                        border border-white/[0.09] bg-black/30 backdrop-blur-md"
+                        className="mt-9 grid max-w-135 grid-cols-3 overflow-hidden rounded-[10px]
+                        border border-white/9 bg-black/30 backdrop-blur-md"
                     >
                         {heroHighlights.map((item, index) => (
                             <div
                                 key={item.label}
                                 className={[
                                     "px-4 py-4 sm:px-5 sm:py-5",
-                                    index !== 0 ? "border-l border-white/[0.08]" : "",
+                                    index !== 0 ? "border-l border-white/8" : "",
                                 ].join(" ")}
                             >
-                                <div className="text-[12px] font-semibold leading-none text-text sm:text-[19px]">
+                                <div className="text-[12px] font-semibold leading-none text-text md:text-[19px]">
                                     {item.value}
                                 </div>
-                                <div className="mt-2 text-[12px] leading-none text-text/60 sm:text-[12px]">
+                                <div className="mt-2 text-[12px] leading-none text-text/60">
                                     {item.label}
                                 </div>
                             </div>

@@ -66,7 +66,7 @@ export function BookingSelectedScreen() {
     }
 
     return (
-        <main className="min-h-screen overflow-hidden bg-background text-text">
+        <main className="min-h-screen bg-background text-text">
             <section className="mx-auto w-full max-w-[1210px] px-5 pb-9 pt-8 sm:px-6 lg:px-0">
                 <button
                     type="button"
@@ -201,8 +201,8 @@ export function BookingSelectedScreen() {
                         </div>
                     </div>
 
-                    <aside className="min-w-0">
-                        <div className="border-t border-border/70 pt-6 lg:sticky lg:top-28">
+                    <aside className="min-w-0  lg:self-star">
+                        <div className="border-t border-border/70 pt-6 lg:sticky lg:top-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                             <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
                                 Связь
                             </p>

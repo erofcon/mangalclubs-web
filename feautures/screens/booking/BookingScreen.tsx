@@ -7,6 +7,12 @@ import {BookingMocks, PICKUP_POINT} from "@/mocks/mocks-data";
 
 const bookingCount = BookingMocks.length;
 
+const heroHighlights = [
+    {value: bookingCount, label: "Кабинок"},
+    {value: "10:30–01:30", label: "каждый день"},
+    {value: "г. Грозный", label: "адрес"},
+];
+
 export function BookingScreen() {
     return (
         <main className="min-h-screen overflow-hidden bg-background text-text">
@@ -23,38 +29,54 @@ export function BookingScreen() {
                 </video>
 
                 <div
-                    className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.96)_28%,rgba(5,5,5,0.72)_56%,rgba(5,5,5,0.32)_100%)]"/>
+                    className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.36)_28%,rgba(5,5,5,0.32)_56%,rgba(5,5,5,0.2)_100%)]"/>
                 <div
                     className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_46%,#070808_100%)]"/>
 
-                <div className="flex min-h-140 items-end px-5 pb-12 pt-16 sm:px-6 lg:px-0">
+                <div
+                    className="flex min-h-[70vh] sm:min-h-140 items-center sm:items-end px-5 pb-8 sm:pb-12 sm:px-6 lg:px-0">
                     <div className="max-w-165">
                         <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
                             Бронирование
                         </p>
 
                         <h1
-                            className="max-w-[650px] text-[45px] font-normal leading-[0.98] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[76px]"
+                            className="max-w-162.5 text-[45px] font-normal leading-[0.98] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[76px]"
                             style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             Кабинки для спокойного вечера.
                         </h1>
 
-                        <p className="mt-6 max-w-[520px] text-[15px] leading-7 text-text/82 sm:text-[16px]">
+                        <p className="mt-6 max-w-130 text-[15px] leading-7 text-text/82 sm:text-[16px]">
                             Выберите приватную зону, а мы поможем забронировать удобное время в Mangal Club.
                         </p>
 
                         <div
-                            className="mt-9 grid max-w-155 overflow-hidden rounded-lg border border-border/70 bg-black/30 backdrop-blur-md sm:grid-cols-3">
-                            <HeroMetric label="кабинок" value={`${bookingCount}`}/>
-                            <HeroMetric label="работаем" value={PICKUP_POINT.schedule.replace("Ежедневно с ", "")}/>
-                            <HeroMetric label="адрес" value={PICKUP_POINT.city}/>
+                            className="mt-9 grid max-w-135 grid-cols-3 overflow-hidden rounded-[10px]
+                        border border-white/9 bg-black/30 backdrop-blur-md"
+                        >
+                            {heroHighlights.map((item, index) => (
+                                <div
+                                    key={item.label}
+                                    className={[
+                                        "px-4 py-4 sm:px-5 sm:py-5",
+                                        index !== 0 ? "border-l border-white/8" : "",
+                                    ].join(" ")}
+                                >
+                                    <div className="text-[12px] font-semibold leading-none text-text md:text-[19px]">
+                                        {item.value}
+                                    </div>
+                                    <div className="mt-2 text-[12px] leading-none text-text/60">
+                                        {item.label}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
+            <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
                 <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -104,7 +126,7 @@ export function BookingScreen() {
                                     </span>
                                 </span>
                                 <span
-                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-border/70 text-primary transition duration-300 group-hover:border-primary">
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border/70 text-primary transition duration-300 group-hover:border-primary">
                                     <ArrowRight className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5"
                                                 strokeWidth={1.8}/>
                                 </span>
@@ -114,24 +136,5 @@ export function BookingScreen() {
                 </div>
             </section>
         </main>
-    );
-}
-
-type HeroMetricProps = {
-    label: string;
-    value: string;
-};
-
-function HeroMetric({label, value}: HeroMetricProps) {
-    return (
-        <div
-            className="border-b border-border/50 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0 sm:px-5 sm:py-5">
-            <div className="text-[16px] font-semibold leading-none text-text sm:text-[19px]">
-                {value}
-            </div>
-            <div className="mt-2 text-[12px] leading-none text-text/60">
-                {label}
-            </div>
-        </div>
     );
 }

@@ -22,7 +22,7 @@ export function DeliverySelector() {
             type="button"
             onClick={openOrderTypeModal}
             className="group inline-flex h-10
-            min-w-[160px] max-w-[230px]
+            min-w-40 w-full md:max-w-57.5
             items-center justify-between gap-3 rounded-[7px] border border-border
             px-4 text-[13px] transition duration-300 hover:border-primary cursor-pointer hover:scale-101"
         >
