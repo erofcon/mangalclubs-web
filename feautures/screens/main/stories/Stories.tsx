@@ -204,25 +204,24 @@ export default function Stories() {
     return (
         <>
             <section
-                className="relative mx-auto -mt-10 w-full max-w-[1210px] px-5 pb-8 pt-6 text-text sm:px-6 lg:px-0">
+                className="relative mx-auto -mt-10 w-full max-w-302.5 px-5 pb-8 pt-6 text-text sm:px-6 lg:px-0">
                 <div
                     className="pointer-events-none absolute inset-x-5 top-0 h-px bg-linear-to-r
                     from-transparent via-[#5f472b] to-transparent sm:inset-x-6 lg:inset-x-0"/>
                 <h2
                     className="mb-5 text-[20px] font-normal leading-none text-text"
-                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                 >
                     Mangal Clubs в деталях
                 </h2>
 
                 <div
-                    className="flex items-start justify-start gap-5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    className="flex items-start justify-start gap-10 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {StoriesData.map((story, index) => (
                         <button
                             key={story.id}
                             type="button"
                             onClick={() => openStory(index)}
-                            className="group flex min-w-23.5 flex-col items-center gap-3 text-center cursor-pointer"
+                            className="group ms-6 md:ms-0 flex min-w-23.5 flex-col items-center gap-3 text-center cursor-pointer"
                         >
                             <span
                                 className={`
@@ -253,7 +252,7 @@ export default function Stories() {
                                 </span>
                             </span>
 
-                            <span className="text-[13px] leading-none text-text">{story.title}</span>
+                            <span className="text-[14px] leading-none font-semibold text-text">{story.title}</span>
                         </button>
                     ))}
                 </div>
