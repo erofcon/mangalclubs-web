@@ -222,12 +222,12 @@ export default function Stories() {
                             key={story.id}
                             type="button"
                             onClick={() => openStory(index)}
-                            className="group flex min-w-[94px] flex-col items-center gap-3 text-center cursor-pointer"
+                            className="group flex min-w-23.5 flex-col items-center gap-3 text-center cursor-pointer"
                         >
                             <span
                                 className={`
-                                    relative h-[92px] w-[92px] overflow-hidden rounded-full border border-primary
-                                    bg-[#111314] p-[3px] shadow-[0_18px_40px_rgba(0,0,0,0.42)]
+                                    relative h-40 w-35 overflow-hidden rounded-lg border border-primary
+                                    bg-[#111314] p-0.75 shadow-[0_18px_40px_rgba(0,0,0,0.42)]
                                     transition duration-300
                                     group-hover:scale-105
                                     group-hover:shadow-[0_22px_48px_rgba(214,173,104,0.16)]
@@ -241,7 +241,7 @@ export default function Stories() {
                                     `}
                             >
                                 <span
-                                    className="relative block h-full w-full overflow-hidden rounded-full bg-black">
+                                    className="relative block h-full w-full overflow-hidden rounded-lg bg-black">
                                     <Image
                                         src={story.previewImage}
                                         alt={story.title ?? "История"}

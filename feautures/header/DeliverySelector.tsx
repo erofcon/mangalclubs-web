@@ -23,10 +23,11 @@ export function DeliverySelector() {
             onClick={openOrderTypeModal}
             className="group inline-flex h-10
             min-w-40 w-full md:max-w-57.5
+            font-normal tracking-wider
             items-center justify-between gap-3 rounded-[7px] border border-border
             px-4 text-[13px] transition duration-300 hover:border-primary cursor-pointer hover:scale-101"
         >
-            <span className="inline-flex min-w-0 items-center gap-2">
+            <span className="inline-flex min-w-0 items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0"/>
                 <span className="truncate">{label}</span>
             </span>

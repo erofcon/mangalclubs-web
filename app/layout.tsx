@@ -13,11 +13,8 @@ import {RestaurantTypeModal} from "@/feautures/order/RestaurantTypeModal";
 import {OrderTypeModal} from "@/feautures/order/OrderTypeModal";
 import {ScrollToTop} from "@/feautures/floating-buttons/ScrollToTop";
 
+import {point} from "@/app/fonts";
 
-const myFont = Open_Sans({
-    subsets: ["cyrillic"],
-    weight: ["400", "600", "800"],
-});
 
 export const metadata: Metadata = {
     title: "Mangal Clubs",
@@ -31,7 +28,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ru">
-        <body className={`${myFont.className} min-h-dvh overflow-x-hidden bg-background`}>
+        <body className={`${point.className} min-h-dvh overflow-x-hidden bg-background`}>
         <Header/>
         {children}
         <Footer/>

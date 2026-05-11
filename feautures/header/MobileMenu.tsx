@@ -29,8 +29,8 @@ export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
 
     return (
         <div
-            className={`fixed inset-x-0 bottom-0 top-[95px] z-40 overflow-y-auto border-t
-            border-[#211c17] bg-background px-5 py-5 text-text transition-transform duration-300 md:hidden ${
+            className={`fixed inset-x-0 bottom-0 top-23.75 z-40 overflow-y-auto border-t
+            border-border/50 font-normal tracking-wider bg-background px-5 py-5 text-text transition-transform duration-300 md:hidden ${
                 isOpen
                     ? "translate-x-0 pointer-events-auto"
                     : "-translate-x-full pointer-events-none"
@@ -40,7 +40,7 @@ export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
                 <button
                     type="button"
                     onClick={handleProfileClick}
-                    className="flex min-h-12 w-full items-center gap-3 rounded-[8px] px-2 text-left text-[15px]"
+                    className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left text-[15px]"
                 >
                     {isAuthenticated ? "Профиль" : "Войти"}
                 </button>
@@ -50,7 +50,7 @@ export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
                         key={link.label}
                         href={link.href}
                         onClick={onClose}
-                        className="flex min-h-12 items-center rounded-[8px] px-2 text-[15px] transition"
+                        className="flex min-h-12 items-center rounded-lg px-2 text-[15px] transition"
                     >
                         {link.label}
                     </Link>

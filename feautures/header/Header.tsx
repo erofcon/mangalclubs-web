@@ -46,13 +46,13 @@ export default function Header() {
     return (
         <header className="relative z-50 text-text">
             <div
-                className="mx-auto flex h-[104px] w-full max-w-[1210px] items-center justify-between px-5 sm:px-6 lg:px-0">
+                className="mx-auto flex h-26 w-full max-w-302.5 items-center justify-between px-5 sm:px-6 lg:px-0">
                 <div className="hidden items-center gap-12 md:flex">
                     <Logo size="desktop"/>
                     <DeliverySelector/>
                 </div>
 
-                <nav className="hidden gap-[54px] text-[14px] font-medium md:flex">
+                <nav className="hidden gap-13.5 text-[14px] font-normal tracking-wider md:flex">
                     {topLinks.map((link) => (
                         <Link
                             key={link.label}
@@ -70,7 +70,7 @@ export default function Header() {
                         data-cart-target="header"
                         onClick={openCart}
                         className="relative cursor-pointer inline-flex h-10 w-10
-                        items-center justify-center text-primary transition duration-300 hover:scale-105"
+                        items-center justify-center text-[#FCB001] transition duration-300 hover:scale-105"
                         aria-label="Открыть корзину"
                     >
                         <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
@@ -78,7 +78,7 @@ export default function Header() {
                             <span
                                 className="absolute right-0 top-0 flex h-5 min-w-5
                                 items-center justify-center rounded-full
-                                bg-primary px-1 text-[11px] font-semibold text-on-primary">
+                                bg-[#FCB001] px-1 text-[11px] font-bold text-on-primary">
                                 {totalItems}
                             </span>
                         )}
@@ -94,7 +94,7 @@ export default function Header() {
                             type="button"
                             aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
                             onClick={() => setIsOpen((value) => !value)}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-[6px] border border-border text-text"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-text"
                         >
                             {isOpen ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}
                         </button>
@@ -102,7 +102,7 @@ export default function Header() {
                 </div>
             </div>
 
-            <div className="mx-auto w-full max-w-[1210px] px-5 pb-4 sm:px-6 md:hidden">
+            <div className="mx-auto w-full max-w-302.5 px-5 pb-4 sm:px-6 md:hidden">
                 <DeliverySelector/>
             </div>
 

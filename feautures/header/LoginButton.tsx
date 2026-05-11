@@ -17,7 +17,7 @@ export function LoginButton() {
             onClick={isAuthenticated ? () => router.push("/personal") : openAuthModal}
             className="inline-flex h-10 shrink-0 cursor-pointer
             items-center gap-2.5 rounded-[5px]
-            border border-border px-5 text-[13px] font-medium
+            border border-border px-5 text-[13px] font-normal tracking-wider
             text-text transition duration-300 hover:border-primary hover:scale-102"
         >
             <UserRound className="h-4 w-4"/>
