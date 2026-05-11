@@ -78,11 +78,11 @@ export function HeroSection() {
                             <button
                                 type="button"
                                 onClick={scrollToMenu}
-                                className="group inline-flex h-12 min-w-52.5 items-center
-                            justify-center gap-4 rounded-md bg-[#FCB001]
-                            px-6 text-[14px] font-bold text-on-primary
-                            shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_28px_rgba(252,176,1,0.28)]
-                            cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:bg-[#ffbf24]"
+                                className="group inline-flex h-12 md:h-16 min-w-52.5 items-center
+                                justify-center gap-4 rounded-md bg-[#FCB001]
+                                px-6 text-[16px] font-bold text-on-primary
+                                shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_28px_rgba(252,176,1,0.28)]
+                                cursor-pointer transition duration-300 hover:-translate-y-0.5 hover:bg-[#ffbf24]"
                             >
                                 Смотреть меню
                                 <ArrowRight
@@ -91,7 +91,9 @@ export function HeroSection() {
 
                             <Link
                                 href="/booking"
-                                className="inline-flex h-12 min-w-57 items-center justify-center gap-4 rounded-md bg-[#EA5516] px-6 text-[14px] font-bold text-on-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_10px_28px_rgba(234,85,22,0.3)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#f36a23]"
+                                className="inline-flex h-12 md:h-16 min-w-57 items-center
+                                justify-center gap-4 rounded-md bg-[#EA5516]
+                                 px-6 text-[16px] font-bold text-on-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_10px_28px_rgba(234,85,22,0.3)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#f36a23]"
                             >
                                 Забронировать стол
                                 <CalendarDays className="h-4 w-4 text-on-primary"/>
