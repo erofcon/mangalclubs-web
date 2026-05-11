@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import {
+    type PointerEvent,
     useCallback,
     useEffect,
     useMemo,
@@ -14,6 +15,24 @@ import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 
 const DEFAULT_IMAGE_DURATION = 5000;
 const LOAD_TIMEOUT = 15000;
+const STORY_SWIPE_DISTANCE = 56;
+const STORY_SWIPE_AXIS_RATIO = 1.15;
+const SUPPRESS_CLICK_AFTER_SWIPE_MS = 320;
+const STORY_DRAG_START_DISTANCE = 6;
+const STORY_CUBE_SETTLE_MS = 260;
+const STORY_CUBE_COMMIT_PROGRESS = 0.28;
+
+type StoryDirection = "previous" | "next";
+
+type StoryCubeTransition = {
+    fromStoryIndex: number;
+    fromSlideIndex: number;
+    toStoryIndex: number;
+    direction: StoryDirection;
+    progress: number;
+    isSettling: boolean;
+    shouldCommit: boolean;
+};
 
 function getMediaType(slide: {
     src: string;
@@ -34,21 +53,248 @@ function getMediaType(slide: {
     return "image";
 }
 
+function preloadImageSource(src?: string) {
+    if (!src || typeof window === "undefined") return;
+
+    const image = new window.Image();
+    image.decoding = "async";
+    image.src = src;
+}
+
+function preloadStoryFirstSlide(storyIndex: number | null) {
+    if (storyIndex === null) return;
+
+    const story = StoriesData[storyIndex];
+    const slide = story?.slides[0];
+    if (!story || !slide) return;
+
+    preloadImageSource(story.previewImage);
+
+    if (getMediaType(slide) === "video") {
+        preloadImageSource(slide.poster);
+        return;
+    }
+
+    preloadImageSource(slide.src);
+}
+
+function StoryJumpPreview({
+                              story,
+                              direction,
+                              onClick,
+                          }: {
+    story: (typeof StoriesData)[number];
+    direction: StoryDirection;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="group relative hidden aspect-9/16 h-[min(44svh,320px)] shrink-0
+            cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-[#111314]
+            text-left text-white opacity-70 shadow-[0_18px_46px_rgba(0,0,0,0.42)]
+            transition duration-300 hover:scale-[1.03] hover:opacity-100
+            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4
+            focus-visible:outline-primary lg:block"
+            aria-label={`${direction === "previous" ? "Previous" : "Next"} story${story.title ? `: ${story.title}` : ""}`}
+        >
+            <Image
+                src={story.previewImage}
+                alt={story.title ?? "Story"}
+                fill
+                sizes="180px"
+                className="object-cover transition duration-300 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 bg-linear-to-b from-black/15 via-black/10 to-black/75"/>
+            {story.title && (
+                <span className="absolute bottom-4 left-4 right-4 text-[16px] font-semibold leading-tight drop-shadow">
+                    {story.title}
+                </span>
+            )}
+        </button>
+    );
+}
+
+function StoryJumpPreviewPlaceholder() {
+    return (
+        <div
+            className="hidden aspect-9/16 h-[min(44svh,320px)] shrink-0 lg:block"
+            aria-hidden="true"
+        />
+    );
+}
+
+function StoryCubeFace({
+                           storyIndex,
+                           slideIndex,
+                           progressValue = 0,
+                       }: {
+    storyIndex: number;
+    slideIndex: number;
+    progressValue?: number;
+}) {
+    const story = StoriesData[storyIndex];
+    const safeSlideIndex = Math.min(slideIndex, story.slides.length - 1);
+    const slide = story.slides[safeSlideIndex] ?? story.slides[0];
+    const mediaType = getMediaType(slide);
+    const fallbackImage = mediaType === "video" ? slide.poster ?? story.previewImage : slide.src;
+
+    return (
+        <div
+            className="relative h-full w-full overflow-hidden bg-black bg-cover bg-center"
+            style={{backgroundImage: `url("${fallbackImage}")`}}
+        >
+            <div className="absolute left-2.5 right-2.5 top-2 z-20 flex gap-1">
+                {story.slides.map((_, index) => (
+                    <div
+                        key={index}
+                        className="h-1 flex-1 overflow-hidden rounded-full bg-white/35"
+                    >
+                        <div
+                            className="h-full bg-white"
+                            style={{
+                                width:
+                                    index < safeSlideIndex
+                                        ? "100%"
+                                        : index === safeSlideIndex
+                                            ? `${progressValue}%`
+                                            : "0%",
+                            }}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {mediaType === "video" ? (
+                <video
+                    src={slide.src}
+                    poster={slide.poster}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    autoPlay
+                    muted
+                    playsInline
+                    preload="metadata"
+                />
+            ) : (
+                <Image
+                    src={slide.src}
+                    alt={story.title ?? "История"}
+                    fill
+                    sizes="(min-width: 768px) calc(min(100svh, 820px) * 0.5625), 100vw"
+                    className="object-cover"
+                    priority
+                    unoptimized={slide.src.endsWith(".gif")}
+                />
+            )}
+        </div>
+    );
+}
+
+function StoryCubeTransitionOverlay({
+                                        transition,
+                                        progressValue,
+                                    }: {
+    transition: StoryCubeTransition;
+    progressValue: number;
+}) {
+    const rotationProgress = transition.shouldCommit
+        ? 1
+        : transition.isSettling
+            ? 0
+            : transition.progress;
+    const rotation = transition.direction === "next"
+        ? -90 * rotationProgress
+        : 90 * rotationProgress;
+    const cubeTransform = `translateZ(-50vw) rotateY(${rotation}deg)`;
+    const targetFaceTransform =
+        transition.direction === "next"
+            ? "rotateY(90deg) translateZ(50vw)"
+            : "rotateY(-90deg) translateZ(50vw)";
+
+    return (
+        <div
+            className="absolute inset-0 z-[60] overflow-hidden bg-black md:hidden"
+            style={{perspective: "1100px"}}
+        >
+            <div
+                className="absolute inset-0 transition-transform"
+                style={{
+                    transform: cubeTransform,
+                    transformStyle: "preserve-3d",
+                    transitionDuration: transition.isSettling ? `${STORY_CUBE_SETTLE_MS}ms` : "0ms",
+                    transitionTimingFunction: "cubic-bezier(0.2, 0.72, 0.18, 1)",
+                }}
+            >
+                <div
+                    className="absolute inset-0 overflow-hidden bg-black"
+                    style={{
+                        backfaceVisibility: "hidden",
+                        transform: "rotateY(0deg) translateZ(50vw)",
+                    }}
+                >
+                    <StoryCubeFace
+                        storyIndex={transition.fromStoryIndex}
+                        slideIndex={transition.fromSlideIndex}
+                        progressValue={progressValue}
+                    />
+                </div>
+
+                <div
+                    className="absolute inset-0 overflow-hidden bg-black"
+                    style={{
+                        backfaceVisibility: "hidden",
+                        transform: targetFaceTransform,
+                    }}
+                >
+                    <StoryCubeFace
+                        storyIndex={transition.toStoryIndex}
+                        slideIndex={0}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Stories() {
     const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
     const [activeSlideIndex, setActiveSlideIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [isMediaLoading, setIsMediaLoading] = useState(false);
     const [hasMediaError, setHasMediaError] = useState(false);
+    const [storyCubeTransition, setStoryCubeTransition] =
+        useState<StoryCubeTransition | null>(null);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const imageTimerStartedAtRef = useRef<number | null>(null);
+    const storySwipeStartRef = useRef<{
+        pointerId: number;
+        x: number;
+        y: number;
+        hasDragged: boolean;
+    } | null>(null);
+    const suppressClickAfterSwipeRef = useRef(false);
+    const suppressClickTimerRef = useRef<number | null>(null);
+    const storyCubeTimerRef = useRef<number | null>(null);
 
     const activeStory =
         activeStoryIndex !== null ? StoriesData[activeStoryIndex] : null;
 
     const activeSlide = activeStory?.slides[activeSlideIndex] ?? null;
     const isViewerOpen = Boolean(activeStory && activeSlide);
+    const previousStoryIndex =
+        activeStoryIndex !== null && activeStoryIndex > 0
+            ? activeStoryIndex - 1
+            : null;
+    const nextStoryIndex =
+        activeStoryIndex !== null && activeStoryIndex < StoriesData.length - 1
+            ? activeStoryIndex + 1
+            : null;
+    const previousStory =
+        previousStoryIndex !== null ? StoriesData[previousStoryIndex] : null;
+    const nextStory =
+        nextStoryIndex !== null ? StoriesData[nextStoryIndex] : null;
 
     useBodyScrollLock(isViewerOpen);
 
@@ -64,14 +310,135 @@ export default function Stories() {
         setHasMediaError(false);
     }, []);
 
+    const clearStoryCubeTransitionTimers = useCallback(() => {
+        if (storyCubeTimerRef.current !== null) {
+            window.clearTimeout(storyCubeTimerRef.current);
+            storyCubeTimerRef.current = null;
+        }
+    }, []);
+
     const close = useCallback(() => {
+        clearStoryCubeTransitionTimers();
         videoRef.current?.pause();
+        setStoryCubeTransition(null);
         setActiveStoryIndex(null);
         setActiveSlideIndex(0);
         setProgress(0);
         setIsMediaLoading(false);
         setHasMediaError(false);
         imageTimerStartedAtRef.current = null;
+    }, [clearStoryCubeTransitionTimers]);
+
+    const jumpToStory = useCallback(
+        (storyIndex: number) => {
+            if (
+                storyIndex < 0 ||
+                storyIndex >= StoriesData.length ||
+                storyIndex === activeStoryIndex
+            ) {
+                return;
+            }
+
+            clearStoryCubeTransitionTimers();
+            videoRef.current?.pause();
+            setStoryCubeTransition(null);
+            resetMediaState();
+            setActiveStoryIndex(storyIndex);
+            setActiveSlideIndex(0);
+        },
+        [activeStoryIndex, clearStoryCubeTransitionTimers, resetMediaState]
+    );
+
+    const updateMobileStoryDrag = useCallback(
+        (targetStoryIndex: number, direction: StoryDirection, dragProgress: number) => {
+            if (
+                activeStoryIndex === null ||
+                targetStoryIndex < 0 ||
+                targetStoryIndex >= StoriesData.length ||
+                targetStoryIndex === activeStoryIndex
+            ) {
+                return;
+            }
+
+            clearStoryCubeTransitionTimers();
+            videoRef.current?.pause();
+            setStoryCubeTransition({
+                fromStoryIndex: activeStoryIndex,
+                fromSlideIndex: activeSlideIndex,
+                toStoryIndex: targetStoryIndex,
+                direction,
+                progress: dragProgress,
+                isSettling: false,
+                shouldCommit: false,
+            });
+        },
+        [
+            activeSlideIndex,
+            activeStoryIndex,
+            clearStoryCubeTransitionTimers,
+        ]
+    );
+
+    const suppressClickAfterSwipe = useCallback(() => {
+        if (suppressClickTimerRef.current !== null) {
+            window.clearTimeout(suppressClickTimerRef.current);
+        }
+
+        suppressClickAfterSwipeRef.current = true;
+        suppressClickTimerRef.current = window.setTimeout(() => {
+            suppressClickAfterSwipeRef.current = false;
+            suppressClickTimerRef.current = null;
+        }, SUPPRESS_CLICK_AFTER_SWIPE_MS);
+    }, []);
+
+    const finishMobileStoryDrag = useCallback(
+        (shouldCommit: boolean) => {
+            if (!storyCubeTransition) return;
+
+            suppressClickAfterSwipe();
+            clearStoryCubeTransitionTimers();
+
+            setStoryCubeTransition((current) =>
+                current
+                    ? {
+                        ...current,
+                        progress: shouldCommit ? 1 : 0,
+                        isSettling: true,
+                        shouldCommit,
+                    }
+                    : current
+            );
+
+            storyCubeTimerRef.current = window.setTimeout(() => {
+                if (shouldCommit) {
+                    resetMediaState();
+                    setActiveStoryIndex(storyCubeTransition.toStoryIndex);
+                    setActiveSlideIndex(0);
+                }
+
+                setStoryCubeTransition(null);
+                storyCubeTimerRef.current = null;
+            }, STORY_CUBE_SETTLE_MS);
+        },
+        [
+            clearStoryCubeTransitionTimers,
+            resetMediaState,
+            storyCubeTransition,
+            suppressClickAfterSwipe,
+        ]
+    );
+
+    const consumeSuppressedClick = useCallback(() => {
+        if (!suppressClickAfterSwipeRef.current) return false;
+
+        suppressClickAfterSwipeRef.current = false;
+
+        if (suppressClickTimerRef.current !== null) {
+            window.clearTimeout(suppressClickTimerRef.current);
+            suppressClickTimerRef.current = null;
+        }
+
+        return true;
     }, []);
 
     const next = useCallback(() => {
@@ -126,13 +493,155 @@ export default function Stories() {
         resetMediaState,
     ]);
 
+    const handlePreviousClick = useCallback(() => {
+        if (storyCubeTransition) return;
+        if (consumeSuppressedClick()) return;
+
+        prev();
+    }, [consumeSuppressedClick, prev, storyCubeTransition]);
+
+    const handleNextClick = useCallback(() => {
+        if (storyCubeTransition) return;
+        if (consumeSuppressedClick()) return;
+
+        next();
+    }, [consumeSuppressedClick, next, storyCubeTransition]);
+
+    const handleViewerPointerDown = useCallback(
+        (event: PointerEvent<HTMLDivElement>) => {
+            if (
+                event.pointerType !== "touch" ||
+                activeStoryIndex === null ||
+                storyCubeTransition
+            ) {
+                return;
+            }
+
+            storySwipeStartRef.current = {
+                pointerId: event.pointerId,
+                x: event.clientX,
+                y: event.clientY,
+                hasDragged: false,
+            };
+
+            try {
+                event.currentTarget.setPointerCapture(event.pointerId);
+            } catch {
+                // Some mobile browsers can reject pointer capture during native gestures.
+            }
+        },
+        [activeStoryIndex, storyCubeTransition]
+    );
+
+    const handleViewerPointerMove = useCallback(
+        (event: PointerEvent<HTMLDivElement>) => {
+            const swipeStart = storySwipeStartRef.current;
+
+            if (
+                event.pointerType !== "touch" ||
+                !swipeStart ||
+                swipeStart.pointerId !== event.pointerId ||
+                activeStoryIndex === null
+            ) {
+                return;
+            }
+
+            const deltaX = event.clientX - swipeStart.x;
+            const deltaY = event.clientY - swipeStart.y;
+            const absoluteDeltaX = Math.abs(deltaX);
+            const absoluteDeltaY = Math.abs(deltaY);
+
+            if (
+                absoluteDeltaX < STORY_DRAG_START_DISTANCE ||
+                absoluteDeltaX < absoluteDeltaY * STORY_SWIPE_AXIS_RATIO
+            ) {
+                if (storyCubeTransition && !storyCubeTransition.isSettling) {
+                    setStoryCubeTransition(null);
+                }
+
+                return;
+            }
+
+            const direction: StoryDirection = deltaX < 0 ? "next" : "previous";
+            const targetStoryIndex =
+                direction === "next" ? nextStoryIndex : previousStoryIndex;
+
+            swipeStart.hasDragged = true;
+
+            if (targetStoryIndex === null) return;
+
+            event.preventDefault();
+
+            const viewerWidth = Math.max(event.currentTarget.clientWidth, 1);
+            const dragProgress = Math.min(absoluteDeltaX / viewerWidth, 1);
+
+            updateMobileStoryDrag(targetStoryIndex, direction, dragProgress);
+        },
+        [
+            activeStoryIndex,
+            nextStoryIndex,
+            previousStoryIndex,
+            storyCubeTransition,
+            updateMobileStoryDrag,
+        ]
+    );
+
+    const handleViewerPointerUp = useCallback(
+        (event: PointerEvent<HTMLDivElement>) => {
+            const swipeStart = storySwipeStartRef.current;
+
+            if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+
+            storySwipeStartRef.current = null;
+
+            const deltaX = event.clientX - swipeStart.x;
+            const deltaY = event.clientY - swipeStart.y;
+            const absoluteDeltaX = Math.abs(deltaX);
+            const absoluteDeltaY = Math.abs(deltaY);
+            const isStorySwipe =
+                absoluteDeltaX >= STORY_SWIPE_DISTANCE &&
+                absoluteDeltaX >= absoluteDeltaY * STORY_SWIPE_AXIS_RATIO;
+
+            if (swipeStart.hasDragged || storyCubeTransition) {
+                if (!storyCubeTransition) {
+                    suppressClickAfterSwipe();
+                    return;
+                }
+
+                const shouldCommit =
+                    isStorySwipe ||
+                    Boolean(
+                        storyCubeTransition &&
+                        storyCubeTransition.progress >= STORY_CUBE_COMMIT_PROGRESS
+                    );
+
+                finishMobileStoryDrag(shouldCommit);
+            }
+        },
+        [
+            finishMobileStoryDrag,
+            suppressClickAfterSwipe,
+            storyCubeTransition,
+        ]
+    );
+
+    const handleViewerPointerCancel = useCallback(() => {
+        storySwipeStartRef.current = null;
+
+        if (storyCubeTransition) {
+            finishMobileStoryDrag(false);
+        }
+    }, [finishMobileStoryDrag, storyCubeTransition]);
+
     const openStory = useCallback(
         (index: number) => {
+            clearStoryCubeTransitionTimers();
+            setStoryCubeTransition(null);
             resetMediaState();
             setActiveStoryIndex(index);
             setActiveSlideIndex(0);
         },
-        [resetMediaState]
+        [clearStoryCubeTransitionTimers, resetMediaState]
     );
 
     useEffect(() => {
@@ -152,7 +661,8 @@ export default function Stories() {
             !activeSlide ||
             activeMediaType !== "image" ||
             isMediaLoading ||
-            hasMediaError
+            hasMediaError ||
+            storyCubeTransition
         ) {
             imageTimerStartedAtRef.current = null;
             return;
@@ -187,6 +697,7 @@ export default function Stories() {
         activeMediaType,
         isMediaLoading,
         hasMediaError,
+        storyCubeTransition,
         next,
     ]);
 
@@ -200,6 +711,23 @@ export default function Stories() {
         video.pause();
         video.load();
     }, [activeSlide, activeMediaType]);
+
+    useEffect(() => {
+        if (!isViewerOpen) return;
+
+        preloadStoryFirstSlide(previousStoryIndex);
+        preloadStoryFirstSlide(nextStoryIndex);
+    }, [isViewerOpen, nextStoryIndex, previousStoryIndex]);
+
+    useEffect(() => {
+        return () => {
+            clearStoryCubeTransitionTimers();
+
+            if (suppressClickTimerRef.current !== null) {
+                window.clearTimeout(suppressClickTimerRef.current);
+            }
+        };
+    }, [clearStoryCubeTransitionTimers]);
 
     return (
         <>
@@ -260,166 +788,199 @@ export default function Stories() {
 
             {activeStory && activeSlide && (
                 <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black">
-                    <button
-                        type="button"
-                        onClick={prev}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-text transition hover:text-white md:block"
-                        aria-label="Предыдущая история"
-                    >
-                        <ChevronLeft className="h-10 w-10"/>
-                    </button>
-
-                    <div
-                        className="relative h-svh w-screen overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
-                        <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
-                            {activeStory.slides.map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="h-1 flex-1 overflow-hidden rounded-full bg-white/35"
-                                >
-                                    <div
-                                        className="h-full bg-white transition-[width] duration-75"
-                                        style={{
-                                            width:
-                                                index < activeSlideIndex
-                                                    ? "100%"
-                                                    : index === activeSlideIndex
-                                                        ? `${progress}%`
-                                                        : "0%",
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={close}
-                            className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer
-                             items-center justify-center rounded-full border-0 bg-black/45 text-text"
-                            aria-label="Закрыть историю"
-                        >
-                            <X className="h-5 w-5"/>
-                        </button>
-
-                        {activeMediaType === "video" ? (
-                            <video
-                                ref={videoRef}
-                                key={activeSlide.src}
-                                src={activeSlide.src}
-                                poster={activeSlide.poster}
-                                className="absolute inset-0 h-full w-full object-cover"
-                                autoPlay
-                                muted
-                                playsInline
-                                preload="auto"
-                                controls={false}
-                                onLoadedData={() => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(false);
-                                }}
-                                onCanPlay={async (event) => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(false);
-
-                                    try {
-                                        await event.currentTarget.play();
-                                    } catch {
-                                        setHasMediaError(true);
-                                    }
-                                }}
-                                onWaiting={() => setIsMediaLoading(true)}
-                                onPlaying={() => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(false);
-                                }}
-                                onError={() => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(true);
-                                }}
-                                onTimeUpdate={(event) => {
-                                    const video = event.currentTarget;
-
-                                    if (!video.duration || isMediaLoading || hasMediaError) {
-                                        return;
-                                    }
-
-                                    setProgress((video.currentTime / video.duration) * 100);
-                                }}
-                                onEnded={next}
+                    <div className="flex h-full w-full items-center justify-center gap-3 overflow-hidden px-0 md:px-4">
+                        {previousStory && previousStoryIndex !== null ? (
+                            <StoryJumpPreview
+                                story={previousStory}
+                                direction="previous"
+                                onClick={() => jumpToStory(previousStoryIndex)}
                             />
                         ) : (
-                            <Image
-                                key={activeSlide.src}
-                                src={activeSlide.src}
-                                alt={activeStory.title ?? "История"}
-                                fill
-                                sizes="100vw"
-                                className="object-cover"
-                                priority
-                                unoptimized={activeSlide.src.endsWith(".gif")}
-                                onLoad={() => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(false);
-                                }}
-                                onError={() => {
-                                    setIsMediaLoading(false);
-                                    setHasMediaError(true);
-                                }}
-                            />
+                            <StoryJumpPreviewPlaceholder/>
                         )}
 
-                        {(isMediaLoading || hasMediaError) && (
-                            <div
-                                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
-                                {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
-                            </div>
-                        )}
+                        <button
+                            type="button"
+                            onClick={handlePreviousClick}
+                            className="hidden h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-white/10 text-text transition hover:bg-white/18 hover:text-white md:flex"
+                            aria-label="Предыдущая история"
+                        >
+                            <ChevronLeft className="h-10 w-10"/>
+                        </button>
 
                         <div
-                            className="absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
-                            <button
-                                type="button"
-                                onClick={prev}
-                                aria-label="Предыдущий слайд"
-                                className="rounded-full bg-black/55 p-2 text-text"
-                            >
-                                <ChevronLeft className="h-5 w-5"/>
-                            </button>
+                            onPointerDown={handleViewerPointerDown}
+                            onPointerMove={handleViewerPointerMove}
+                            onPointerUp={handleViewerPointerUp}
+                            onPointerCancel={handleViewerPointerCancel}
+                            className="relative h-svh w-screen touch-pan-y overflow-hidden bg-black md:aspect-9/16 md:h-[min(100svh,820px)] md:w-auto md:rounded-[14px]">
+                            <div className="absolute left-2.5 right-2.5 top-2 z-40 flex gap-1">
+                                {activeStory.slides.map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="h-1 flex-1 overflow-hidden rounded-full bg-white/35"
+                                    >
+                                        <div
+                                            className="h-full bg-white transition-[width] duration-75"
+                                            style={{
+                                                width:
+                                                    index < activeSlideIndex
+                                                        ? "100%"
+                                                        : index === activeSlideIndex
+                                                            ? `${progress}%`
+                                                            : "0%",
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
 
                             <button
                                 type="button"
-                                onClick={next}
-                                aria-label="Следующий слайд"
-                                className="rounded-full bg-black/55 p-2 text-text"
+                                onClick={close}
+                                className="absolute right-3 top-6 z-50 flex h-10 w-10 cursor-pointer
+                             items-center justify-center rounded-full border-0 bg-black/45 text-text"
+                                aria-label="Закрыть историю"
                             >
-                                <ChevronRight className="h-5 w-5"/>
+                                <X className="h-5 w-5"/>
                             </button>
+
+                            {activeMediaType === "video" ? (
+                                <video
+                                    ref={videoRef}
+                                    key={activeSlide.src}
+                                    src={activeSlide.src}
+                                    poster={activeSlide.poster}
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                    autoPlay
+                                    muted
+                                    playsInline
+                                    preload="auto"
+                                    controls={false}
+                                    onLoadedData={() => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(false);
+                                    }}
+                                    onCanPlay={async (event) => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(false);
+
+                                        try {
+                                            await event.currentTarget.play();
+                                        } catch {
+                                            setHasMediaError(true);
+                                        }
+                                    }}
+                                    onWaiting={() => setIsMediaLoading(true)}
+                                    onPlaying={() => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(false);
+                                    }}
+                                    onError={() => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(true);
+                                    }}
+                                    onTimeUpdate={(event) => {
+                                        const video = event.currentTarget;
+
+                                        if (!video.duration || isMediaLoading || hasMediaError) {
+                                            return;
+                                        }
+
+                                        setProgress((video.currentTime / video.duration) * 100);
+                                    }}
+                                    onEnded={next}
+                                />
+                            ) : (
+                                <Image
+                                    key={activeSlide.src}
+                                    src={activeSlide.src}
+                                    alt={activeStory.title ?? "История"}
+                                    fill
+                                    sizes="(min-width: 768px) calc(min(100svh, 820px) * 0.5625), 100vw"
+                                    className="object-cover"
+                                    priority
+                                    unoptimized={activeSlide.src.endsWith(".gif")}
+                                    onLoad={() => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(false);
+                                    }}
+                                    onError={() => {
+                                        setIsMediaLoading(false);
+                                        setHasMediaError(true);
+                                    }}
+                                />
+                            )}
+
+                            {(isMediaLoading || hasMediaError) && (
+                                <div
+                                    className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
+                                    {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}
+                                </div>
+                            )}
+
+                            <div
+                                className="absolute inset-x-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-4 md:hidden">
+                                <button
+                                    type="button"
+                                    onClick={handlePreviousClick}
+                                    aria-label="Предыдущий слайд"
+                                    className="rounded-full bg-black/55 p-2 text-text"
+                                >
+                                    <ChevronLeft className="h-5 w-5"/>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleNextClick}
+                                    aria-label="Следующий слайд"
+                                    className="rounded-full bg-black/55 p-2 text-text"
+                                >
+                                    <ChevronRight className="h-5 w-5"/>
+                                </button>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handlePreviousClick}
+                                className="absolute bottom-0 left-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
+                                aria-label="Предыдущий слайд"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={handleNextClick}
+                                className="absolute bottom-0 right-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
+                                aria-label="Следующий слайд"
+                            />
+
+                            {storyCubeTransition && (
+                                <StoryCubeTransitionOverlay
+                                    transition={storyCubeTransition}
+                                    progressValue={progress}
+                                />
+                            )}
                         </div>
 
                         <button
                             type="button"
-                            onClick={prev}
-                            className="absolute bottom-0 left-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                            aria-label="Предыдущий слайд"
-                        />
+                            onClick={handleNextClick}
+                            className="hidden h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-white/10 text-text transition hover:bg-white/18 hover:text-white md:flex"
+                            aria-label="Следующая история"
+                        >
+                            <ChevronRight className="h-10 w-10"/>
+                        </button>
 
-                        <button
-                            type="button"
-                            onClick={next}
-                            className="absolute bottom-0 right-0 top-0 z-10 w-1/2 cursor-pointer border-0 bg-transparent"
-                            aria-label="Следующий слайд"
-                        />
+                        {nextStory && nextStoryIndex !== null ? (
+                            <StoryJumpPreview
+                                story={nextStory}
+                                direction="next"
+                                onClick={() => jumpToStory(nextStoryIndex)}
+                            />
+                        ) : (
+                            <StoryJumpPreviewPlaceholder/>
+                        )}
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={next}
-                        className="hidden cursor-pointer border-0 bg-transparent px-6 text-text transition hover:text-white md:block"
-                        aria-label="Следующая история"
-                    >
-                        <ChevronRight className="h-10 w-10"/>
-                    </button>
                 </div>
             )}
         </>
