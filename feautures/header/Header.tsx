@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect, useState} from "react";
-import {Menu, ShoppingCart, X} from "lucide-react";
+import {Menu, ShoppingCart, X, Search} from "lucide-react";
 import {Logo} from "@/feautures/header/Logo";
 import {DeliverySelector} from "@/feautures/header/DeliverySelector";
 import {LoginButton} from "@/feautures/header/LoginButton";
@@ -65,6 +65,12 @@ export default function Header() {
                 </nav>
 
                 <div className="hidden items-center gap-6 md:flex">
+                    <button
+                        type="button"
+                        className="cursor-pointer text-text"
+                    >
+                        <Search  className="h-6 w-6" strokeWidth={1.8}/>
+                    </button>
                     <button
                         type="button"
                         data-cart-target="header"

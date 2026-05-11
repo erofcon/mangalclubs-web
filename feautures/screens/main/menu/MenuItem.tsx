@@ -90,7 +90,9 @@ export function MenuItem({item}: MenuItemProps) {
 
             <button
                 onClick={handleAddToCart}
-                className="absolute bottom-4 right-4 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[5px] border border-[#4a3925] bg-[#111213] text-[#d6ad68] transition duration-300 hover:border-[#d6ad68] hover:text-[#f5efe5] active:scale-95"
+                className="absolute bottom-4 right-4 inline-flex h-9 w-9 cursor-pointer
+                items-center justify-center rounded-[5px] border border-[#4a3925] bg-[#111213] text-primary
+                transition duration-300 hover:border-primary active:scale-95"
                 aria-label={`Добавить ${item.name} в корзину`}
             >
                 <ShoppingCart className="h-4.5 w-4.5" strokeWidth={1.8}/>

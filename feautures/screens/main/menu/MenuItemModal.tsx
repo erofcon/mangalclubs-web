@@ -86,7 +86,6 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                         </p>
                         <h2
                             className="pr-12 text-center text-[28px] font-normal leading-tight text-text sm:text-[34px] md:text-left"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             {item.name}
                         </h2>
@@ -101,7 +100,8 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                             </h3>
 
                             <div
-                                className="mt-3 grid grid-cols-2 overflow-hidden rounded-[8px] border border-border/70 text-center sm:grid-cols-4">
+                                className="mt-3 grid grid-cols-2 overflow-hidden rounded-lg
+                                border border-border/70 text-center sm:grid-cols-4">
                                 <div>
                                     <div className="border-b border-border/50 px-3 py-3 sm:border-b-0 sm:border-r">
                                         <div className="text-xs font-semibold text-text/60">
@@ -152,11 +152,13 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                     <div className="shrink-0 border-t border-border bg-background p-5 sm:p-8">
                         <div className="flex items-center gap-4">
                             <div
-                                className="flex h-12 w-32 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
+                                className="flex h-12 w-32 shrink-0 items-center justify-between
+                                rounded-md border border-border p-1">
                                 <button
                                     onClick={decreaseQuantity}
                                     disabled={quantity <= 1}
-                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[4px] text-text transition hover:text-primary disabled:opacity-50"
+                                    className="flex h-10 w-10 cursor-pointer items-center justify-center
+                                    rounded-sm text-text transition hover:text-primary disabled:opacity-50"
                                     aria-label="Уменьшить количество"
                                 >
                                     <Minus className="h-5 w-5"/>
@@ -168,7 +170,7 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
                                 <button
                                     onClick={increaseQuantity}
-                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[4px] text-text transition hover:text-primary"
+                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-sm text-text transition hover:text-primary"
                                     aria-label="Увеличить количество"
                                 >
                                     <Plus className="h-5 w-5"/>
@@ -177,7 +179,9 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
 
                             <button
                                 onClick={handleAddToCart}
-                                className="flex h-12 flex-1 cursor-pointer items-center justify-center rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 md:text-base"
+                                className="flex h-12 flex-1 cursor-pointer items-center justify-center
+                                rounded-md bg-primary px-6 text-sm font-bold
+                                text-on-primary transition duration-300 hover:-translate-y-0.5 md:text-base"
                             >
                                 Добавить за {(item.price * quantity).toLocaleString("ru-RU")}&nbsp;₽
                             </button>
