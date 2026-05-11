@@ -12,7 +12,7 @@ const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, 
 export function Footer() {
     return (
         <footer className="border-t border-border/70 bg-background text-text">
-            <div className="mx-auto w-full max-w-[1210px] px-5 py-10 sm:px-6 lg:px-0 lg:py-14">
+            <div className="mx-auto w-full max-w-302.5 px-5 py-10 sm:px-6 lg:px-0 lg:py-14">
                 <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.95fr)]">
                     <div className="min-w-0">
                         <Link href="/" aria-label="Mangal Club" className="inline-flex">
@@ -25,7 +25,7 @@ export function Footer() {
                             />
                         </Link>
 
-                        <p className="mt-5 max-w-[420px] text-[14px] leading-6 text-text/70">
+                        <p className="mt-5 max-w-105 text-[14px] leading-6 text-text/70 font-semibold">
                             Мангал Клабс - сеть мясных ресторанов с приватными кабинками,
                             живым огнем и внимательным отношением к каждому гостю.
                         </p>
@@ -35,7 +35,8 @@ export function Footer() {
                                 href="https://www.instagram.com/mangalclubs/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                                className="inline-flex h-11 items-center gap-3 rounded-md border border-border/70 px-4 text-[14px]
+                                font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
                             >
                                 <Image
                                     src="/icons/Instagram.svg"
@@ -51,7 +52,8 @@ export function Footer() {
                                 href={whatsappHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px]
+                                font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
                             >
                                 <Image
                                     src="/icons/WhatsappIcon.svg"
@@ -66,7 +68,7 @@ export function Footer() {
                     </div>
 
                     <div className="min-w-0 border-t border-border/70 pt-6 lg:border-t-0 lg:pt-0">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                        <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
                             Контакты
                         </p>
 
@@ -92,7 +94,7 @@ export function Footer() {
 
                     <div className="grid min-w-0 gap-8 border-t border-border/70 pt-6 sm:grid-cols-2 lg:border-t-0 lg:pt-0">
                         <nav>
-                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
                                 Разделы
                             </p>
 
@@ -112,7 +114,7 @@ export function Footer() {
                         </nav>
 
                         <div>
-                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
                                 Приложение
                             </p>
 
@@ -132,7 +134,8 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-10 flex flex-col gap-3 border-t border-border/55 pt-5 text-[12px] text-text/52 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-10 flex flex-col gap-3 border-t
+                border-border/55 pt-5 text-[12px] tracking-wide text-text/52 sm:flex-row sm:items-center sm:justify-between">
                     <p>© 2026 ИП Гусейнова Парване Махаррамовна</p>
                     <p>Все права защищены</p>
                 </div>
@@ -155,10 +158,10 @@ function FooterInfo({icon, label, value, href}: FooterInfoProps) {
                 {icon}
             </span>
             <span className="min-w-0">
-                <span className="block text-[12px] text-text/55">
+                <span className="block font-semibold tracking-wider text-[12px] text-text/55">
                     {label}
                 </span>
-                <span className="mt-1 block wrap-break-word text-[14px] font-semibold leading-6 text-text">
+                <span className="mt-1 block wrap-break-word text-[14px] font-semibold tracking-wider leading-6 text-text">
                     {value}
                 </span>
             </span>

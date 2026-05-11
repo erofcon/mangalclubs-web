@@ -396,7 +396,6 @@ export function CategoriesNav() {
                             <h2
                                 id="category-dropdown-title"
                                 className="text-[18px] font-normal leading-tight text-text"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 Категории
                             </h2>
@@ -404,7 +403,8 @@ export function CategoriesNav() {
                             <button
                                 type="button"
                                 onClick={() => setIsCategoryMenuOpen(false)}
-                                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] text-text/70 transition duration-300 hover:bg-white/[0.06] hover:text-primary"
+                                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center
+                                rounded-md text-text/70 transition duration-300 hover:bg-white/6 hover:text-primary"
                                 aria-label="Закрыть"
                             >
                                 <X className="h-4 w-4" strokeWidth={2.2}/>
@@ -420,13 +420,16 @@ export function CategoriesNav() {
                                         key={category.id}
                                         type="button"
                                         onClick={() => selectCategory(category.id)}
-                                        className={`group flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-[6px] border px-3.5 py-2.5 text-left text-[14px] leading-5 transition duration-300 ${getCategoryGridSpanClass(category.title)} ${
+                                        className={`group flex min-h-11 cursor-pointer items-center justify-between gap-4 
+                                        rounded-md border px-3.5 py-2.5 text-left text-[14px] leading-5 transition duration-300 
+                                        ${getCategoryGridSpanClass(category.title)} ${
                                             isActive
                                                 ? "border-primary/60 bg-primary/12 text-primary"
-                                                : "border-transparent bg-transparent text-text/78 hover:border-border/60 hover:bg-white/[0.045] hover:text-text"
+                                                : "border-transparent bg-transparent text-text/78 hover:border-border/60 " +
+                                                "hover:bg-white/4.5 hover:text-text"
                                         }`}
                                     >
-                                        <span className="min-w-0">{category.title}</span>
+                                        <span className="min-w-0 font-semibold">{category.title}</span>
                                         <span
                                             className={`h-1.5 w-1.5 shrink-0 rounded-full transition duration-300 ${
                                                 isActive
@@ -463,7 +466,6 @@ export function CategoriesNav() {
                             <h2
                                 id="category-menu-title"
                                 className="text-[26px] font-normal leading-tight text-text"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 Категории
                             </h2>
@@ -487,7 +489,9 @@ export function CategoriesNav() {
                                         key={category.id}
                                         type="button"
                                         onClick={() => selectCategory(category.id)}
-                                        className={`group flex min-h-13 cursor-pointer items-center justify-between gap-4 rounded-[8px] border px-4 py-3 text-left text-[15px] leading-5 transition duration-300 ${getCategoryGridSpanClass(category.title)} ${
+                                        className={`group flex min-h-13 cursor-pointer items-center justify-between gap-4 
+                                        rounded-lg border px-4 py-3 text-left text-[15px] leading-5 transition
+                                         duration-300 ${getCategoryGridSpanClass(category.title)} ${
                                             isActive
                                                 ? "border-primary/70 bg-primary/14 text-primary shadow-[0_12px_30px_rgba(214,173,104,0.12)]"
                                                 : "border-border/50 bg-white/[0.035] text-text/82 hover:border-primary/60 hover:text-text"

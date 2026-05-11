@@ -66,25 +66,24 @@ export function MenuItem({item}: MenuItemProps) {
 
             <div className="relative flex min-w-0 flex-1 flex-col justify-center py-4 pl-2 pr-14.5">
                 <h3
-                    className="line-clamp-2 wrap-break-word text-[15px] font-normal leading-4.75 text-[#f3ede5]"
-                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                    className="line-clamp-2 wrap-break-word text-[15px] font-semibold leading-4.75 tracking-wide text-[#f3ede5]"
                 >
                     {item.name}
                 </h3>
 
                 {item.description && (
-                    <p className="mt-1 line-clamp-1 text-[13px] leading-5 text-[#b8afa5]">
+                    <p className="mt-1 line-clamp-1 text-[12px] leading-5 text-text">
                         {item.description}
                     </p>
                 )}
 
                 {item.weight && (
-                    <p className="mt-2 text-[13px] leading-none text-[#b8afa5]">
+                    <p className="mt-2 text-[12px] leading-none text-text">
                         {item.weight}
                     </p>
                 )}
 
-                <p className="mt-3 text-[16px] font-semibold leading-none text-[#f5efe5]">
+                <p className="mt-3 text-[16px] font-bold leading-4 tracking-wide text-text">
                     {item.price.toLocaleString("ru-RU")} ₽
                 </p>
             </div>
