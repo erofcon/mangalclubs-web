@@ -55,14 +55,6 @@
     grid-template-columns: minmax(0, 1fr);
 }
 
-.booking-category-rail {
-    scrollbar-width: none;
-}
-
-.booking-category-rail::-webkit-scrollbar {
-    display: none;
-}
-
 .booking-surface {
     background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 42%),

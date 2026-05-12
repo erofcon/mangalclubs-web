@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useRef, useState} from "react";
+import {type ReactNode, useCallback, useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import {Menu, ShoppingCart, X} from "lucide-react";
 import {categories} from "@/mocks/mocks-data";
@@ -10,6 +10,21 @@ import {useUIStore} from "@/store/ui-store";
 
 const FLY_ANIMATION_DURATION_MS = 1650;
 const HALF_WIDTH_CATEGORY_MAX_LENGTH = 20;
+
+export type CategoryNavItem = {
+    id: string | number;
+    title: string;
+};
+
+type CategoryNavProps = {
+    items: CategoryNavItem[];
+    sectionIdPrefix: string;
+    ariaLabel?: string;
+    menuTitle?: string;
+    scrollOffset?: number;
+    activeThreshold?: number;
+    rightSlot?: ReactNode;
+};
 
 type FlyingItem = {
     id: string;
@@ -70,30 +85,39 @@ const getCategoryGridSpanClass = (title: string) => {
     return title.length <= HALF_WIDTH_CATEGORY_MAX_LENGTH ? "" : "col-span-full";
 };
 
-export function CategoriesNav() {
+export function CategoryNav({
+                                items,
+                                sectionIdPrefix,
+                                ariaLabel = "Категории",
+                                menuTitle = "Категории",
+                                scrollOffset = -104,
+                                activeThreshold = 150,
+                                rightSlot,
+                            }: CategoryNavProps) {
     const [activeId, setActiveId] = useState<string | number | null>(
-        categories[0]?.id ?? null
+        items[0]?.id ?? null
     );
-
     const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
     const [isMobileCategoryMenu, setIsMobileCategoryMenu] = useState(false);
-    const [isHeaderCartVisible, setIsHeaderCartVisible] = useState(true);
-
-    const openCart = useUIStore((state) => state.openCart);
-    const totalItems = useCartStore((state) =>
-        state.items.reduce((sum, item) => sum + item.quantity, 0),
-    );
 
     const categoryListRef = useRef<HTMLUListElement | null>(null);
     const categoryRefs = useRef<Record<string, HTMLLIElement | null>>({});
     const categoryMenuButtonRef = useRef<HTMLButtonElement | null>(null);
     const categoryMenuPanelRef = useRef<HTMLDivElement | null>(null);
 
-    const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
+    const dropdownTitleId = `${sectionIdPrefix}-category-dropdown-title`;
+    const mobileTitleId = `${sectionIdPrefix}-category-menu-title`;
+    const currentActiveId = items.some((item) => item.id === activeId)
+        ? activeId
+        : items[0]?.id ?? null;
 
     useBodyScrollLock(isCategoryMenuOpen && isMobileCategoryMenu);
 
-    const scrollActiveCategoryIntoView = (categoryId: string | number) => {
+    const getSectionId = useCallback((categoryId: string | number) => {
+        return `${sectionIdPrefix}-${categoryId}`;
+    }, [sectionIdPrefix]);
+
+    const scrollActiveCategoryIntoView = useCallback((categoryId: string | number) => {
         const list = categoryListRef.current;
         const element = categoryRefs.current[String(categoryId)];
 
@@ -112,76 +136,31 @@ export function CategoriesNav() {
             left,
             behavior: "smooth",
         });
-    };
-
-    useEffect(() => {
-        const handleFlyToCart = (event: Event) => {
-            const customEvent = event as CustomEvent<{
-                image?: string;
-                name: string;
-                from: {
-                    x: number;
-                    y: number;
-                };
-                onComplete?: () => void;
-            }>;
-
-            const cartRect = getVisibleCartButtonRect();
-
-            if (!cartRect) {
-                customEvent.detail.onComplete?.();
-                return;
-            }
-
-            const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-            const flyingItem: FlyingItem = {
-                id,
-                image: customEvent.detail.image,
-                name: customEvent.detail.name,
-                onComplete: customEvent.detail.onComplete,
-                from: customEvent.detail.from,
-                center: {
-                    x: window.innerWidth / 2,
-                    y: window.innerHeight / 2,
-                },
-                to: {
-                    x: cartRect.left + cartRect.width / 2,
-                    y: cartRect.top + cartRect.height / 2,
-                },
-            };
-
-            setFlyingItems((prev) => [...prev, flyingItem]);
-        };
-
-        window.addEventListener("fly-to-cart", handleFlyToCart);
-
-        return () => {
-            window.removeEventListener("fly-to-cart", handleFlyToCart);
-        };
     }, []);
 
     useEffect(() => {
+        if (items.length === 0) return;
+
         let scrollTimeout: ReturnType<typeof setTimeout>;
 
         const updateActiveCategory = () => {
-            let currentId: string | number | null = categories[0]?.id ?? null;
+            let currentId: string | number | null = items[0]?.id ?? null;
 
-            categories.forEach((category) => {
-                const section = document.getElementById(`menu-${category.id}`);
+            items.forEach((category) => {
+                const section = document.getElementById(getSectionId(category.id));
 
                 if (!section) return;
 
                 const sectionTop = section.getBoundingClientRect().top;
 
-                if (sectionTop <= 150) {
+                if (sectionTop <= activeThreshold) {
                     currentId = category.id;
                 }
             });
 
             setActiveId(currentId);
 
-            if (currentId) {
+            if (currentId !== null) {
                 scrollActiveCategoryIntoView(currentId);
             }
         };
@@ -202,27 +181,7 @@ export function CategoriesNav() {
             clearTimeout(scrollTimeout);
             window.removeEventListener("scroll", handleScroll);
         };
-    }, []);
-
-    useEffect(() => {
-        const updateHeaderCartVisibility = () => {
-            const headerCartButton = document.querySelector<HTMLElement>(
-                '[data-cart-target="header"]'
-            );
-
-            setIsHeaderCartVisible(isCartTargetVisible(headerCartButton));
-        };
-
-        updateHeaderCartVisibility();
-
-        window.addEventListener("scroll", updateHeaderCartVisibility, {passive: true});
-        window.addEventListener("resize", updateHeaderCartVisibility);
-
-        return () => {
-            window.removeEventListener("scroll", updateHeaderCartVisibility);
-            window.removeEventListener("resize", updateHeaderCartVisibility);
-        };
-    }, []);
+    }, [activeThreshold, getSectionId, items, scrollActiveCategoryIntoView]);
 
     useEffect(() => {
         const updateMenuMode = () => {
@@ -277,22 +236,21 @@ export function CategoriesNav() {
         };
     }, [isCategoryMenuOpen, isMobileCategoryMenu]);
 
-    const scrollToCategory = (categoryId: string | number) => {
-        const section = document.getElementById(`menu-${categoryId}`);
+    const scrollToCategory = useCallback((categoryId: string | number) => {
+        const section = document.getElementById(getSectionId(categoryId));
 
         if (!section) return;
 
         setActiveId(categoryId);
         scrollActiveCategoryIntoView(categoryId);
 
-        const yOffset = -104;
-        const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
+        const y = section.getBoundingClientRect().top + window.scrollY + scrollOffset;
 
         window.scrollTo({
             top: y,
             behavior: "smooth",
         });
-    };
+    }, [getSectionId, scrollActiveCategoryIntoView, scrollOffset]);
 
     const selectCategory = (categoryId: string | number) => {
         setIsCategoryMenuOpen(false);
@@ -302,11 +260,14 @@ export function CategoriesNav() {
         }, 0);
     };
 
+    if (items.length === 0) return null;
+
     return (
         <>
             <nav
                 className="sticky top-0 z-10 mx-auto w-full max-w-302.5 border-b border-border/50
                 bg-background shadow-[0_18px_45px_rgba(0,0,0,0.34)]"
+                aria-label={ariaLabel}
             >
                 <div
                     className="mx-auto flex w-full max-w-302.5 items-center
@@ -331,8 +292,8 @@ export function CategoriesNav() {
                         className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap
                         scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
-                        {categories.map((category) => {
-                            const isActive = activeId === category.id;
+                        {items.map((category) => {
+                            const isActive = currentActiveId === category.id;
 
                             return (
                                 <li
@@ -344,6 +305,7 @@ export function CategoriesNav() {
                                     <button
                                         type="button"
                                         onClick={() => scrollToCategory(category.id)}
+                                        aria-current={isActive ? "true" : undefined}
                                         className={`h-10 rounded-full px-7 text-[14px] transition duration-300 cursor-pointer ${
                                             isActive
                                                 ? "border border-border text-primary bg-background shadow-[0_0_22px_rgba(214,173,104,0.12)]"
@@ -357,31 +319,7 @@ export function CategoriesNav() {
                         })}
                     </ul>
 
-                    <button
-                        type="button"
-                        data-cart-target="category"
-                        tabIndex={isHeaderCartVisible ? -1 : 0}
-                        onClick={openCart}
-                        className={`relative hidden h-10 w-10 cursor-pointer md:inline-flex
-                        items-center justify-center text-primary transition duration-300 hover:scale-105
-                        ${
-                            isHeaderCartVisible
-                                ? "pointer-events-none opacity-0"
-                                : "pointer-events-auto opacity-100"
-                        }
-                        `}
-                        aria-label="Открыть корзину"
-                    >
-                        <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
-                        {totalItems > 0 && (
-                            <span
-                                className="absolute right-0 top-0 flex h-5 min-w-5
-                                items-center justify-center rounded-full
-                                bg-primary px-1 text-[11px] font-semibold text-on-primary">
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
+                    {rightSlot}
                 </div>
 
                 {isCategoryMenuOpen && (
@@ -390,14 +328,14 @@ export function CategoriesNav() {
                         className="absolute left-5 top-[calc(100%+10px)] hidden w-[min(420px,calc(100vw-40px))] overflow-hidden rounded-[8px] border border-border/70 bg-background/98 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:left-6 md:block lg:left-0"
                         role="dialog"
                         aria-modal="false"
-                        aria-labelledby="category-dropdown-title"
+                        aria-labelledby={dropdownTitleId}
                     >
                         <div className="flex items-center justify-between gap-4 border-b border-border/45 px-2 pb-3">
                             <h2
-                                id="category-dropdown-title"
+                                id={dropdownTitleId}
                                 className="text-[18px] font-normal leading-tight text-text"
                             >
-                                Категории
+                                {menuTitle}
                             </h2>
 
                             <button
@@ -412,8 +350,8 @@ export function CategoriesNav() {
                         </div>
 
                         <div className="mt-3 grid max-h-105 grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1.5 overflow-y-auto pr-1">
-                            {categories.map((category) => {
-                                const isActive = activeId === category.id;
+                            {items.map((category) => {
+                                const isActive = currentActiveId === category.id;
 
                                 return (
                                     <button
@@ -458,16 +396,16 @@ export function CategoriesNav() {
                         className="absolute inset-x-0 bottom-0 max-h-[82dvh] overflow-hidden rounded-t-2xl border-t border-border/70 bg-background shadow-[0_-18px_60px_rgba(0,0,0,0.48)]"
                         role="dialog"
                         aria-modal="true"
-                        aria-labelledby="category-menu-title"
+                        aria-labelledby={mobileTitleId}
                     >
                         <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-text/18"/>
 
                         <div className="flex items-center justify-between gap-4 px-5 pb-3 pt-5 sm:px-6">
                             <h2
-                                id="category-menu-title"
+                                id={mobileTitleId}
                                 className="text-[26px] font-normal leading-tight text-text"
                             >
-                                Категории
+                                {menuTitle}
                             </h2>
 
                             <button
@@ -481,8 +419,8 @@ export function CategoriesNav() {
                         </div>
 
                         <div className="grid max-h-[calc(82dvh-82px)] grid-cols-[repeat(auto-fit,minmax(155px,1fr))] gap-2 overflow-y-auto px-5 pb-6 sm:px-6">
-                            {categories.map((category) => {
-                                const isActive = activeId === category.id;
+                            {items.map((category) => {
+                                const isActive = currentActiveId === category.id;
 
                                 return (
                                     <button
@@ -510,7 +448,129 @@ export function CategoriesNav() {
                     </div>
                 </div>
             )}
+        </>
+    );
+}
 
+export function CategoriesNav() {
+    const [isHeaderCartVisible, setIsHeaderCartVisible] = useState(true);
+
+    const openCart = useUIStore((state) => state.openCart);
+    const totalItems = useCartStore((state) =>
+        state.items.reduce((sum, item) => sum + item.quantity, 0),
+    );
+
+    useEffect(() => {
+        const updateHeaderCartVisibility = () => {
+            const headerCartButton = document.querySelector<HTMLElement>(
+                '[data-cart-target="header"]'
+            );
+
+            setIsHeaderCartVisible(isCartTargetVisible(headerCartButton));
+        };
+
+        updateHeaderCartVisibility();
+
+        window.addEventListener("scroll", updateHeaderCartVisibility, {passive: true});
+        window.addEventListener("resize", updateHeaderCartVisibility);
+
+        return () => {
+            window.removeEventListener("scroll", updateHeaderCartVisibility);
+            window.removeEventListener("resize", updateHeaderCartVisibility);
+        };
+    }, []);
+
+    return (
+        <>
+            <CategoryNav
+                items={categories}
+                sectionIdPrefix="menu"
+                rightSlot={
+                    <button
+                        type="button"
+                        data-cart-target="category"
+                        tabIndex={isHeaderCartVisible ? -1 : 0}
+                        onClick={openCart}
+                        className={`relative hidden h-10 w-10 cursor-pointer md:inline-flex
+                        items-center justify-center text-primary transition duration-300 hover:scale-105
+                        ${
+                            isHeaderCartVisible
+                                ? "pointer-events-none opacity-0"
+                                : "pointer-events-auto opacity-100"
+                        }
+                        `}
+                        aria-label="Открыть корзину"
+                    >
+                        <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
+                        {totalItems > 0 && (
+                            <span
+                                className="absolute right-0 top-0 flex h-5 min-w-5
+                                items-center justify-center rounded-full
+                                bg-primary px-1 text-[11px] font-semibold text-on-primary">
+                                {totalItems}
+                            </span>
+                        )}
+                    </button>
+                }
+            />
+
+            <FlyToCartLayer/>
+        </>
+    );
+}
+
+function FlyToCartLayer() {
+    const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
+
+    useEffect(() => {
+        const handleFlyToCart = (event: Event) => {
+            const customEvent = event as CustomEvent<{
+                image?: string;
+                name: string;
+                from: {
+                    x: number;
+                    y: number;
+                };
+                onComplete?: () => void;
+            }>;
+
+            const cartRect = getVisibleCartButtonRect();
+
+            if (!cartRect) {
+                customEvent.detail.onComplete?.();
+                return;
+            }
+
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+            const flyingItem: FlyingItem = {
+                id,
+                image: customEvent.detail.image,
+                name: customEvent.detail.name,
+                onComplete: customEvent.detail.onComplete,
+                from: customEvent.detail.from,
+                center: {
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                },
+                to: {
+                    x: cartRect.left + cartRect.width / 2,
+                    y: cartRect.top + cartRect.height / 2,
+                },
+            };
+
+            setFlyingItems((prev) => [...prev, flyingItem]);
+        };
+
+        window.addEventListener("fly-to-cart", handleFlyToCart);
+
+        return () => {
+            window.removeEventListener("fly-to-cart", handleFlyToCart);
+        };
+    }, []);
+
+    return (
+        <>
             {flyingItems.map((item) => {
                 return (
                     <div

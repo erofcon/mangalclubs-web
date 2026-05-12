@@ -5,8 +5,10 @@ import Link from "next/link";
 import {ArrowRight, Flame, Sparkles, Users, Utensils, Waves} from "lucide-react";
 import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
 import type {BookingCategory} from "@/types/booking";
+import {CategoryNav} from "@/feautures/screens/main/category/CategoryNav";
 
 const bookingCount = BookingMocks.length;
+const bookingCategoryNavItems = BookingCategories.map(({id, title}) => ({id, title}));
 
 const heroHighlights = [
     {value: BookingCategories.length, label: "категории"},
@@ -20,7 +22,7 @@ const getCategoryBookings = (categoryId: string) => {
 
 export function BookingScreen() {
     return (
-        <main className="min-h-screen overflow-hidden bg-background text-text">
+        <main className="min-h-screen bg-background text-text">
             <section className="relative isolate mx-auto w-full max-w-302.5 overflow-hidden">
                 <video
                     className="absolute inset-0 -z-30 h-full w-full object-cover"
@@ -81,7 +83,7 @@ export function BookingScreen() {
                 </div>
             </section>
 
-            <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
+            <section className="mx-auto w-full max-w-302.5 px-5 pt-8 sm:px-6 lg:px-0">
                 <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -100,31 +102,16 @@ export function BookingScreen() {
                         зала.
                     </p>
                 </div>
+            </section>
 
-                <nav
-                    className="booking-category-rail sticky top-0 z-10 -mx-5 mb-8 flex gap-3 overflow-x-auto border-y border-border/45 bg-background/95 px-5 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-[8px] lg:border lg:px-4"
-                    aria-label="Категории бронирования"
-                >
-                    {BookingCategories.map((category) => {
-                        const categoryBookings = getCategoryBookings(category.id);
+            <CategoryNav
+                items={bookingCategoryNavItems}
+                sectionIdPrefix="booking-category"
+                ariaLabel="Категории бронирования"
+                menuTitle="Категории бронирования"
+            />
 
-                        return (
-                            <Link
-                                key={category.id}
-                                href={`#booking-category-${category.id}`}
-                                className="group flex h-12 shrink-0 items-center gap-3 rounded-[6px] border border-border/60 bg-black/20 px-4 text-[14px] font-semibold text-text transition duration-300 hover:border-primary/70 hover:text-primary"
-                            >
-                                <CategoryIcon categoryId={category.id} className="h-4.5 w-4.5 shrink-0 text-primary"/>
-                                <span className="whitespace-nowrap">{category.title}</span>
-                                <span
-                                    className="flex h-6 min-w-6 items-center justify-center rounded-full border border-border/60 px-2 text-[12px] text-text/70 transition duration-300 group-hover:border-primary/60 group-hover:text-primary">
-                                    {categoryBookings.length}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-
+            <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
                 <div className="grid gap-5 lg:grid-cols-3">
                     {BookingCategories.map((category) => (
                         <CategoryPreview
