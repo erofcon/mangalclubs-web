@@ -55,6 +55,53 @@
     grid-template-columns: minmax(0, 1fr);
 }
 
+.booking-category-rail {
+    scrollbar-width: none;
+}
+
+.booking-category-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.booking-surface {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 42%),
+        #090a0a;
+}
+
+.booking-zone-card {
+    position: relative;
+    isolation: isolate;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 40%),
+        #090a0a;
+}
+
+.booking-zone-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(214, 173, 104, 0.1), rgba(214, 173, 104, 0) 38%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+}
+
+.booking-zone-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.booking-zone-card:hover::after {
+    opacity: 1;
+}
+
+.booking-section-anchor {
+    scroll-margin-top: 7rem;
+}
+
 @media (min-width: 640px) {
     .menu-items-grid {
         gap: 0.75rem;

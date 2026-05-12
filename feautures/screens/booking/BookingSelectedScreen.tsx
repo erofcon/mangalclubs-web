@@ -3,8 +3,8 @@
 import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
 import {useMemo, useState} from "react";
-import {ArrowLeft, MapPin, MessageCircle, Phone} from "lucide-react";
-import {BookingMocks, PICKUP_POINT} from "@/mocks/mocks-data";
+import {ArrowLeft, Check, Clock3, MapPin, MessageCircle, Phone, Tag, Users} from "lucide-react";
+import {BookingCategories, BookingMocks, PICKUP_POINT} from "@/mocks/mocks-data";
 
 const phoneHref = `tel:${PICKUP_POINT.phone}`;
 const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, "")}`;
@@ -18,8 +18,8 @@ const getBookingImages = (booking?: BookingWithGallery) => {
 
     return Array.from(
         new Set([
-            ...(booking.images ?? []),
             booking.image,
+            ...(booking.images ?? []),
         ].filter((image): image is string => Boolean(image)))
     );
 };
@@ -29,7 +29,9 @@ export function BookingSelectedScreen() {
     const params = useParams();
 
     const bookingId = params?.id as string;
-    const booking = BookingMocks.find((item) => item.id === bookingId) as BookingWithGallery | undefined;
+    const booking = BookingMocks.find((item) => String(item.id) === bookingId) as BookingWithGallery | undefined;
+    const category = BookingCategories.find((item) => item.id === booking?.categoryId);
+    const categoryTitle = booking?.categoryTitle ?? category?.title ?? "Зона";
     const galleryImages = useMemo(() => getBookingImages(booking), [booking]);
 
     const [gallerySelection, setGallerySelection] = useState({
@@ -42,7 +44,7 @@ export function BookingSelectedScreen() {
     if (!booking) {
         return (
             <main className="min-h-screen bg-background px-5 text-text sm:px-6">
-                <div className="mx-auto w-full max-w-302.5">
+                <div className="mx-auto w-full max-w-302.5 py-10">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
                         Бронирование
                     </p>
@@ -50,7 +52,7 @@ export function BookingSelectedScreen() {
                         className="mt-3 text-[34px] font-normal leading-tight text-text"
                         style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
-                        Кабинка не найдена
+                        Зона не найдена
                     </h1>
                     <button
                         type="button"
@@ -64,6 +66,14 @@ export function BookingSelectedScreen() {
             </main>
         );
     }
+
+    const details = booking.details?.length
+        ? booking.details
+        : [
+            {label: "Формат", value: categoryTitle},
+            {label: "Гости", value: booking.capacity ?? "уточним по телефону"},
+            {label: "Время", value: booking.time ?? PICKUP_POINT.schedule},
+        ];
 
     return (
         <main className="min-h-screen bg-background text-text">
@@ -82,7 +92,7 @@ export function BookingSelectedScreen() {
                 <div className="mt-12 grid gap-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end">
                     <div>
                         <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
-                            VIP-кабинка
+                            {categoryTitle}
                         </p>
                         <h1
                             className="max-w-[720px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
@@ -92,9 +102,23 @@ export function BookingSelectedScreen() {
                         </h1>
                     </div>
 
-                    <p className="max-w-[390px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                        {booking.description}
-                    </p>
+                    <div className="max-w-[390px]">
+                        <p className="text-[15px] leading-7 text-text/72 sm:text-[16px]">
+                            {booking.description}
+                        </p>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+                            {booking.capacity && (
+                                <QuickDetail icon={Users} label={booking.capacity}/>
+                            )}
+                            {booking.time && (
+                                <QuickDetail icon={Clock3} label={booking.time}/>
+                            )}
+                            {booking.priceNote && (
+                                <QuickDetail icon={Tag} label={booking.priceNote}/>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -111,7 +135,7 @@ export function BookingSelectedScreen() {
                                         className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
                                         style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                                     >
-                                        Галерея кабинки
+                                        Галерея зоны
                                     </h2>
                                 </div>
 
@@ -126,7 +150,7 @@ export function BookingSelectedScreen() {
                                 <div className="relative aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black">
                                     <Image
                                         src={selectedImage}
-                                        alt={booking.title ?? "VIP-кабинка"}
+                                        alt={booking.title ?? "Зона бронирования"}
                                         fill
                                         priority
                                         sizes="(max-width: 1023px) 100vw, 790px"
@@ -157,7 +181,7 @@ export function BookingSelectedScreen() {
                                             >
                                                 <Image
                                                     src={image}
-                                                    alt={`${booking.title ?? "VIP-кабинка"} ${index + 1}`}
+                                                    alt={`${booking.title ?? "Зона бронирования"} ${index + 1}`}
                                                     fill
                                                     sizes="160px"
                                                     className="object-cover"
@@ -177,17 +201,43 @@ export function BookingSelectedScreen() {
                                 className="mt-2 max-w-[640px] text-[28px] font-normal leading-tight text-text sm:text-[34px]"
                                 style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
-                                Приватная зона в Mangal Club
+                                О зоне
                             </h2>
 
                             <p className="mt-5 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                                {PICKUP_POINT.intro}
+                                {booking.longDescription ?? PICKUP_POINT.intro}
                             </p>
 
+                            {!!booking.features?.length && (
+                                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                                    {booking.features.map((feature) => (
+                                        <div
+                                            key={feature}
+                                            className="booking-surface flex min-h-13 items-center gap-3 rounded-[6px] border border-border/60 px-4 py-3"
+                                        >
+                                            <Check className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
+                                            <span className="text-[14px] leading-5 text-text/78">
+                                                {feature}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="mt-9 grid overflow-hidden rounded-[8px] border border-border/70 md:grid-cols-3">
+                                {details.map((detail) => (
+                                    <InfoItem
+                                        key={`${detail.label}-${detail.value}`}
+                                        label={detail.label}
+                                        value={detail.value}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="mt-4 grid overflow-hidden rounded-[8px] border border-border/70 md:grid-cols-3">
                                 <InfoItem label="Адрес" value={PICKUP_POINT.address}/>
                                 <InfoItem label="Город" value={PICKUP_POINT.city}/>
-                                <InfoItem label="Время" value={PICKUP_POINT.schedule}/>
+                                <InfoItem label="График" value={PICKUP_POINT.schedule}/>
                             </div>
 
                             <div className="mt-9 overflow-hidden rounded-[8px] border border-border/70">
@@ -201,7 +251,7 @@ export function BookingSelectedScreen() {
                         </div>
                     </div>
 
-                    <aside className="min-w-0  lg:self-star">
+                    <aside className="min-w-0 lg:self-start">
                         <div className="border-t border-border/70 pt-6 lg:sticky lg:top-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                             <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
                                 Связь
@@ -213,7 +263,7 @@ export function BookingSelectedScreen() {
                                 Забронировать
                             </h2>
                             <p className="mt-4 text-[14px] leading-6 text-text/68">
-                                Позвоните нам или напишите в WhatsApp. Подскажем свободное время и закрепим кабинку.
+                                Позвоните нам или напишите в WhatsApp. Подскажем свободное время и закрепим выбранную зону.
                             </p>
 
                             <div className="mt-7 space-y-3">
@@ -236,6 +286,19 @@ export function BookingSelectedScreen() {
                                 </a>
                             </div>
 
+                            <div className="mt-9 grid gap-3 border-t border-border/55 pt-6">
+                                <AsideMeta icon={Users} label="Формат" value={categoryTitle}/>
+                                {booking.capacity && (
+                                    <AsideMeta icon={Users} label="Гости" value={booking.capacity}/>
+                                )}
+                                {booking.time && (
+                                    <AsideMeta icon={Clock3} label="Время" value={booking.time}/>
+                                )}
+                                {booking.priceNote && (
+                                    <AsideMeta icon={Tag} label="Условия" value={booking.priceNote}/>
+                                )}
+                            </div>
+
                             <div className="mt-9 border-t border-border/55 pt-6">
                                 <div className="flex gap-3">
                                     <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8}/>
@@ -254,6 +317,42 @@ export function BookingSelectedScreen() {
                 </div>
             </section>
         </main>
+    );
+}
+
+type QuickDetailProps = {
+    icon: typeof Users;
+    label: string;
+};
+
+function QuickDetail({icon: Icon, label}: QuickDetailProps) {
+    return (
+        <span className="inline-flex h-9 items-center gap-2 rounded-[5px] border border-border/60 bg-black/20 px-3 text-[12px] font-semibold text-text/72">
+            <Icon className="h-3.5 w-3.5 text-primary" strokeWidth={1.8}/>
+            {label}
+        </span>
+    );
+}
+
+type AsideMetaProps = {
+    icon: typeof Users;
+    label: string;
+    value: string;
+};
+
+function AsideMeta({icon: Icon, label, value}: AsideMetaProps) {
+    return (
+        <div className="booking-surface flex gap-3 rounded-[6px] border border-border/55 px-4 py-3">
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
+            <div className="min-w-0">
+                <p className="text-[12px] leading-none text-text/55">
+                    {label}
+                </p>
+                <p className="mt-2 text-[14px] font-semibold leading-5 text-text">
+                    {value}
+                </p>
+            </div>
+        </div>
     );
 }
 
