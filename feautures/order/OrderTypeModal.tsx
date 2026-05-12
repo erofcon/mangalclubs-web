@@ -22,7 +22,8 @@ export function OrderTypeModal() {
             onClose={closeOrderTypeModal}
             className="sm:max-w-md sm:h-70"
         >
-            <div className="flex h-full w-full flex-col border-border bg-background px-6 py-8 pb-6 sm:rounded-[8px] sm:border sm:px-10 sm:py-10">
+            <div
+                className="flex h-full w-full flex-col border-border bg-background px-6 py-8 pb-6 sm:rounded-[8px] sm:border sm:px-10 sm:py-10">
                 <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col gap-2 text-center">
                         <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -67,7 +68,7 @@ export function OrderTypeModal() {
                         `}
                     >
                         <Utensils width={16} height={16}/>
-                        В ресторане
+                        Самовывоз
                         {isRestaurantSelected && <Check className="h-4 w-4"/>}
                     </button>
                 </div>

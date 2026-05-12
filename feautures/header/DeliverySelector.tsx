@@ -15,7 +15,7 @@ export function DeliverySelector() {
             ? delivery.address
             : orderType === "restaurant" && restaurant
                 ? `${restaurant.city}, ${restaurant.address}`
-                : "Доставка/В ресторане";
+                : "Доставка/Самовывоз";
 
     return (
         <button

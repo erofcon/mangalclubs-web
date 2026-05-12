@@ -67,12 +67,6 @@ export default function Header() {
                 <div className="hidden items-center gap-6 md:flex">
                     <button
                         type="button"
-                        className="cursor-pointer text-text"
-                    >
-                        <Search  className="h-6 w-6" strokeWidth={1.8}/>
-                    </button>
-                    <button
-                        type="button"
                         data-cart-target="header"
                         onClick={openCart}
                         className="relative cursor-pointer inline-flex h-10 w-10
@@ -89,7 +83,12 @@ export default function Header() {
                             </span>
                         )}
                     </button>
-                    <div className="h-8 w-px"/>
+                    <button
+                        type="button"
+                        className="cursor-pointer text-text border p-2 rounded-[5px] border-border"
+                    >
+                        <Search className="h-4 w-4"/>
+                    </button>
                     <LoginButton/>
                 </div>
 
