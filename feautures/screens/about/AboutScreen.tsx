@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import {ArrowRight} from "lucide-react";
-import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {ArrowRight, MapPin, Phone} from "lucide-react";
+import {Organizations} from "@/mocks/mocks-data";
+import {formatOrganizationAddress, getPhoneHref, primaryOrganization} from "@/utils/organizations";
 
 const principles = [
     {
@@ -42,7 +43,7 @@ export function AboutScreen() {
                     </div>
 
                     <p className="max-w-[390px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                        {PICKUP_POINT.intro}
+                        {primaryOrganization.intro}
                     </p>
                 </div>
 
@@ -99,6 +100,51 @@ export function AboutScreen() {
                                 <p className="text-[14px] leading-6 text-text/70">
                                     {principle.text}
                                 </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-12">
+                    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                                Рестораны
+                            </p>
+                            <h2
+                                className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
+                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                            >
+                                Два адреса в Грозном
+                            </h2>
+                        </div>
+                        <p className="max-w-[380px] text-[14px] leading-6 text-text/68">
+                            Выбирайте ближайший ресторан для самовывоза, брони или спокойного вечера внутри.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {Organizations.map((organization) => (
+                            <div key={organization.id} className="organization-card p-5">
+                                <h3
+                                    className="text-[24px] font-normal leading-tight text-text"
+                                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                                >
+                                    {organization.name}
+                                </h3>
+                                <div className="mt-5 space-y-4 text-[14px] leading-6 text-text/72">
+                                    <p className="flex gap-3">
+                                        <MapPin className="mt-1 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
+                                        <span>{formatOrganizationAddress(organization)}</span>
+                                    </p>
+                                    <a
+                                        href={getPhoneHref(organization.phone)}
+                                        className="flex gap-3 font-semibold text-text transition duration-300 hover:text-primary"
+                                    >
+                                        <Phone className="mt-1 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
+                                        <span>{organization.phone}</span>
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>

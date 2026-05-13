@@ -5,6 +5,7 @@ export type Coordinates = {
 };
 
 export type Organization = {
+    id: string;
     name: string;
     city: string;
     address: string;

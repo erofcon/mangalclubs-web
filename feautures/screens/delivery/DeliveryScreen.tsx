@@ -2,17 +2,13 @@
 
 import {useState} from "react";
 import {ChevronRight} from "lucide-react";
-import {deliveryPickupPoints, deliveryZones} from "@/mocks/mocks-data";
+import {Organizations, deliveryZones} from "@/mocks/mocks-data";
 import {RestaurantInfoModal} from "@/feautures/order/RestaurantInfoModal";
+import {formatOrganizationAddress} from "@/utils/organizations";
 
 const formatPrice = (price: number | null) => (
     price ? `${price.toLocaleString("ru-RU")} ₽` : "без минимума"
 );
-
-const pickupFallback = {
-    city: "г. Грозный",
-    address: "ул. Светлая улица, 105А",
-};
 
 const getDeliveryTime = (zoneId: string) => {
     const [, distanceTo] = zoneId.split("-").map(Number);
@@ -26,6 +22,7 @@ const getDeliveryTime = (zoneId: string) => {
 
 export function DeliveryScreen() {
     const [isRestaurantInfoOpen, setRestaurantInfoOpen] = useState(false);
+    const [activeOrganization, setActiveOrganization] = useState(Organizations[0]);
 
     return (
         <>
@@ -91,21 +88,27 @@ export function DeliveryScreen() {
                                 </p>
 
                                 <div className="mt-7 space-y-3">
-                                    {deliveryPickupPoints.map((point) => (
+                                    {Organizations.map((organization) => (
                                         <button
                                             type="button"
-                                            key={point.id}
-                                            onClick={() => setRestaurantInfoOpen(true)}
+                                            key={organization.id}
+                                            onClick={() => {
+                                                setActiveOrganization(organization);
+                                                setRestaurantInfoOpen(true);
+                                            }}
                                             className="group flex w-full min-w-0 cursor-pointer items-center justify-between gap-4 border-b border-border/55 pb-4 text-left transition duration-300 hover:border-primary/70"
                                         >
                                             <span className="flex min-w-0 gap-3">
                                                 <span className="min-w-0">
-                                                    <span className="block text-[13px] text-text-secondary">
-                                                        {pickupFallback.city}
+                                                    <span className="block text-[13px] font-semibold text-primary">
+                                                        {organization.name}
                                                     </span>
                                                     <span
                                                         className="mt-1 block wrap-break-word text-[15px] leading-6 text-[#f5efe5]">
-                                                        {point.address || pickupFallback.address}
+                                                        {formatOrganizationAddress(organization)}
+                                                    </span>
+                                                    <span className="mt-1 block text-[13px] text-text-secondary">
+                                                        {organization.phone}
                                                     </span>
                                                 </span>
                                             </span>
@@ -125,6 +128,7 @@ export function DeliveryScreen() {
             <RestaurantInfoModal
                 isOpen={isRestaurantInfoOpen}
                 onClose={() => setRestaurantInfoOpen(false)}
+                organization={activeOrganization}
             />
         </>
     );

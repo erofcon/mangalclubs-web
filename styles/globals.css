@@ -94,6 +94,47 @@
     scroll-margin-top: 7rem;
 }
 
+.organization-card {
+    border: 1px solid rgba(93, 69, 41, 0.7);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 44%),
+        #090a0a;
+}
+
+.organization-choice-grid {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.organization-choice {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid rgba(93, 69, 41, 0.55);
+    border-radius: 6px;
+    background: rgba(7, 8, 8, 0.74);
+    padding: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 220ms ease,
+        background 220ms ease,
+        transform 220ms ease;
+}
+
+.organization-choice:hover,
+.organization-choice-active {
+    border-color: rgba(214, 173, 104, 0.8);
+    background: rgba(214, 173, 104, 0.08);
+}
+
+.organization-choice:hover {
+    transform: translateY(-1px);
+}
+
 @media (min-width: 640px) {
     .menu-items-grid {
         gap: 0.75rem;

@@ -2,15 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {ArrowRight, Flame, Sparkles, Users, Utensils, Waves} from "lucide-react";
-import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
+import {ArrowRight, Flame, MapPin, Sparkles, Users, Utensils, Waves} from "lucide-react";
+import {BookingCategories, BookingMocks, Organizations} from "@/mocks/mocks-data";
 import type {BookingCategory} from "@/types/booking";
 import {CategoryNav} from "@/feautures/screens/main/category/CategoryNav";
+import {formatOrganizationAddress, getBookingOrganization} from "@/utils/organizations";
 
 const bookingCount = BookingMocks.length;
 
 const heroHighlights = [
-    {label: "Форматы отдыха", value: "VIP, сауна и зал"},
+    {label: "Рестораны", value: `${Organizations.length} ${getRestaurantCountWord(Organizations.length)}`},
     {label: "Варианты брони", value: `${bookingCount} ${getBookingOptionWord(bookingCount)}`},
     {label: "График", value: "ежедневно 10:30–01:30"},
 ];
@@ -166,12 +167,15 @@ export function BookingScreen() {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                                    {categoryBookings.map((booking) => (
-                                        <Link
-                                            key={booking.id}
-                                            href={`/booking/${booking.id}`}
-                                            className="booking-zone-card group block overflow-hidden rounded-[8px] border border-border/70 transition duration-300 hover:-translate-y-0.5 hover:border-primary/70"
-                                        >
+                                    {categoryBookings.map((booking) => {
+                                        const organization = getBookingOrganization(booking);
+
+                                        return (
+                                            <Link
+                                                key={booking.id}
+                                                href={`/booking/${booking.id}`}
+                                                className="booking-zone-card group block overflow-hidden rounded-[8px] border border-border/70 transition duration-300 hover:-translate-y-0.5 hover:border-primary/70"
+                                            >
                                             <span className="relative block aspect-[1.34] overflow-hidden bg-black">
                                                 {booking.image && (
                                                     <Image
@@ -210,6 +214,14 @@ export function BookingScreen() {
                                                         className="mt-2 block line-clamp-2 text-[14px] leading-6 text-text/68">
                                                         {booking.description}
                                                     </span>
+                                                    <span
+                                                        className="mt-3 flex min-w-0 items-start gap-2 text-[12px] font-semibold leading-5 text-primary"
+                                                    >
+                                                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8}/>
+                                                        <span className="line-clamp-2 text-text/70">
+                                                            {organization.name} · {formatOrganizationAddress(organization)}
+                                                        </span>
+                                                    </span>
                                                 </span>
 
                                                 <span className="flex items-end justify-between gap-5">
@@ -236,8 +248,9 @@ export function BookingScreen() {
                                                     </span>
                                                 </span>
                                             </span>
-                                        </Link>
-                                    ))}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             </section>
                         );
@@ -330,4 +343,11 @@ function getBookingOptionWord(count: number) {
     if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) return "варианта";
 
     return "вариантов";
+}
+
+function getRestaurantCountWord(count: number) {
+    if (count % 10 === 1 && count % 100 !== 11) return "ресторан";
+    if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) return "ресторана";
+
+    return "ресторанов";
 }

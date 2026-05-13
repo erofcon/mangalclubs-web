@@ -2,15 +2,19 @@
 
 import Image from "next/image";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
-import {menus, PICKUP_POINT} from "@/mocks/mocks-data";
+import {Organizations, menus} from "@/mocks/mocks-data";
+import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
+import {formatOrganizationAddress} from "@/utils/organizations";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ru-RU")} ₽`;
 
 export function ShowOrderModal() {
     const isOpen = useUIStore((state) => state.isShowOrderModalOpen);
     const closeShowOrderModal = useUIStore((state) => state.closeShowOrderModal);
+    const selectedRestaurant = useOrderStore((state) => state.restaurant);
     const orderItem = menus[0].items[0];
+    const restaurant = selectedRestaurant ?? Organizations[0];
     const quantity = 2;
     const total = orderItem.price * quantity;
 
@@ -62,7 +66,7 @@ export function ShowOrderModal() {
                         <OrderDetail label="Сумма" value={formatPrice(total)}/>
                         <OrderDetail label="Время заказа" value="22.03.2026 21:14"/>
                         <OrderDetail label="Способ получения" value="В ресторане"/>
-                        <OrderDetail label="Адрес ресторана" value={PICKUP_POINT.address}/>
+                        <OrderDetail label="Адрес ресторана" value={formatOrganizationAddress(restaurant)}/>
                     </div>
                 </div>
             </div>

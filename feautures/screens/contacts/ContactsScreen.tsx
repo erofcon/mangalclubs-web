@@ -1,9 +1,10 @@
 import type {ReactNode} from "react";
 import Image from "next/image";
 import {Clock, MapPin, MessageCircle, Phone} from "lucide-react";
-import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {Organizations} from "@/mocks/mocks-data";
+import {formatOrganizationAddress, getPhoneHref, getWhatsappHref} from "@/utils/organizations";
 
-const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, "")}`;
+const mapSrc = getOrganizationsMapSrc();
 
 export function ContactsScreen() {
     return (
@@ -23,35 +24,48 @@ export function ContactsScreen() {
                     </div>
 
                     <p className="max-w-[390px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                        Позвоните, напишите в WhatsApp или приезжайте в ресторан. Подскажем по доставке, бронированию и самовывозу.
+                        Позвоните, напишите в WhatsApp или приезжайте в удобный ресторан. Подскажем по доставке, бронированию и самовывозу.
                     </p>
                 </div>
 
                 <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_390px]">
                     <div className="min-w-0">
-                        <div className="grid overflow-hidden rounded-[8px] border border-border/70 md:grid-cols-3">
-                            <ContactInfo
-                                icon={<Phone className="h-5 w-5" strokeWidth={1.8}/>}
-                                label="Телефон"
-                                value={PICKUP_POINT.phone}
-                                href={`tel:${PICKUP_POINT.phone}`}
-                            />
-                            <ContactInfo
-                                icon={<MapPin className="h-5 w-5" strokeWidth={1.8}/>}
-                                label="Адрес"
-                                value={PICKUP_POINT.address}
-                            />
-                            <ContactInfo
-                                icon={<Clock className="h-5 w-5" strokeWidth={1.8}/>}
-                                label="График"
-                                value={PICKUP_POINT.schedule}
-                            />
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {Organizations.map((organization) => (
+                                <div key={organization.id} className="organization-card p-5">
+                                    <h2
+                                        className="text-[24px] font-normal leading-tight text-text"
+                                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                                    >
+                                        {organization.name}
+                                    </h2>
+
+                                    <div className="mt-5 space-y-4">
+                                        <ContactInfo
+                                            icon={<Phone className="h-5 w-5" strokeWidth={1.8}/>}
+                                            label="Телефон"
+                                            value={organization.phone}
+                                            href={getPhoneHref(organization.phone)}
+                                        />
+                                        <ContactInfo
+                                            icon={<MapPin className="h-5 w-5" strokeWidth={1.8}/>}
+                                            label="Адрес"
+                                            value={formatOrganizationAddress(organization)}
+                                        />
+                                        <ContactInfo
+                                            icon={<Clock className="h-5 w-5" strokeWidth={1.8}/>}
+                                            label="График"
+                                            value={organization.schedule}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <div className="mt-9 overflow-hidden rounded-[8px] border border-border/70">
                             <iframe
-                                title={`Карта: ${PICKUP_POINT.address}`}
-                                src={`https://yandex.com/map-widget/v1/?ll=${PICKUP_POINT.coordinates.longitude}%2C${PICKUP_POINT.coordinates.latitude}&z=15&pt=${PICKUP_POINT.coordinates.longitude}%2C${PICKUP_POINT.coordinates.latitude}%2Cpm2rdm`}
+                                title="Карта ресторанов Mangal Clubs"
+                                src={mapSrc}
                                 className="h-[360px] w-full border-0 grayscale md:h-[470px]"
                                 loading="lazy"
                             />
@@ -73,24 +87,32 @@ export function ContactsScreen() {
                                 Для бронирования лучше звонить или писать в WhatsApp. Для новостей и фото можно заглянуть в Instagram.
                             </p>
 
-                            <div className="mt-7 space-y-3">
-                                <a
-                                    href={`tel:${PICKUP_POINT.phone}`}
-                                    className="flex h-12 items-center justify-center gap-3 rounded-[6px] bg-primary px-5 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
-                                >
-                                    <Phone className="h-4 w-4" strokeWidth={1.8}/>
-                                    Позвонить
-                                </a>
+                            <div className="mt-7 space-y-5">
+                                {Organizations.map((organization) => (
+                                    <div key={organization.id} className="space-y-3 border-b border-border/55 pb-5 last:border-b-0 last:pb-0">
+                                        <p className="text-[14px] font-semibold text-text">
+                                            {organization.name}
+                                        </p>
 
-                                <a
-                                    href={whatsappHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex h-12 items-center justify-center gap-3 rounded-[6px] border border-border bg-background px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-                                >
-                                    <MessageCircle className="h-4 w-4" strokeWidth={1.8}/>
-                                    WhatsApp
-                                </a>
+                                        <a
+                                            href={getPhoneHref(organization.phone)}
+                                            className="flex h-12 items-center justify-center gap-3 rounded-[6px] bg-primary px-5 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
+                                        >
+                                            <Phone className="h-4 w-4" strokeWidth={1.8}/>
+                                            Позвонить
+                                        </a>
+
+                                        <a
+                                            href={getWhatsappHref(organization.phone)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex h-12 items-center justify-center gap-3 rounded-[6px] border border-border bg-background px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                                        >
+                                            <MessageCircle className="h-4 w-4" strokeWidth={1.8}/>
+                                            WhatsApp
+                                        </a>
+                                    </div>
+                                ))}
 
                                 <a
                                     href="https://www.instagram.com/mangalclubs/"
@@ -138,7 +160,7 @@ function ContactInfo({icon, label, value, href}: ContactInfoProps) {
         </>
     );
 
-    const className = "block border-b border-border/50 px-5 py-5 last:border-b-0 md:border-b-0 md:border-l md:first:border-l-0";
+    const className = "block";
 
     if (href) {
         return (
@@ -153,4 +175,21 @@ function ContactInfo({icon, label, value, href}: ContactInfoProps) {
             {content}
         </div>
     );
+}
+
+function getOrganizationsMapSrc() {
+    const center = Organizations.reduce(
+        (acc, organization) => ({
+            latitude: acc.latitude + organization.coordinates.latitude,
+            longitude: acc.longitude + organization.coordinates.longitude,
+        }),
+        {latitude: 0, longitude: 0},
+    );
+    const latitude = center.latitude / Organizations.length;
+    const longitude = center.longitude / Organizations.length;
+    const points = Organizations
+        .map((organization) => `${organization.coordinates.longitude}%2C${organization.coordinates.latitude}%2Cpm2rdm`)
+        .join("~");
+
+    return `https://yandex.com/map-widget/v1/?ll=${longitude}%2C${latitude}&z=13&pt=${points}`;
 }

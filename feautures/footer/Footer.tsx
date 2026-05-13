@@ -1,13 +1,12 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import {type ReactNode} from "react";
 import {ArrowUpRight, Clock, MapPin, Phone} from "lucide-react";
-import {PICKUP_POINT} from "@/mocks/mocks-data";
+import {Organizations} from "@/mocks/mocks-data";
 import {topLinks} from "@/utils/constants";
+import {formatOrganizationAddress, getPhoneHref, getWhatsappHref, primaryOrganization} from "@/utils/organizations";
 
-const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, "")}`;
+const whatsappHref = getWhatsappHref(primaryOrganization.phone);
 
 export function Footer() {
     return (
@@ -73,22 +72,32 @@ export function Footer() {
                         </p>
 
                         <div className="mt-5 space-y-5">
-                            <FooterInfo
-                                icon={<Phone className="h-4 w-4" strokeWidth={1.8}/>}
-                                label="Телефон"
-                                value={PICKUP_POINT.phone}
-                                href={`tel:${PICKUP_POINT.phone}`}
-                            />
-                            <FooterInfo
-                                icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
-                                label="Адрес"
-                                value={PICKUP_POINT.address}
-                            />
-                            <FooterInfo
-                                icon={<Clock className="h-4 w-4" strokeWidth={1.8}/>}
-                                label="График"
-                                value={PICKUP_POINT.schedule}
-                            />
+                            {Organizations.map((organization) => (
+                                <div
+                                    key={organization.id}
+                                    className="space-y-4 border-b border-border/45 pb-5 last:border-b-0 last:pb-0"
+                                >
+                                    <p className="text-[14px] font-semibold text-text">
+                                        {organization.name}
+                                    </p>
+                                    <FooterInfo
+                                        icon={<Phone className="h-4 w-4" strokeWidth={1.8}/>}
+                                        label="Телефон"
+                                        value={organization.phone}
+                                        href={getPhoneHref(organization.phone)}
+                                    />
+                                    <FooterInfo
+                                        icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
+                                        label="Адрес"
+                                        value={formatOrganizationAddress(organization)}
+                                    />
+                                    <FooterInfo
+                                        icon={<Clock className="h-4 w-4" strokeWidth={1.8}/>}
+                                        label="График"
+                                        value={organization.schedule}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </div>
 

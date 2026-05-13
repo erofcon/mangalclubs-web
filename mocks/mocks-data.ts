@@ -20,7 +20,6 @@ export const categories: Category[] = [
         icon: "grill",
     },
 ];
-
 export const menus: MenuCategory[] = [
     {
         id: categories[0].id,
@@ -289,6 +288,7 @@ export const StoriesData: Story[] = [
 
 export const Organizations: Organization[] = [
     {
+        id: "fazenda",
         name: "Fazenda",
         city: "г. Грозный",
         address: "ул. Светлая улица, 105А",
@@ -302,6 +302,7 @@ export const Organizations: Organization[] = [
         },
     },
     {
+        id: "mangal-club",
         name: "Mangal Club",
         city: "г. Грозный",
         address: "ул. Окраинная, 4",
@@ -314,22 +315,7 @@ export const Organizations: Organization[] = [
             accuracy: null,
         },
     }
-]
-
-export const PICKUP_POINT: Organization = {
-
-    name: "Mangal Club",
-    city: "г. Грозный",
-    address: "ул. Светлая улица, 105А",
-    schedule: "Ежедневно с 10:30 до 01:30",
-    phone: "+7 (928) 340-50-50",
-    intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
-    coordinates: {
-        latitude: 43.359307,
-        longitude: 45.697802,
-        accuracy: null,
-    },
-};
+];
 
 export const BookingCategories: BookingCategory[] = [
     {
@@ -355,6 +341,7 @@ export const BookingCategories: BookingCategory[] = [
 export const BookingMocks: Booking[] = [
     {
         id: "fireplace",
+        organizationId: "fazenda",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Каминная",
@@ -377,6 +364,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "warm-corner",
+        organizationId: "fazenda",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Теплый угол",
@@ -399,6 +387,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "loft",
+        organizationId: "mangal-club",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Лофт-зона",
@@ -421,6 +410,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "green-room",
+        organizationId: "fazenda",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Зеленая гостиная",
@@ -443,6 +433,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "private-club",
+        organizationId: "mangal-club",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Закрытый клуб",
@@ -465,6 +456,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "soft-zone",
+        organizationId: "mangal-club",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Мягкая зона",
@@ -487,6 +479,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "cinema-room",
+        organizationId: "mangal-club",
         categoryId: "vip",
         categoryTitle: "VIP-кабинка",
         title: "Кино-комната",
@@ -509,6 +502,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "sauna-room",
+        organizationId: "mangal-club",
         categoryId: "sauna-pool",
         categoryTitle: "Сауна и бассейн",
         title: "Сауна Mangal",
@@ -531,6 +525,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "pool-lounge",
+        organizationId: "mangal-club",
         categoryId: "sauna-pool",
         categoryTitle: "Сауна и бассейн",
         title: "Бассейн",
@@ -553,6 +548,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "sauna-pool-combo",
+        organizationId: "mangal-club",
         categoryId: "sauna-pool",
         categoryTitle: "Сауна и бассейн",
         title: "Сауна с бассейном",
@@ -575,6 +571,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "window-table",
+        organizationId: "fazenda",
         categoryId: "tables",
         categoryTitle: "Столики",
         title: "Столик у окна",
@@ -597,6 +594,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "main-hall-table",
+        organizationId: "mangal-club",
         categoryId: "tables",
         categoryTitle: "Столики",
         title: "Столик в основном зале",
@@ -619,6 +617,7 @@ export const BookingMocks: Booking[] = [
     },
     {
         id: "large-company-table",
+        organizationId: "mangal-club",
         categoryId: "tables",
         categoryTitle: "Столики",
         title: "Стол для компании",
@@ -708,10 +707,3 @@ export const deliveryZones: DeliveryZone[] = [
     },
 ];
 
-export const deliveryPickupPoints = [
-    {
-        id: "svetlaya",
-        city: PICKUP_POINT.city,
-        address: PICKUP_POINT.address,
-    },
-];

@@ -4,9 +4,9 @@ import dynamic from "next/dynamic";
 import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
 import {LoaderCircle, Navigation} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
-import {PICKUP_POINT} from "@/mocks/mocks-data";
 import {useUIStore} from "@/store/ui-store";
 import {useOrderStore} from "@/store/order-store";
+import {primaryOrganization} from "@/utils/organizations";
 
 const RestaurantMap = dynamic(
     () =>
@@ -170,8 +170,8 @@ export function DeliveryTypeModal() {
             : initialForm
     ));
     const [mapCoordinates, setMapCoordinates] = useState<CoordinatesState>({
-        latitude: PICKUP_POINT.coordinates.latitude,
-        longitude: PICKUP_POINT.coordinates.longitude,
+        latitude: primaryOrganization.coordinates.latitude,
+        longitude: primaryOrganization.coordinates.longitude,
     });
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
@@ -192,8 +192,8 @@ export function DeliveryTypeModal() {
             setAddressError(null);
             setForm(initialForm);
             setMapCoordinates({
-                latitude: PICKUP_POINT.coordinates.latitude,
-                longitude: PICKUP_POINT.coordinates.longitude,
+                latitude: primaryOrganization.coordinates.latitude,
+                longitude: primaryOrganization.coordinates.longitude,
             });
             return;
         }

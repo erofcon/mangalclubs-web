@@ -1,5 +1,8 @@
+import type {Organization} from "@/types/organization";
+
 export type Booking = {
     id: string | number;
+    organizationId?: Organization["id"];
     categoryId?: string;
     categoryTitle?: string;
     title?: string;

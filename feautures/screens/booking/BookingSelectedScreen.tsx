@@ -2,19 +2,22 @@
 
 import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
-import {useMemo, useState} from "react";
-import {ArrowLeft, Check, Clock3, MapPin, MessageCircle, Phone, Tag, Users} from "lucide-react";
-import {BookingCategories, BookingMocks, PICKUP_POINT} from "@/mocks/mocks-data";
-
-const phoneHref = `tel:${PICKUP_POINT.phone}`;
-const whatsappHref = `https://wa.me/${String(PICKUP_POINT.phone).replace(/\D/g, "")}`;
+import {useState} from "react";
+import {ArrowLeft, Check, Clock3, type LucideIcon, MapPin, MessageCircle, Phone, Tag, Users} from "lucide-react";
+import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
+import {
+    formatOrganizationAddress,
+    getBookingOrganization,
+    getPhoneHref,
+    getWhatsappHref,
+} from "@/utils/organizations";
 
 type BookingWithGallery = (typeof BookingMocks)[number] & {
     images?: string[];
 };
 
 type BookingFact = {
-    icon: typeof Users;
+    icon: LucideIcon;
     label: string;
     value: string;
 };
@@ -38,7 +41,7 @@ export function BookingSelectedScreen() {
     const booking = BookingMocks.find((item) => String(item.id) === bookingId) as BookingWithGallery | undefined;
     const category = BookingCategories.find((item) => item.id === booking?.categoryId);
     const categoryTitle = booking?.categoryTitle ?? category?.title ?? "Зона";
-    const galleryImages = useMemo(() => getBookingImages(booking), [booking]);
+    const galleryImages = getBookingImages(booking);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
 
@@ -71,9 +74,13 @@ export function BookingSelectedScreen() {
         );
     }
 
+    const organization = getBookingOrganization(booking);
+    const phoneHref = getPhoneHref(organization.phone);
+    const whatsappHref = getWhatsappHref(organization.phone);
     const purpose = booking.details?.find((detail) => detail.label.toLowerCase() === "подходит");
     const bookingFacts = [
         {icon: Tag, label: "Формат", value: categoryTitle},
+        {icon: MapPin, label: "Ресторан", value: organization.name},
         booking.capacity ? {icon: Users, label: "Гости", value: booking.capacity} : null,
         booking.time ? {icon: Clock3, label: "Время", value: booking.time} : null,
         booking.priceNote ? {icon: Tag, label: "Условия", value: booking.priceNote} : null,
@@ -176,7 +183,7 @@ export function BookingSelectedScreen() {
                             </h2>
 
                             <p className="mt-5 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                                {booking.longDescription ?? PICKUP_POINT.intro}
+                                {booking.longDescription ?? organization.intro}
                             </p>
 
                             {!!booking.features?.length && (
@@ -248,9 +255,16 @@ export function BookingSelectedScreen() {
                                         Адрес
                                     </p>
                                     <p className="mt-2 wrap-break-word text-[14px] leading-6 text-text/82">
-                                        {PICKUP_POINT.city}, {PICKUP_POINT.address}
+                                        {formatOrganizationAddress(organization)}
                                     </p>
                                 </div>
+                            </div>
+                            <div className="mt-5">
+                                <BookingMeta
+                                    icon={Phone}
+                                    label={organization.name}
+                                    value={organization.phone}
+                                />
                             </div>
                         </div>
                     </aside>
@@ -261,7 +275,7 @@ export function BookingSelectedScreen() {
 }
 
 type QuickDetailProps = {
-    icon: typeof Users;
+    icon: LucideIcon;
     label: string;
 };
 
@@ -275,7 +289,7 @@ function QuickDetail({icon: Icon, label}: QuickDetailProps) {
 }
 
 type BookingMetaProps = {
-    icon: typeof Users;
+    icon: LucideIcon;
     label: string;
     value: string;
 };

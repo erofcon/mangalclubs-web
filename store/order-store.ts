@@ -15,7 +15,7 @@ export type DeliveryOrderDetails = {
 
 export type RestaurantOrderDetails = Pick<
     Organization,
-    "name" | "city" | "address" | "schedule" | "phone" | "coordinates"
+    "id" | "name" | "city" | "address" | "schedule" | "phone" | "coordinates"
 >;
 
 type DeliveryOrderInput = Omit<DeliveryOrderDetails, "address"> & {

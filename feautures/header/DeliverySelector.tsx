@@ -14,7 +14,7 @@ export function DeliverySelector() {
         orderType === "delivery" && delivery
             ? delivery.address
             : orderType === "restaurant" && restaurant
-                ? `${restaurant.city}, ${restaurant.address}`
+                ? `${restaurant.name} · ${restaurant.address}`
                 : "Доставка/Самовывоз";
 
     return (
