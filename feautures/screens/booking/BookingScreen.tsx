@@ -8,17 +8,27 @@ import type {BookingCategory} from "@/types/booking";
 import {CategoryNav} from "@/feautures/screens/main/category/CategoryNav";
 
 const bookingCount = BookingMocks.length;
-const bookingCategoryNavItems = BookingCategories.map(({id, title}) => ({id, title}));
 
 const heroHighlights = [
-    {value: BookingCategories.length, label: "категории"},
-    {value: bookingCount, label: "зон"},
-    {value: "10:30–01:30", label: "каждый день"},
+    {label: "Форматы отдыха", value: "VIP, сауна и зал"},
+    {label: "Варианты брони", value: `${bookingCount} ${getBookingOptionWord(bookingCount)}`},
+    {label: "График", value: "ежедневно 10:30–01:30"},
 ];
 
 const getCategoryBookings = (categoryId: string) => {
     return BookingMocks.filter((booking) => booking.categoryId === categoryId);
 };
+
+const bookingCategoryNavItems = BookingCategories.map((category) => {
+    const count = getCategoryBookings(category.id).length;
+
+    return {
+        id: category.id,
+        title: category.title,
+        meta: `${count} ${getBookingOptionWord(count)}`,
+        icon: <CategoryIcon categoryId={category.id} className="h-4 w-4"/>,
+    };
+});
 
 export function BookingScreen() {
     return (
@@ -51,30 +61,30 @@ export function BookingScreen() {
                             className="max-w-175 text-[45px] font-normal leading-[0.98] text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[64px] lg:text-[76px]"
                             style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
-                            Зоны для отдыха и спокойного вечера.
+                            Выберите место для вечера в Mangal Club.
                         </h1>
 
                         <p className="mt-6 max-w-135 text-[15px] leading-7 text-text/82 sm:text-[16px]">
-                            Выберите VIP-кабинку, сауну с бассейном или столик в зале. Мы подскажем свободное время и
-                            поможем забронировать удобный формат в Mangal Club.
+                            VIP-кабинка для приватной встречи, сауна с бассейном для отдыха или столик в зале. Напишите
+                            нам, и мы уточним свободное время, посадку и условия брони.
                         </p>
 
                         <div
-                            className="mt-9 grid max-w-140 grid-cols-3 overflow-hidden rounded-[10px] border border-white/9 bg-black/30 backdrop-blur-md"
+                            className="mt-9 grid max-w-160 overflow-hidden rounded-[10px] border border-white/9 bg-black/32 backdrop-blur-md sm:grid-cols-3"
                         >
                             {heroHighlights.map((item, index) => (
                                 <div
                                     key={item.label}
                                     className={[
                                         "px-4 py-4 sm:px-5 sm:py-5",
-                                        index !== 0 ? "border-l border-white/8" : "",
+                                        index !== 0 ? "border-t border-white/8 sm:border-l sm:border-t-0" : "",
                                     ].join(" ")}
                                 >
-                                    <div className="text-[13px] font-semibold leading-none text-text md:text-[19px]">
-                                        {item.value}
-                                    </div>
-                                    <div className="mt-2 text-[12px] leading-none text-text/60">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                                         {item.label}
+                                    </div>
+                                    <div className="mt-2 text-[14px] font-semibold leading-5 text-text/86">
+                                        {item.value}
                                     </div>
                                 </div>
                             ))}
@@ -93,13 +103,13 @@ export function BookingScreen() {
                             className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
                             style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
-                            Бронируйте под настроение вечера
+                            Подберите формат под ваш вечер
                         </h2>
                     </div>
 
                     <p className="max-w-105 text-[14px] leading-6 text-text/68">
-                        Категории помогают быстро выбрать формат: приватно, расслабленно или ближе к живой атмосфере
-                        зала.
+                        Сначала выберите тип отдыха, затем посмотрите свободные варианты: вместимость, время и условия
+                        указаны в карточках.
                     </p>
                 </div>
             </section>
@@ -109,6 +119,10 @@ export function BookingScreen() {
                 sectionIdPrefix="booking-category"
                 ariaLabel="Категории бронирования"
                 menuTitle="Категории бронирования"
+                variant="booking"
+                showMenuButton={false}
+                scrollOffset={-118}
+                activeThreshold={170}
             />
 
             <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
@@ -142,7 +156,7 @@ export function BookingScreen() {
                                             className="mt-2 text-[26px] font-normal leading-tight text-text sm:text-[32px]"
                                             style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                                         >
-                                            {categoryBookings.length} {getZoneWord(categoryBookings.length)}
+                                            {categoryBookings.length} {getBookingOptionWord(categoryBookings.length)} для бронирования
                                         </h3>
                                     </div>
 
@@ -278,7 +292,7 @@ function CategoryPreview({category, count}: CategoryPreviewProps) {
 
                 <span className="flex items-center justify-between gap-4">
                     <span className="text-[13px] font-semibold text-primary">
-                        {count} {getZoneWord(count)}
+                        {count} {getBookingOptionWord(count)}
                     </span>
                     <span
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[5px] border border-border/70 text-primary transition duration-300 group-hover:border-primary">
@@ -311,9 +325,9 @@ function CategoryIcon({categoryId, className}: CategoryIconProps) {
     return <Sparkles className={className} strokeWidth={1.8}/>;
 }
 
-function getZoneWord(count: number) {
-    if (count % 10 === 1 && count % 100 !== 11) return "зона";
-    if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) return "зоны";
+function getBookingOptionWord(count: number) {
+    if (count % 10 === 1 && count % 100 !== 11) return "вариант";
+    if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) return "варианта";
 
-    return "зон";
+    return "вариантов";
 }

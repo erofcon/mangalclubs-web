@@ -14,6 +14,8 @@ const HALF_WIDTH_CATEGORY_MAX_LENGTH = 20;
 export type CategoryNavItem = {
     id: string | number;
     title: string;
+    icon?: ReactNode;
+    meta?: string;
 };
 
 type CategoryNavProps = {
@@ -21,6 +23,9 @@ type CategoryNavProps = {
     sectionIdPrefix: string;
     ariaLabel?: string;
     menuTitle?: string;
+    variant?: "menu" | "booking";
+    showMenuButton?: boolean;
+    menuButtonLabel?: string;
     scrollOffset?: number;
     activeThreshold?: number;
     rightSlot?: ReactNode;
@@ -90,6 +95,9 @@ export function CategoryNav({
                                 sectionIdPrefix,
                                 ariaLabel = "Категории",
                                 menuTitle = "Категории",
+                                variant = "menu",
+                                showMenuButton = true,
+                                menuButtonLabel = "Открыть все категории",
                                 scrollOffset = -104,
                                 activeThreshold = 150,
                                 rightSlot,
@@ -110,6 +118,7 @@ export function CategoryNav({
     const currentActiveId = items.some((item) => item.id === activeId)
         ? activeId
         : items[0]?.id ?? null;
+    const isBookingVariant = variant === "booking";
 
     useBodyScrollLock(isCategoryMenuOpen && isMobileCategoryMenu);
 
@@ -265,32 +274,37 @@ export function CategoryNav({
     return (
         <>
             <nav
-                className="sticky top-0 z-10 mx-auto w-full max-w-302.5 border-b border-border/50
-                bg-background shadow-[0_18px_45px_rgba(0,0,0,0.34)]"
+                className={`sticky top-0 z-10 mx-auto w-full max-w-302.5 border-b border-border/50 bg-background shadow-[0_18px_45px_rgba(0,0,0,0.34)] ${
+                    isBookingVariant ? "border-t border-border/35 bg-background/96 backdrop-blur-md" : ""
+                }`}
                 aria-label={ariaLabel}
             >
                 <div
-                    className="mx-auto flex w-full max-w-302.5 items-center
-                    justify-between gap-3 px-5 py-2 sm:px-6 lg:px-0">
-                    <button
-                        ref={categoryMenuButtonRef}
-                        type="button"
-                        onClick={() => setIsCategoryMenuOpen((current) => !current)}
-                        className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border bg-black/35 transition duration-300 hover:border-primary hover:text-primary ${
-                            isCategoryMenuOpen
-                                ? "border-primary text-primary shadow-[0_0_22px_rgba(214,173,104,0.16)]"
-                                : "border-border/60 text-text"
-                        }`}
-                        aria-label="Открыть все категории"
-                        aria-expanded={isCategoryMenuOpen}
-                    >
-                        <Menu className="h-6 w-6" strokeWidth={2.2}/>
-                    </button>
+                    className={`mx-auto flex w-full max-w-302.5 items-center justify-between gap-3 px-5 sm:px-6 lg:px-0 ${
+                        isBookingVariant ? "py-3" : "py-2"
+                    }`}>
+                    {showMenuButton && (
+                        <button
+                            ref={categoryMenuButtonRef}
+                            type="button"
+                            onClick={() => setIsCategoryMenuOpen((current) => !current)}
+                            className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border bg-black/35 transition duration-300 hover:border-primary hover:text-primary ${
+                                isCategoryMenuOpen
+                                    ? "border-primary text-primary shadow-[0_0_22px_rgba(214,173,104,0.16)]"
+                                    : "border-border/60 text-text"
+                            }`}
+                            aria-label={menuButtonLabel}
+                            aria-expanded={isCategoryMenuOpen}
+                        >
+                            <Menu className="h-6 w-6" strokeWidth={2.2}/>
+                        </button>
+                    )}
 
                     <ul
                         ref={categoryListRef}
-                        className="flex flex-1 gap-3 overflow-x-auto whitespace-nowrap
-                        scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        className={`flex flex-1 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+                            isBookingVariant ? "gap-2.5" : "gap-3"
+                        }`}
                     >
                         {items.map((category) => {
                             const isActive = currentActiveId === category.id;
@@ -306,13 +320,48 @@ export function CategoryNav({
                                         type="button"
                                         onClick={() => scrollToCategory(category.id)}
                                         aria-current={isActive ? "true" : undefined}
-                                        className={`h-10 rounded-full px-7 text-[14px] transition duration-300 cursor-pointer ${
-                                            isActive
-                                                ? "border border-border text-primary bg-background shadow-[0_0_22px_rgba(214,173,104,0.12)]"
-                                                : "border border-[#272421] bg-black/20 text-text hover:border-border hover:text-primary"
-                                        }`}
+                                        className={
+                                            isBookingVariant
+                                                ? `group flex h-14 min-w-[185px] cursor-pointer items-center gap-3 rounded-[8px] border px-3.5 text-left transition duration-300 sm:min-w-[205px] ${
+                                                    isActive
+                                                        ? "border-primary/75 bg-primary/12 text-text shadow-[0_12px_28px_rgba(214,173,104,0.12)]"
+                                                        : "border-border/45 bg-white/[0.035] text-text/78 hover:border-primary/55 hover:bg-white/[0.055] hover:text-text"
+                                                }`
+                                                : `h-10 cursor-pointer rounded-full px-7 text-[14px] transition duration-300 ${
+                                                    isActive
+                                                        ? "border border-border bg-background text-primary shadow-[0_0_22px_rgba(214,173,104,0.12)]"
+                                                        : "border border-[#272421] bg-black/20 text-text hover:border-border hover:text-primary"
+                                                }`
+                                        }
                                     >
-                                        {category.title}
+                                        {isBookingVariant ? (
+                                            <>
+                                                {category.icon && (
+                                                    <span
+                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border transition duration-300 ${
+                                                            isActive
+                                                                ? "border-primary/70 bg-primary/12 text-primary"
+                                                                : "border-border/55 bg-black/25 text-primary/85 group-hover:border-primary/50"
+                                                        }`}
+                                                        aria-hidden="true"
+                                                    >
+                                                        {category.icon}
+                                                    </span>
+                                                )}
+                                                <span className="min-w-0">
+                                                    <span className="block truncate text-[14px] font-semibold leading-5">
+                                                        {category.title}
+                                                    </span>
+                                                    {category.meta && (
+                                                        <span className="mt-0.5 block truncate text-[11px] leading-4 text-text/54">
+                                                            {category.meta}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            category.title
+                                        )}
                                     </button>
                                 </li>
                             );

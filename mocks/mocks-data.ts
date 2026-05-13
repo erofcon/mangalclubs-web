@@ -287,7 +287,37 @@ export const StoriesData: Story[] = [
     },
 ];
 
+export const Organizations: Organization[] = [
+    {
+        name: "Fazenda",
+        city: "г. Грозный",
+        address: "ул. Светлая улица, 105А",
+        schedule: "Ежедневно с 10:30 до 01:30",
+        phone: "+7 (928) 340-50-50",
+        intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
+        coordinates: {
+            latitude: 43.359307,
+            longitude: 45.697802,
+            accuracy: null,
+        },
+    },
+    {
+        name: "Mangal Club",
+        city: "г. Грозный",
+        address: "ул. Окраинная, 4",
+        schedule: "Ежедневно с 10:30 до 01:30",
+        phone: "+7 (983) 999-50-50",
+        intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
+        coordinates: {
+            latitude: 43.346346,
+            longitude: 45.694209,
+            accuracy: null,
+        },
+    }
+]
+
 export const PICKUP_POINT: Organization = {
+
     name: "Mangal Club",
     city: "г. Грозный",
     address: "ул. Светлая улица, 105А",

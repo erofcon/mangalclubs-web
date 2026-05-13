@@ -13,6 +13,12 @@ type BookingWithGallery = (typeof BookingMocks)[number] & {
     images?: string[];
 };
 
+type BookingFact = {
+    icon: typeof Users;
+    label: string;
+    value: string;
+};
+
 const getBookingImages = (booking?: BookingWithGallery) => {
     if (!booking) return [];
 
@@ -33,12 +39,7 @@ export function BookingSelectedScreen() {
     const category = BookingCategories.find((item) => item.id === booking?.categoryId);
     const categoryTitle = booking?.categoryTitle ?? category?.title ?? "Зона";
     const galleryImages = useMemo(() => getBookingImages(booking), [booking]);
-
-    const [gallerySelection, setGallerySelection] = useState({
-        bookingId: "",
-        imageIndex: 0,
-    });
-    const selectedImageIndex = gallerySelection.bookingId === bookingId ? gallerySelection.imageIndex : 0;
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
 
     if (!booking) {
@@ -54,6 +55,9 @@ export function BookingSelectedScreen() {
                     >
                         Зона не найдена
                     </h1>
+                    <p className="mt-4 max-w-[520px] text-[15px] leading-7 text-text/68">
+                        Возможно, ссылка устарела или вариант бронирования уже убрали с сайта.
+                    </p>
                     <button
                         type="button"
                         onClick={() => router.back()}
@@ -67,17 +71,18 @@ export function BookingSelectedScreen() {
         );
     }
 
-    const details = booking.details?.length
-        ? booking.details
-        : [
-            {label: "Формат", value: categoryTitle},
-            {label: "Гости", value: booking.capacity ?? "уточним по телефону"},
-            {label: "Время", value: booking.time ?? PICKUP_POINT.schedule},
-        ];
+    const purpose = booking.details?.find((detail) => detail.label.toLowerCase() === "подходит");
+    const bookingFacts = [
+        {icon: Tag, label: "Формат", value: categoryTitle},
+        booking.capacity ? {icon: Users, label: "Гости", value: booking.capacity} : null,
+        booking.time ? {icon: Clock3, label: "Время", value: booking.time} : null,
+        booking.priceNote ? {icon: Tag, label: "Условия", value: booking.priceNote} : null,
+        purpose ? {icon: Check, label: "Подходит", value: purpose.value} : null,
+    ].filter((fact): fact is BookingFact => Boolean(fact));
 
     return (
         <main className="min-h-screen bg-background text-text">
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-9 pt-8 sm:px-6 lg:px-0">
+            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
                 <button
                     type="button"
                     onClick={() => router.back()}
@@ -86,28 +91,25 @@ export function BookingSelectedScreen() {
                     <span className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-border/70 bg-background transition duration-300 group-hover:border-primary/70">
                         <ArrowLeft className="h-4 w-4" strokeWidth={1.8}/>
                     </span>
-                    Назад
+                    Назад к выбору зоны
                 </button>
 
-                <div className="mt-12 grid gap-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end">
-                    <div>
+                <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+                    <div className="min-w-0">
                         <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
                             {categoryTitle}
                         </p>
                         <h1
-                            className="max-w-[720px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
+                            className="max-w-[760px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
                             style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             {booking.title}
                         </h1>
-                    </div>
-
-                    <div className="max-w-[390px]">
-                        <p className="text-[15px] leading-7 text-text/72 sm:text-[16px]">
+                        <p className="mt-6 max-w-[680px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
                             {booking.description}
                         </p>
 
-                        <div className="mt-5 flex flex-wrap gap-2">
+                        <div className="mt-6 flex flex-wrap gap-2">
                             {booking.capacity && (
                                 <QuickDetail icon={Users} label={booking.capacity}/>
                             )}
@@ -118,90 +120,59 @@ export function BookingSelectedScreen() {
                                 <QuickDetail icon={Tag} label={booking.priceNote}/>
                             )}
                         </div>
-                    </div>
-                </div>
-            </section>
 
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 sm:px-6 lg:px-0 lg:pb-20">
-                <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_390px]">
-                    <div className="min-w-0">
-                        <div className="border-t border-border/70 pt-6">
-                            <div className="mb-5 flex items-end justify-between gap-4">
-                                <div>
-                                    <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
-                                        Фотографии
-                                    </p>
-                                    <h2
-                                        className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
-                                    >
-                                        Галерея зоны
-                                    </h2>
-                                </div>
-
-                                {galleryImages.length > 1 && (
-                                    <p className="text-[13px] text-text/60">
-                                        {selectedImageIndex + 1} / {galleryImages.length}
-                                    </p>
-                                )}
+                        {selectedImage && (
+                            <div className="relative mt-10 aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black">
+                                <Image
+                                    src={selectedImage}
+                                    alt={booking.title ?? "Зона бронирования"}
+                                    fill
+                                    priority
+                                    sizes="(max-width: 1023px) 100vw, 790px"
+                                    className="object-cover"
+                                />
                             </div>
+                        )}
 
-                            {selectedImage && (
-                                <div className="relative aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black">
-                                    <Image
-                                        src={selectedImage}
-                                        alt={booking.title ?? "Зона бронирования"}
-                                        fill
-                                        priority
-                                        sizes="(max-width: 1023px) 100vw, 790px"
-                                        className="object-cover"
-                                    />
-                                </div>
-                            )}
+                        {galleryImages.length > 1 && (
+                            <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                                {galleryImages.map((image, index) => {
+                                    const isSelected = selectedImageIndex === index;
 
-                            {galleryImages.length > 1 && (
-                                <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
-                                    {galleryImages.map((image, index) => {
-                                        const isSelected = selectedImageIndex === index;
+                                    return (
+                                        <button
+                                            key={image}
+                                            type="button"
+                                            onClick={() => setSelectedImageIndex(index)}
+                                            className={`relative aspect-[1.2] overflow-hidden rounded-[6px] border transition duration-300 ${
+                                                isSelected
+                                                    ? "border-primary"
+                                                    : "border-border/70 opacity-70 hover:border-primary/70 hover:opacity-100"
+                                            }`}
+                                            aria-label={`Показать фото ${index + 1}`}
+                                        >
+                                            <Image
+                                                src={image}
+                                                alt={`${booking.title ?? "Зона бронирования"} ${index + 1}`}
+                                                fill
+                                                sizes="160px"
+                                                className="object-cover"
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
 
-                                        return (
-                                            <button
-                                                key={image}
-                                                type="button"
-                                                onClick={() => setGallerySelection({
-                                                    bookingId,
-                                                    imageIndex: index,
-                                                })}
-                                                className={`relative aspect-[1.2] overflow-hidden rounded-[6px] border transition duration-300 ${
-                                                    isSelected
-                                                        ? "border-primary"
-                                                        : "border-border/70 opacity-70 hover:border-primary/70 hover:opacity-100"
-                                                }`}
-                                                aria-label={`Открыть фото ${index + 1}`}
-                                            >
-                                                <Image
-                                                    src={image}
-                                                    alt={`${booking.title ?? "Зона бронирования"} ${index + 1}`}
-                                                    fill
-                                                    sizes="160px"
-                                                    className="object-cover"
-                                                />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="mt-10">
+                        <section className="mt-10 border-t border-border/70 pt-6">
                             <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
-                                Детали
+                                О зоне
                             </p>
                             <h2
                                 className="mt-2 max-w-[640px] text-[28px] font-normal leading-tight text-text sm:text-[34px]"
                                 style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
-                                О зоне
+                                Кому подойдет
                             </h2>
 
                             <p className="mt-5 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
@@ -209,107 +180,76 @@ export function BookingSelectedScreen() {
                             </p>
 
                             {!!booking.features?.length && (
-                                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                                <div className="mt-7 flex flex-wrap gap-2">
                                     {booking.features.map((feature) => (
-                                        <div
+                                        <span
                                             key={feature}
-                                            className="booking-surface flex min-h-13 items-center gap-3 rounded-[6px] border border-border/60 px-4 py-3"
+                                            className="inline-flex min-h-10 items-center gap-2 rounded-[6px] border border-border/55 px-3.5 py-2 text-[13px] text-text/76"
                                         >
-                                            <Check className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
-                                            <span className="text-[14px] leading-5 text-text/78">
-                                                {feature}
-                                            </span>
-                                        </div>
+                                            <Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={1.8}/>
+                                            {feature}
+                                        </span>
                                     ))}
                                 </div>
                             )}
-
-                            <div className="mt-9 grid overflow-hidden rounded-[8px] border border-border/70 md:grid-cols-3">
-                                {details.map((detail) => (
-                                    <InfoItem
-                                        key={`${detail.label}-${detail.value}`}
-                                        label={detail.label}
-                                        value={detail.value}
-                                    />
-                                ))}
-                            </div>
-
-                            <div className="mt-4 grid overflow-hidden rounded-[8px] border border-border/70 md:grid-cols-3">
-                                <InfoItem label="Адрес" value={PICKUP_POINT.address}/>
-                                <InfoItem label="Город" value={PICKUP_POINT.city}/>
-                                <InfoItem label="График" value={PICKUP_POINT.schedule}/>
-                            </div>
-
-                            <div className="mt-9 overflow-hidden rounded-[8px] border border-border/70">
-                                <iframe
-                                    title={`Карта: ${PICKUP_POINT.address}`}
-                                    src={`https://yandex.com/map-widget/v1/?ll=${PICKUP_POINT.coordinates.longitude}%2C${PICKUP_POINT.coordinates.latitude}&z=15&pt=${PICKUP_POINT.coordinates.longitude}%2C${PICKUP_POINT.coordinates.latitude}%2Cpm2rdm`}
-                                    className="h-[360px] w-full border-0 grayscale md:h-[420px]"
-                                    loading="lazy"
-                                />
-                            </div>
-                        </div>
+                        </section>
                     </div>
 
-                    <aside className="min-w-0 lg:self-start">
-                        <div className="border-t border-border/70 pt-6 lg:sticky lg:top-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
-                                Связь
-                            </p>
-                            <h2
-                                className="mt-2 text-[28px] font-normal leading-tight text-text"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                    <aside className="booking-surface rounded-[8px] border border-border/70 p-5 lg:sticky lg:top-6">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Бронирование
+                        </p>
+                        <h2
+                            className="mt-2 text-[28px] font-normal leading-tight text-text"
+                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
+                        >
+                            Уточнить свободное время
+                        </h2>
+                        <p className="mt-4 text-[14px] leading-6 text-text/68">
+                            Позвоните или напишите в WhatsApp. Команда проверит свободные слоты и закрепит зону за вами.
+                        </p>
+
+                        <div className="mt-7 space-y-3">
+                            <a
+                                href={phoneHref}
+                                className="flex h-12 items-center justify-center gap-3 rounded-[6px] bg-primary px-5 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
                             >
-                                Забронировать
-                            </h2>
-                            <p className="mt-4 text-[14px] leading-6 text-text/68">
-                                Позвоните нам или напишите в WhatsApp. Подскажем свободное время и закрепим выбранную зону.
-                            </p>
+                                <Phone className="h-4 w-4" strokeWidth={1.8}/>
+                                Позвонить
+                            </a>
 
-                            <div className="mt-7 space-y-3">
-                                <a
-                                    href={phoneHref}
-                                    className="group flex h-12 items-center justify-center gap-3 rounded-[6px] bg-primary px-5 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
-                                >
-                                    <Phone className="h-4 w-4" strokeWidth={1.8}/>
-                                    {PICKUP_POINT.phone}
-                                </a>
+                            <a
+                                href={whatsappHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex h-12 items-center justify-center gap-3 rounded-[6px] border border-border bg-background px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                            >
+                                <MessageCircle className="h-4 w-4" strokeWidth={1.8}/>
+                                WhatsApp
+                            </a>
+                        </div>
 
-                                <a
-                                    href={whatsappHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group flex h-12 items-center justify-center gap-3 rounded-[6px] border border-border bg-background px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-                                >
-                                    <MessageCircle className="h-4 w-4" strokeWidth={1.8}/>
-                                    WhatsApp
-                                </a>
-                            </div>
+                        <div className="mt-7 space-y-3 border-t border-border/55 pt-6">
+                            {bookingFacts.map((fact) => (
+                                <BookingMeta
+                                    key={`${fact.label}-${fact.value}`}
+                                    icon={fact.icon}
+                                    label={fact.label}
+                                    value={fact.value}
+                                />
+                            ))}
+                        </div>
 
-                            <div className="mt-9 grid gap-3 border-t border-border/55 pt-6">
-                                <AsideMeta icon={Users} label="Формат" value={categoryTitle}/>
-                                {booking.capacity && (
-                                    <AsideMeta icon={Users} label="Гости" value={booking.capacity}/>
-                                )}
-                                {booking.time && (
-                                    <AsideMeta icon={Clock3} label="Время" value={booking.time}/>
-                                )}
-                                {booking.priceNote && (
-                                    <AsideMeta icon={Tag} label="Условия" value={booking.priceNote}/>
-                                )}
-                            </div>
-
-                            <div className="mt-9 border-t border-border/55 pt-6">
-                                <div className="flex gap-3">
-                                    <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8}/>
-                                    <div>
-                                        <p className="text-[13px] text-text/60">
-                                            {PICKUP_POINT.name}
-                                        </p>
-                                        <p className="mt-1 text-[15px] leading-6 text-text">
-                                            {PICKUP_POINT.address}
-                                        </p>
-                                    </div>
+                        <div className="mt-7 border-t border-border/55 pt-6">
+                            <div className="flex gap-3">
+                                <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8}/>
+                                <div className="min-w-0">
+                                    <p className="text-[12px] leading-none text-text/55">
+                                        Адрес
+                                    </p>
+                                    <p className="mt-2 wrap-break-word text-[14px] leading-6 text-text/82">
+                                        {PICKUP_POINT.city}, {PICKUP_POINT.address}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -334,42 +274,24 @@ function QuickDetail({icon: Icon, label}: QuickDetailProps) {
     );
 }
 
-type AsideMetaProps = {
+type BookingMetaProps = {
     icon: typeof Users;
     label: string;
     value: string;
 };
 
-function AsideMeta({icon: Icon, label, value}: AsideMetaProps) {
+function BookingMeta({icon: Icon, label, value}: BookingMetaProps) {
     return (
-        <div className="booking-surface flex gap-3 rounded-[6px] border border-border/55 px-4 py-3">
+        <div className="flex gap-3">
             <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
             <div className="min-w-0">
                 <p className="text-[12px] leading-none text-text/55">
                     {label}
                 </p>
-                <p className="mt-2 text-[14px] font-semibold leading-5 text-text">
+                <p className="mt-2 wrap-break-word text-[14px] font-semibold leading-5 text-text">
                     {value}
                 </p>
             </div>
-        </div>
-    );
-}
-
-type InfoItemProps = {
-    label: string;
-    value: string;
-};
-
-function InfoItem({label, value}: InfoItemProps) {
-    return (
-        <div className="border-b border-border/50 px-5 py-5 last:border-b-0 md:border-b-0 md:border-l md:first:border-l-0">
-            <p className="text-[12px] leading-none text-text/60">
-                {label}
-            </p>
-            <p className="mt-3 text-[15px] font-semibold leading-6 text-text">
-                {value}
-            </p>
         </div>
     );
 }
