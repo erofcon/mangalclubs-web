@@ -71,16 +71,14 @@ export function HeroSection() {
 
                     <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:gap-4">
 
-                        {/*/!*Вариант 2: со свечением*!/*/}
-
-
                         <button
                             type="button"
                             onClick={scrollToMenu}
-                            className="group inline-flex h-12 min-w-52.5 items-center justify-center gap-4 rounded-md bg-[#f1b84c]
-                            px-6 text-[14px] font-semibold text-[#1c1105] shadow-[0_0_18px_rgba(241,184,76,0.35),0_18px_42px_rgba(241,184,76,0.25)]
-                            cursor-pointer transition duration-300 hover:-translate-y-0.5
-                            hover:shadow-[0_0_26px_rgba(241,184,76,0.70),0_22px_48px_rgba(241,184,76,0.42)]"
+                            className="group inline-flex h-12 min-w-52.5 items-center justify-center gap-4 rounded-md
+                            bg-primary px-6 text-[14px] font-semibold text-[#111111]
+                             cursor-pointer
+                              transition duration-300 hover:-translate-y-0.5
+                              hover:bg-[#ffc22b]"
                         >
                             Смотреть меню
                             <ArrowRight

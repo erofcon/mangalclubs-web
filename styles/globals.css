@@ -3,7 +3,8 @@
 
 @theme {
     /*Brand colors*/
-    --color-primary: #d6ad68;
+    /*--color-primary: #d6ad68;*/
+    --color-primary: #FCB001;
     /*--color-secondary: #F4900C;*/
     /*--color-accent: #DD2E44;*/
     /*text-[#c99a55]*/
@@ -18,7 +19,7 @@
     /*Text colors*/
     --color-text: #d8d0c5;
     --color-text-secondary: #8f867b;
-    --color-hover: #c99a55;
+    --color-hover:   #E09A00;
     --color-on-primary: #18130c;
 
     /*!*unused*!*/
@@ -26,7 +27,7 @@
     /*--color-text-muted: rgba(255, 255, 255, 0.70);*/
     /*--color-text-on-primary: #000000;*/
     /*UI elements*/
-    --color-border: #5d4529;
+    --color-border: #615739;
     /*--color-divider: #D9D9D9;*/
     /*Status colors*/
     /*--color-notification: #DD2E44;*/
@@ -56,17 +57,15 @@
 }
 
 .booking-surface {
-    background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 42%),
-        #090a0a;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 42%),
+    #090a0a;
 }
 
 .booking-zone-card {
     position: relative;
     isolation: isolate;
-    background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 40%),
-        #090a0a;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 40%),
+    #090a0a;
 }
 
 .booking-zone-card::after {
@@ -97,9 +96,8 @@
 .organization-card {
     border: 1px solid rgba(93, 69, 41, 0.7);
     border-radius: 8px;
-    background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 44%),
-        #090a0a;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 44%),
+    #090a0a;
 }
 
 .organization-choice-grid {
@@ -119,10 +117,9 @@
     padding: 0.75rem;
     text-align: left;
     cursor: pointer;
-    transition:
-        border-color 220ms ease,
-        background 220ms ease,
-        transform 220ms ease;
+    transition: border-color 220ms ease,
+    background 220ms ease,
+    transform 220ms ease;
 }
 
 .organization-choice:hover,
