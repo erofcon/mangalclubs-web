@@ -1,5 +1,6 @@
 "use client";
 
+import {useMemo, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,28 +14,64 @@ import {
     Wifi,
     CreditCard,
     SquareParking,
+    SlidersHorizontal,
 } from "lucide-react";
-import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
-import {CategoryNav} from "@/feautures/screens/main/category/CategoryNav";
+import {BookingCategories, BookingMocks, Organizations} from "@/mocks/mocks-data";
+import {CategoryNav, type CategoryNavItem} from "@/feautures/screens/main/category/CategoryNav";
 import {formatOrganizationAddress, getBookingOrganization} from "@/utils/organizations";
+import type {Organization} from "@/types/organization";
 
+const getCategoryBookings = (
+    categoryId: string,
+    organizationId?: Organization["id"] | null,
+) => {
+    return BookingMocks.filter((booking) => {
+        const matchesCategory = booking.categoryId === categoryId;
+        const matchesOrganization = !organizationId || booking.organizationId === organizationId;
 
-const getCategoryBookings = (categoryId: string) => {
-    return BookingMocks.filter((booking) => booking.categoryId === categoryId);
+        return matchesCategory && matchesOrganization;
+    });
 };
 
-const bookingCategoryNavItems = BookingCategories.map((category) => {
-    const count = getCategoryBookings(category.id).length;
+const getOrganizationBookingsCount = (organizationId: Organization["id"]) => {
+    return BookingMocks.filter((booking) => booking.organizationId === organizationId).length;
+};
 
-    return {
-        id: category.id,
-        title: category.title,
-        meta: `${count} ${getBookingOptionWord(count)}`,
-        icon: <CategoryIcon categoryId={category.id} className="h-4 w-4"/>,
-    };
-});
+const restaurantFilterNavItems: CategoryNavItem[] = [
+    ...Organizations.map((organization) => {
+        const count = getOrganizationBookingsCount(organization.id);
+
+        return {
+            id: organization.id,
+            title: organization.name,
+            meta: `${formatOrganizationAddress(organization)}`,
+            icon: <MapPin className="h-4 w-4" strokeWidth={1.8}/>,
+        };
+    }),
+];
 
 export function BookingScreen() {
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState<Organization["id"] | null>(null);
+
+    const visibleBookingCategories = useMemo(() => {
+        return BookingCategories.filter((category) => (
+            getCategoryBookings(category.id, selectedOrganizationId).length > 0
+        ));
+    }, [selectedOrganizationId]);
+
+    const bookingCategoryNavItems = useMemo(() => {
+        return visibleBookingCategories.map((category) => {
+            const count = getCategoryBookings(category.id, selectedOrganizationId).length;
+
+            return {
+                id: category.id,
+                title: category.title,
+                meta: `${count} ${getBookingOptionWord(count)}`,
+                icon: <CategoryIcon categoryId={category.id} className="h-4 w-4"/>,
+            };
+        });
+    }, [selectedOrganizationId, visibleBookingCategories]);
+
     return (
         <main className="min-h-screen bg-background text-text">
             <section className="relative isolate mx-auto w-full max-w-302.5 overflow-hidden">
@@ -109,7 +146,7 @@ export function BookingScreen() {
                         Выбор зоны
                     </p>
                     <h2
-                        className="mt-2 text-[28px] font-normal leading-[0.92] text-text md:text-[32px]"
+                        className="mt-4 text-[28px] font-normal leading-[0.92] text-text"
                     >
                         Подберите формат под ваш вечер
                     </h2>
@@ -118,19 +155,30 @@ export function BookingScreen() {
 
             <CategoryNav
                 items={bookingCategoryNavItems}
+                menuItems={restaurantFilterNavItems}
+                menuActiveId={selectedOrganizationId}
                 sectionIdPrefix="booking-category"
                 ariaLabel="Категории бронирования"
-                menuTitle="Категории бронирования"
+                menuTitle="Рестораны"
+                menuButtonIcon={<SlidersHorizontal className="h-5 w-5" strokeWidth={2.2}/>}
+                menuButtonLabel="Выбрать ресторан"
+                closeMenuLabel="Закрыть выбор ресторана"
                 variant="booking"
-                showMenuButton={false}
+                onMenuItemSelect={(item) => {
+                    const organizationId = String(item.id) as Organization["id"];
+
+                    setSelectedOrganizationId((currentOrganizationId) => (
+                        currentOrganizationId === organizationId ? null : organizationId
+                    ));
+                }}
                 scrollOffset={-118}
                 activeThreshold={170}
             />
 
             <section className="mx-auto w-full max-w-302.5 px-5 pb-16 sm:px-6 lg:px-0 lg:pb-20">
                 <div className="mt-4 space-y-14">
-                    {BookingCategories.map((category) => {
-                        const categoryBookings = getCategoryBookings(category.id);
+                    {visibleBookingCategories.map((category) => {
+                        const categoryBookings = getCategoryBookings(category.id, selectedOrganizationId);
 
                         return (
                             <section

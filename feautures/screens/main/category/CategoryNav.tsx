@@ -23,9 +23,14 @@ type CategoryNavProps = {
     sectionIdPrefix: string;
     ariaLabel?: string;
     menuTitle?: string;
+    menuItems?: CategoryNavItem[];
+    menuActiveId?: string | number | null;
+    menuButtonIcon?: ReactNode;
     variant?: "menu" | "booking";
     showMenuButton?: boolean;
     menuButtonLabel?: string;
+    closeMenuLabel?: string;
+    onMenuItemSelect?: (item: CategoryNavItem) => void;
     scrollOffset?: number;
     activeThreshold?: number;
     rightSlot?: ReactNode;
@@ -95,9 +100,14 @@ export function CategoryNav({
                                 sectionIdPrefix,
                                 ariaLabel = "Категории",
                                 menuTitle = "Категории",
+                                menuItems,
+                                menuActiveId,
+                                menuButtonIcon,
                                 variant = "menu",
                                 showMenuButton = true,
                                 menuButtonLabel = "Открыть все категории",
+                                closeMenuLabel = "Закрыть категории",
+                                onMenuItemSelect,
                                 scrollOffset = -104,
                                 activeThreshold = 150,
                                 rightSlot,
@@ -118,6 +128,8 @@ export function CategoryNav({
     const currentActiveId = items.some((item) => item.id === activeId)
         ? activeId
         : items[0]?.id ?? null;
+    const currentMenuItems = menuItems ?? items;
+    const currentMenuActiveId = menuItems ? menuActiveId : currentActiveId;
     const isBookingVariant = variant === "booking";
 
     useBodyScrollLock(isCategoryMenuOpen && isMobileCategoryMenu);
@@ -261,11 +273,16 @@ export function CategoryNav({
         });
     }, [getSectionId, scrollActiveCategoryIntoView, scrollOffset]);
 
-    const selectCategory = (categoryId: string | number) => {
+    const selectMenuItem = (item: CategoryNavItem) => {
         setIsCategoryMenuOpen(false);
 
+        if (onMenuItemSelect) {
+            onMenuItemSelect(item);
+            return;
+        }
+
         window.setTimeout(() => {
-            scrollToCategory(categoryId);
+            scrollToCategory(item.id);
         }, 0);
     };
 
@@ -288,15 +305,20 @@ export function CategoryNav({
                             ref={categoryMenuButtonRef}
                             type="button"
                             onClick={() => setIsCategoryMenuOpen((current) => !current)}
-                            className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border bg-black/35 transition duration-300 hover:border-primary hover:text-primary ${
+                            className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center 
+                            border bg-black/35 transition duration-300 hover:border-primary hover:text-primary ${
                                 isCategoryMenuOpen
                                     ? "border-primary text-primary shadow-[0_0_22px_rgba(214,173,104,0.16)]"
                                     : "border-border/60 text-text"
-                            }`}
+                            }
+                            ${
+                                isBookingVariant ? " rounded-lg" : " rounded-full"
+                            }`
+                            }
                             aria-label={menuButtonLabel}
                             aria-expanded={isCategoryMenuOpen}
                         >
-                            <Menu className="h-6 w-6" strokeWidth={2.2}/>
+                            {menuButtonIcon ?? <Menu className="h-6 w-6" strokeWidth={2.2}/>}
                         </button>
                     )}
 
@@ -323,7 +345,7 @@ export function CategoryNav({
                                         aria-current={isActive ? "true" : undefined}
                                         className={
                                             isBookingVariant
-                                                ? `group flex h-14 min-w-[185px] cursor-pointer items-center gap-3
+                                                ? `group flex h-11 min-w-[176px] cursor-pointer items-center gap-3
                                                 px-3.5 text-left transition duration-300 sm:min-w-[205px] ${
                                                     isActive
                                                         ? "border border-border bg-background rounded-lg text-primary shadow-[0_0_22px_rgba(214,173,104,0.12)]"
@@ -337,7 +359,7 @@ export function CategoryNav({
                                         }
                                     >
                                         {isBookingVariant ? (
-                                            <div className="flex items-center">
+                                            <div className="flex min-w-0 items-center gap-2.5">
                                                 {category.icon && (
                                                     <span
                                                         className={`flex h-9 w-9 shrink-0 items-center 
@@ -352,7 +374,8 @@ export function CategoryNav({
                                                     </span>
                                                 )}
                                                 <span className="min-w-0">
-                                                    <span className="block truncate text-[14px] font-semibold leading-5">
+                                                    <span
+                                                        className="block truncate text-[14px] font-semibold leading-5">
                                                         {category.title}
                                                     </span>
                                                 </span>
@@ -372,7 +395,11 @@ export function CategoryNav({
                 {isCategoryMenuOpen && (
                     <div
                         ref={categoryMenuPanelRef}
-                        className="absolute left-5 top-[calc(100%+10px)] hidden w-[min(420px,calc(100vw-40px))] overflow-hidden rounded-[8px] border border-border/70 bg-background/98 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:left-6 md:block lg:left-0"
+                        className={`absolute left-5 top-[calc(100%+10px)] hidden overflow-hidden rounded-[8px] border border-border/70 bg-background/98 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:left-6 md:block lg:left-0 ${
+                            isBookingVariant
+                                ? "w-[min(520px,calc(100vw-40px))]"
+                                : "w-[min(420px,calc(100vw-40px))]"
+                        }`}
                         role="dialog"
                         aria-modal="false"
                         aria-labelledby={dropdownTitleId}
@@ -396,15 +423,19 @@ export function CategoryNav({
                             </button>
                         </div>
 
-                        <div className="mt-3 grid max-h-105 grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1.5 overflow-y-auto pr-1">
-                            {items.map((category) => {
-                                const isActive = currentActiveId === category.id;
+                        <div className={`mt-3 grid max-h-105 gap-1.5 overflow-y-auto pr-1 ${
+                            isBookingVariant
+                                ? "grid-cols-1"
+                                : "grid-cols-[repeat(auto-fit,minmax(150px,1fr))]"
+                        }`}>
+                            {currentMenuItems.map((category) => {
+                                const isActive = currentMenuActiveId === category.id;
 
                                 return (
                                     <button
                                         key={category.id}
                                         type="button"
-                                        onClick={() => selectCategory(category.id)}
+                                        onClick={() => selectMenuItem(category)}
                                         className={`group flex min-h-11 cursor-pointer items-center justify-between gap-4 
                                         rounded-md border px-3.5 py-2.5 text-left text-[14px] leading-5 transition duration-300 
                                         ${getCategoryGridSpanClass(category.title)} ${
@@ -414,7 +445,29 @@ export function CategoryNav({
                                                 "hover:bg-white/4.5 hover:text-text"
                                         }`}
                                     >
-                                        <span className="min-w-0 font-semibold">{category.title}</span>
+                                        <span className="flex min-w-0 items-center gap-2.5">
+                                            {category.icon && (
+                                                <span
+                                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition duration-300 ${
+                                                        isActive ? "text-primary" : "text-text/58 group-hover:text-primary"
+                                                    }`}
+                                                    aria-hidden="true"
+                                                >
+                                                    {category.icon}
+                                                </span>
+                                            )}
+                                            <span className="min-w-0">
+                                                <span className="block truncate font-semibold">{category.title}</span>
+                                                {category.meta && (
+                                                    <span
+                                                        className={`mt-0.5 block truncate text-[12px] font-semibold leading-4 ${
+                                                            isActive ? "text-primary/72" : "text-text/48"
+                                                        }`}>
+                                                        {category.meta}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </span>
                                         <span
                                             className={`h-1.5 w-1.5 shrink-0 rounded-full transition duration-300 ${
                                                 isActive
@@ -436,7 +489,7 @@ export function CategoryNav({
                         type="button"
                         className="absolute inset-0 h-full w-full cursor-default bg-black/60 backdrop-blur-sm"
                         onClick={() => setIsCategoryMenuOpen(false)}
-                        aria-label="Закрыть категории"
+                        aria-label={closeMenuLabel}
                     />
 
                     <div
@@ -465,15 +518,19 @@ export function CategoryNav({
                             </button>
                         </div>
 
-                        <div className="grid max-h-[calc(82dvh-82px)] grid-cols-[repeat(auto-fit,minmax(155px,1fr))] gap-2 overflow-y-auto px-5 pb-6 sm:px-6">
-                            {items.map((category) => {
-                                const isActive = currentActiveId === category.id;
+                        <div className={`grid max-h-[calc(82dvh-82px)] gap-2 overflow-y-auto px-5 pb-6 sm:px-6 ${
+                            isBookingVariant
+                                ? "grid-cols-1"
+                                : "grid-cols-[repeat(auto-fit,minmax(155px,1fr))]"
+                        }`}>
+                            {currentMenuItems.map((category) => {
+                                const isActive = currentMenuActiveId === category.id;
 
                                 return (
                                     <button
                                         key={category.id}
                                         type="button"
-                                        onClick={() => selectCategory(category.id)}
+                                        onClick={() => selectMenuItem(category)}
                                         className={`group flex min-h-13 cursor-pointer items-center justify-between gap-4 
                                         rounded-lg border px-4 py-3 text-left text-[15px] leading-5 transition
                                          duration-300 ${getCategoryGridSpanClass(category.title)} ${
@@ -482,7 +539,29 @@ export function CategoryNav({
                                                 : "border-border/50 bg-white/[0.035] text-text/82 hover:border-primary/60 hover:text-text"
                                         }`}
                                     >
-                                        <span className="min-w-0">{category.title}</span>
+                                        <span className="flex min-w-0 items-center gap-3">
+                                            {category.icon && (
+                                                <span
+                                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition duration-300 ${
+                                                        isActive ? "text-primary" : "text-text/58 group-hover:text-primary"
+                                                    }`}
+                                                    aria-hidden="true"
+                                                >
+                                                    {category.icon}
+                                                </span>
+                                            )}
+                                            <span className="min-w-0">
+                                                <span className="block truncate">{category.title}</span>
+                                                {category.meta && (
+                                                    <span
+                                                        className={`mt-1 block truncate text-[12px] font-semibold leading-4 ${
+                                                            isActive ? "text-primary/72" : "text-text/48"
+                                                        }`}>
+                                                        {category.meta}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </span>
                                         <span
                                             className={`h-2 w-2 shrink-0 rounded-full transition duration-300 ${
                                                 isActive ? "bg-primary" : "bg-border/70 opacity-45 group-hover:opacity-100"
