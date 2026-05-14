@@ -274,8 +274,8 @@ export function CategoryNav({
     return (
         <>
             <nav
-                className={`sticky top-0 z-10 mx-auto w-full max-w-302.5 border-b border-border/50 bg-background shadow-[0_18px_45px_rgba(0,0,0,0.34)] ${
-                    isBookingVariant ? "border-t border-border/35 bg-background/96 backdrop-blur-md" : ""
+                className={`sticky top-0 z-10 mx-auto w-full max-w-302.5 bg-background shadow-[0_18px_45px_rgba(0,0,0,0.34)] ${
+                    isBookingVariant ? "bg-background/96 backdrop-blur-md" : "border-b border-border/50"
                 }`}
                 aria-label={ariaLabel}
             >
@@ -302,7 +302,8 @@ export function CategoryNav({
 
                     <ul
                         ref={categoryListRef}
-                        className={`flex flex-1 overflow-x-auto whitespace-nowrap scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+                        className={`flex flex-1 overflow-x-auto whitespace-nowrap scroll-smooth 
+                        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
                             isBookingVariant ? "gap-2.5" : "gap-3"
                         }`}
                     >
@@ -322,10 +323,11 @@ export function CategoryNav({
                                         aria-current={isActive ? "true" : undefined}
                                         className={
                                             isBookingVariant
-                                                ? `group flex h-14 min-w-[185px] cursor-pointer items-center gap-3 rounded-[8px] border px-3.5 text-left transition duration-300 sm:min-w-[205px] ${
+                                                ? `group flex h-14 min-w-[185px] cursor-pointer items-center gap-3
+                                                px-3.5 text-left transition duration-300 sm:min-w-[205px] ${
                                                     isActive
-                                                        ? "border-primary/75 bg-primary/12 text-text shadow-[0_12px_28px_rgba(214,173,104,0.12)]"
-                                                        : "border-border/45 bg-white/[0.035] text-text/78 hover:border-primary/55 hover:bg-white/[0.055] hover:text-text"
+                                                        ? "border border-border bg-background rounded-lg text-primary shadow-[0_0_22px_rgba(214,173,104,0.12)]"
+                                                        : "border border-[#272421] bg-black/20 rounded-lg text-text hover:border-border hover:text-primary"
                                                 }`
                                                 : `h-10 cursor-pointer rounded-full px-7 text-[14px] transition duration-300 ${
                                                     isActive
@@ -335,13 +337,14 @@ export function CategoryNav({
                                         }
                                     >
                                         {isBookingVariant ? (
-                                            <>
+                                            <div className="flex items-center">
                                                 {category.icon && (
                                                     <span
-                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border transition duration-300 ${
+                                                        className={`flex h-9 w-9 shrink-0 items-center 
+                                                        justify-center rounded-[6px] transition duration-300 ${
                                                             isActive
-                                                                ? "border-primary/70 bg-primary/12 text-primary"
-                                                                : "border-border/55 bg-black/25 text-primary/85 group-hover:border-primary/50"
+                                                                ? "text-primary"
+                                                                : ""
                                                         }`}
                                                         aria-hidden="true"
                                                     >
@@ -352,13 +355,8 @@ export function CategoryNav({
                                                     <span className="block truncate text-[14px] font-semibold leading-5">
                                                         {category.title}
                                                     </span>
-                                                    {category.meta && (
-                                                        <span className="mt-0.5 block truncate text-[11px] leading-4 text-text/54">
-                                                            {category.meta}
-                                                        </span>
-                                                    )}
                                                 </span>
-                                            </>
+                                            </div>
                                         ) : (
                                             category.title
                                         )}
