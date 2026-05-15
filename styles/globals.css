@@ -100,6 +100,18 @@
     #090a0a;
 }
 
+.organization-page-card {
+    border: 1px solid rgba(93, 69, 41, 0.7);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 42%),
+    #090a0a;
+}
+
+.organization-hero-surface {
+    background: linear-gradient(135deg, rgba(252, 176, 1, 0.08), rgba(252, 176, 1, 0) 38%),
+    #090a0a;
+}
+
 .organization-choice-grid {
     display: grid;
     gap: 0.5rem;

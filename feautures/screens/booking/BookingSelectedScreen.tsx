@@ -11,6 +11,7 @@ import {
     getPhoneHref,
     getWhatsappHref,
 } from "@/utils/organizations";
+import {useImageLightbox} from "@/hooks/useImageLightbox";
 
 type BookingWithGallery = (typeof BookingMocks)[number] & {
     images?: string[];
@@ -44,6 +45,10 @@ export function BookingSelectedScreen() {
     const galleryImages = getBookingImages(booking);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
+    const imageLightbox = useImageLightbox({
+        images: galleryImages,
+        alt: booking?.title ?? "Зона бронирования",
+    });
 
     if (!booking) {
         return (
@@ -129,7 +134,12 @@ export function BookingSelectedScreen() {
                         </div>
 
                         {selectedImage && (
-                            <div className="relative mt-10 aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black">
+                            <button
+                                type="button"
+                                onClick={() => imageLightbox.open(selectedImageIndex)}
+                                className="relative mt-10 block aspect-[16/10] w-full overflow-hidden rounded-[8px] border border-border/70 bg-black text-left"
+                                aria-label="Открыть фото на весь экран"
+                            >
                                 <Image
                                     src={selectedImage}
                                     alt={booking.title ?? "Зона бронирования"}
@@ -138,7 +148,7 @@ export function BookingSelectedScreen() {
                                     sizes="(max-width: 1023px) 100vw, 790px"
                                     className="object-cover"
                                 />
-                            </div>
+                            </button>
                         )}
 
                         {galleryImages.length > 1 && (
@@ -270,6 +280,8 @@ export function BookingSelectedScreen() {
                     </aside>
                 </div>
             </section>
+
+            {imageLightbox.lightbox}
         </main>
     );
 }
