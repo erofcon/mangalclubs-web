@@ -221,17 +221,6 @@ export function BookingScreen() {
                                                 )}
                                                 <span
                                                     className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.05)_24%,rgba(0,0,0,0.82)_100%)]"/>
-                                                <span
-                                                    className="absolute left-4 top-4 rounded-[5px] border border-white/12 bg-black/45 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary backdrop-blur">
-                                                    {booking.categoryTitle ?? category.title}
-                                                </span>
-                                                {booking.capacity && (
-                                                    <span
-                                                        className="absolute bottom-4 left-4 inline-flex items-center gap-2 text-[13px] font-semibold text-text">
-                                                        <Users className="h-4 w-4 text-primary" strokeWidth={1.8}/>
-                                                        {booking.capacity}
-                                                    </span>
-                                                )}
                                             </span>
 
                                                 <span

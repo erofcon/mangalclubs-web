@@ -68,40 +68,29 @@ export function Footer() {
 
                     <div className="min-w-0 border-t border-border/70 pt-6 lg:border-t-0 lg:pt-0">
                         <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
-                            Контакты
+                            Наши рестораны
                         </p>
 
                         <div className="mt-5 space-y-5">
                             {Organizations.map((organization) => (
                                 <div
                                     key={organization.id}
-                                    className="space-y-4 border-b border-border/45 pb-5 last:border-b-0 last:pb-0"
                                 >
-                                    <p className="text-[14px] font-semibold text-text">
+                                    <Link
+                                        href={'/organization/' + organization.id}
+                                        className="group inline-flex items-center gap-2 text-[14px] font-semibold text-text/78 transition duration-300 hover:text-primary"
+                                    >
                                         {organization.name}
-                                    </p>
-                                    <FooterInfo
-                                        icon={<Phone className="h-4 w-4" strokeWidth={1.8}/>}
-                                        label="Телефон"
-                                        value={organization.phone}
-                                        href={getPhoneHref(organization.phone)}
-                                    />
-                                    <FooterInfo
-                                        icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
-                                        label="Адрес"
-                                        value={formatOrganizationAddress(organization)}
-                                    />
-                                    <FooterInfo
-                                        icon={<Clock className="h-4 w-4" strokeWidth={1.8}/>}
-                                        label="График"
-                                        value={organization.schedule}
-                                    />
+                                        <ArrowUpRight
+                                            className="h-3.5 w-3.5 opacity-0 transition duration-300 group-hover:opacity-100"/>
+                                    </Link>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="grid min-w-0 gap-8 border-t border-border/70 pt-6 sm:grid-cols-2 lg:border-t-0 lg:pt-0">
+                    <div
+                        className="grid min-w-0 gap-8 border-t border-border/70 pt-6 sm:grid-cols-2 lg:border-t-0 lg:pt-0">
                         <nav>
                             <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
                                 Разделы
@@ -115,7 +104,8 @@ export function Footer() {
                                             className="group inline-flex items-center gap-2 text-[14px] font-semibold text-text/78 transition duration-300 hover:text-primary"
                                         >
                                             {link.label}
-                                            <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition duration-300 group-hover:opacity-100"/>
+                                            <ArrowUpRight
+                                                className="h-3.5 w-3.5 opacity-0 transition duration-300 group-hover:opacity-100"/>
                                         </Link>
                                     </li>
                                 ))}
@@ -170,7 +160,8 @@ function FooterInfo({icon, label, value, href}: FooterInfoProps) {
                 <span className="block font-semibold tracking-wider text-[12px] text-text/55">
                     {label}
                 </span>
-                <span className="mt-1 block wrap-break-word text-[14px] font-semibold tracking-wider leading-6 text-text">
+                <span
+                    className="mt-1 block wrap-break-word text-[14px] font-semibold tracking-wider leading-6 text-text">
                     {value}
                 </span>
             </span>

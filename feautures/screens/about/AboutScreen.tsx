@@ -47,7 +47,8 @@ export function AboutScreen() {
                     </p>
                 </div>
 
-                <div className="relative mt-12 aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black md:aspect-[16/7]">
+                <div
+                    className="relative mt-12 aspect-[16/10] overflow-hidden rounded-[8px] border border-border/70 bg-black md:aspect-[16/7]">
                     <Image
                         src="/hero/hero-v2.png"
                         alt="Mangal Club"
@@ -56,7 +57,8 @@ export function AboutScreen() {
                         sizes="(max-width: 768px) 100vw, 1210px"
                         className="object-cover object-[62%_center]"
                     />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(0,0,0,0.62)_100%)]"/>
+                    <div
+                        className="absolute inset-0 bg-[linear-gradient(180deg,transparent_40%,rgba(0,0,0,0.62)_100%)]"/>
                 </div>
             </section>
 
@@ -73,7 +75,8 @@ export function AboutScreen() {
                             Здесь важны детали
                         </h2>
                         <p className="mt-4 text-[14px] leading-6 text-text/68">
-                            Мы не пытаемся быть громче всех. Наша задача проще: сделать вечер вкусным, удобным и цельным.
+                            Мы не пытаемся быть громче всех. Наша задача проще: сделать вечер вкусным, удобным и
+                            цельным.
                         </p>
 
                         <Link
