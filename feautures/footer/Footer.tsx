@@ -143,48 +143,6 @@ export function Footer() {
     );
 }
 
-type FooterInfoProps = {
-    icon: ReactNode;
-    label: string;
-    value: string;
-    href?: string;
-};
-
-function FooterInfo({icon, label, value, href}: FooterInfoProps) {
-    const content = (
-        <>
-            <span className="mt-1 shrink-0 text-primary">
-                {icon}
-            </span>
-            <span className="min-w-0">
-                <span className="block font-semibold tracking-wider text-[12px] text-text/55">
-                    {label}
-                </span>
-                <span
-                    className="mt-1 block wrap-break-word text-[14px] font-semibold tracking-wider leading-6 text-text">
-                    {value}
-                </span>
-            </span>
-        </>
-    );
-
-    const className = "flex min-w-0 gap-3 transition duration-300 hover:text-primary";
-
-    if (href) {
-        return (
-            <a href={href} className={className}>
-                {content}
-            </a>
-        );
-    }
-
-    return (
-        <div className="flex min-w-0 gap-3">
-            {content}
-        </div>
-    );
-}
-
 type StoreLinkProps = {
     icon: string;
     label: string;

@@ -176,11 +176,20 @@ export function DeliveryTypeModal() {
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
     const [resolvedAddress, setResolvedAddress] = useState("");
+    const [isAddressLockedToCoordinates, setIsAddressLockedToCoordinates] = useState(false);
 
     const lastResolvedAddressRef = useRef("");
     const addressAbortRef = useRef<AbortController | null>(null);
+    const reverseAddressAbortRef = useRef<AbortController | null>(null);
 
     const {locate, isLocating, locationError} = useGeolocation();
+
+    useEffect(() => {
+        return () => {
+            addressAbortRef.current?.abort();
+            reverseAddressAbortRef.current?.abort();
+        };
+    }, []);
 
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
@@ -189,6 +198,7 @@ export function DeliveryTypeModal() {
         if (!selectedDelivery) {
             lastResolvedAddressRef.current = "";
             setResolvedAddress("");
+            setIsAddressLockedToCoordinates(false);
             setAddressError(null);
             setForm(initialForm);
             setMapCoordinates({
@@ -200,6 +210,7 @@ export function DeliveryTypeModal() {
 
         lastResolvedAddressRef.current = selectedDelivery.address;
         setResolvedAddress(selectedDelivery.address);
+        setIsAddressLockedToCoordinates(false);
         setAddressError(null);
         setForm({
             address: selectedDelivery.address,
@@ -215,7 +226,7 @@ export function DeliveryTypeModal() {
     }, [isOpen, selectedDelivery]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
-    const applyResolvedAddress = useCallback((resolved: ResolvedAddress) => {
+    const applyResolvedAddress = useCallback((resolved: ResolvedAddress, coordinates?: CoordinatesState) => {
         lastResolvedAddressRef.current = resolved.address;
         setResolvedAddress(resolved.address);
 
@@ -225,8 +236,8 @@ export function DeliveryTypeModal() {
         }));
 
         setMapCoordinates({
-            latitude: resolved.latitude,
-            longitude: resolved.longitude,
+            latitude: coordinates?.latitude ?? resolved.latitude,
+            longitude: coordinates?.longitude ?? resolved.longitude,
         });
 
         setAddressError(
@@ -235,7 +246,7 @@ export function DeliveryTypeModal() {
     }, []);
 
     const reverseGeocodeCoordinates = useCallback(
-        async (coordinates: CoordinatesState) => {
+        async (coordinates: CoordinatesState, signal: AbortSignal) => {
             setAddressError(null);
             setIsAddressResolving(true);
 
@@ -245,7 +256,11 @@ export function DeliveryTypeModal() {
                     lon: String(coordinates.longitude),
                 });
 
-                const response = await fetch(`/api/geocode/reverse?${params}`);
+                const response = await fetch(`/api/geocode/reverse?${params}`, {
+                    signal,
+                });
+
+                if (signal.aborted) return;
 
                 if (!response.ok) {
                     const error = await response.json().catch(() => null);
@@ -255,18 +270,48 @@ export function DeliveryTypeModal() {
                 }
 
                 const resolved = (await response.json()) as ResolvedAddress;
-                applyResolvedAddress(resolved);
+
+                if (signal.aborted) return;
+
+                applyResolvedAddress(resolved, coordinates);
             } catch (error) {
+                if (signal.aborted) return;
+
                 setAddressError(
                     error instanceof Error
                         ? error.message
                         : "Не удалось определить адрес. Если включен VPN, необходимо выключить."
                 );
             } finally {
-                setIsAddressResolving(false);
+                if (!signal.aborted) {
+                    setIsAddressResolving(false);
+                }
             }
         },
         [applyResolvedAddress]
+    );
+
+    const resolveCoordinates = useCallback(
+        (coordinates: CoordinatesState) => {
+            addressAbortRef.current?.abort();
+            reverseAddressAbortRef.current?.abort();
+
+            const controller = new AbortController();
+            reverseAddressAbortRef.current = controller;
+
+            lastResolvedAddressRef.current = "";
+            setResolvedAddress("");
+            setIsAddressLockedToCoordinates(true);
+            setAddressError(null);
+            setForm((prev) => ({
+                ...prev,
+                address: "",
+            }));
+            setMapCoordinates(coordinates);
+
+            void reverseGeocodeCoordinates(coordinates, controller.signal);
+        },
+        [reverseGeocodeCoordinates]
     );
 
     const geocodeAddress = useCallback(
@@ -318,6 +363,7 @@ export function DeliveryTypeModal() {
 
     useEffect(() => {
         if (!isOpen) return;
+        if (isAddressLockedToCoordinates) return;
 
         const address = form.address.trim();
 
@@ -342,7 +388,7 @@ export function DeliveryTypeModal() {
             window.clearTimeout(timeoutId);
             controller.abort();
         };
-    }, [form.address, geocodeAddress, isOpen]);
+    }, [form.address, geocodeAddress, isAddressLockedToCoordinates, isOpen]);
 
     if (!isOpen) return null;
 
@@ -351,6 +397,7 @@ export function DeliveryTypeModal() {
             (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
                 if (field === "address") {
                     addressAbortRef.current?.abort();
+                    reverseAddressAbortRef.current?.abort();
                     setAddressError(null);
                     setIsAddressResolving(false);
                     lastResolvedAddressRef.current = "";
@@ -364,10 +411,11 @@ export function DeliveryTypeModal() {
             };
 
     const handleLocate = () => {
-        locate((coordinates) => {
-            setMapCoordinates(coordinates);
-            void reverseGeocodeCoordinates(coordinates);
-        });
+        locate(resolveCoordinates);
+    };
+
+    const handleMapSelect = (coordinates: CoordinatesState) => {
+        resolveCoordinates(coordinates);
     };
 
     const handleSave = () => {
@@ -387,23 +435,26 @@ export function DeliveryTypeModal() {
     const trimmedAddress = form.address.trim();
     const canSaveAddress =
         Boolean(trimmedAddress) &&
-        trimmedAddress === resolvedAddress &&
-        !addressError &&
-        !isAddressResolving;
+        !isAddressResolving &&
+        (
+            isAddressLockedToCoordinates ||
+            (trimmedAddress === resolvedAddress && !addressError)
+        ) &&
+        !addressError;
 
     return (
         <ModalSkeleton
             onClose={closeDeliveryTypeModal}
-            className="h-dvh w-full p-0 sm:h-140 sm:w-[calc(100vw-32px)] sm:max-w-8xl"
+            className="h-dvh w-full p-0 sm:h-140 sm:w-[calc(100vw-32px)] sm:max-w-[900px]"
         >
-            <div className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:rounded-[8px] sm:border md:flex-row">
+            <div className="flex h-full w-full flex-col overflow-hidden border-border bg-background sm:rounded-lg sm:border md:flex-row">
                 <div
                     className="order-1 relative h-[40dvh] min-h-80 w-full shrink-0 overflow-hidden md:order-2 md:h-full md:flex-1">
                     <RestaurantMap
-                        key={`${mapCoordinates.latitude}-${mapCoordinates.longitude}`}
                         name="Адрес доставки"
                         address={form.address.trim() || "Текущее местоположение"}
                         coordinates={mapCoordinates}
+                        onSelectCoordinates={handleMapSelect}
                     />
 
                     <div className="absolute right-5 bottom-5 z-1000 md:right-10 md:bottom-8">
@@ -431,7 +482,8 @@ export function DeliveryTypeModal() {
                 </div>
 
                 <div
-                    className="order-2 flex min-h-0 flex-1 flex-col border-t border-border bg-background px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[44%] md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
+                    className="order-2 flex min-h-0 flex-1 flex-col border-t border-border bg-background px-4 py-5 sm:px-6 sm:py-6 md:order-1
+                    md:w-[50%] md:flex-none md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10">
                     <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                         <div className="max-w-xl">
                             <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">

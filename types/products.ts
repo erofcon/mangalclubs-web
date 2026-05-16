@@ -11,7 +11,6 @@ export interface MenuItem {
     description: string;
     price: number;
     image?: string;
-    isHit: boolean;
     weight?: string;
     calories?: string | number;
     fats?: string | number;
@@ -22,9 +21,3 @@ export interface MenuItem {
 export interface MenuCategory extends Category {
     items: MenuItem[];
 }
-
-
-export const CategoryIcons: Record<string, string> = {
-    steak: "/menu/icons/steak.svg",
-    grill: "/menu/icons/grill.svg",
-};

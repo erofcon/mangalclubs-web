@@ -8,7 +8,6 @@ import {
     Flame,
     MapPin,
     Sparkles,
-    Users,
     Utensils,
     Waves,
     Wifi,
@@ -33,14 +32,8 @@ const getCategoryBookings = (
     });
 };
 
-const getOrganizationBookingsCount = (organizationId: Organization["id"]) => {
-    return BookingMocks.filter((booking) => booking.organizationId === organizationId).length;
-};
-
 const restaurantFilterNavItems: CategoryNavItem[] = [
     ...Organizations.map((organization) => {
-        const count = getOrganizationBookingsCount(organization.id);
-
         return {
             id: organization.id,
             title: organization.name,

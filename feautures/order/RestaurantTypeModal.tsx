@@ -40,9 +40,9 @@ export function RestaurantTypeModal() {
             onClose={handleClose}
             organization={activeOrganization}
             action={(
-                <div className="flex flex-col h-full">
-                    {/* flex-1 растянет список, занимая всё свободное место */}
-                    <div className="organization-choice-grid overflow-y-auto pr-1 items-start">
+                <div className="flex min-h-0 flex-1 flex-col">
+                    <div
+                        className="organization-choice-grid min-h-0 flex-1 content-start items-start overflow-y-auto pr-1">
                         {Organizations.map((organization) => {
                             const isActive = organization.id === activeOrganization.id;
 
@@ -76,7 +76,7 @@ export function RestaurantTypeModal() {
                     <button
                         type="button"
                         onClick={handleSelect}
-                        className="mt-4 h-12 w-full mt-auto cursor-pointer rounded-[6px] bg-primary text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
+                        className="mt-4 h-12 w-full shrink-0 cursor-pointer rounded-[6px] bg-primary text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
                     >
                         Выбрать ресторан
                     </button>

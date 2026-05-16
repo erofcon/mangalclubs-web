@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
 import {ArrowRight, Clock, MapPin, Phone} from "lucide-react";
@@ -141,7 +143,7 @@ export function AboutScreen() {
                             Два адреса в Грозном
                         </h2>
                     </div>
-                    <p className="max-w-[460px] text-[14px] leading-6 text-text-secondary">
+                    <p className="max-w-115 text-[14px] leading-6 text-text-secondary">
                         Выберите удобный ресторан для бронирования, самовывоза или спокойного вечера
                         в зале. Режим работы указан отдельно для каждого адреса.
                     </p>
@@ -149,9 +151,10 @@ export function AboutScreen() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                     {Organizations.map((organization, index) => (
-                        <article
+                        <Link
+                            href={'/organization/' + organization.id}
                             key={organization.id}
-                            className="rounded-[8px] border border-border/70 bg-[#0a0b0b] p-5"
+                            className="rounded-lg border border-border/70 bg-[#0a0b0b] p-5 hover:scale-102 duration-200"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <h3 className="text-[24px] font-semibold leading-tight text-text">
@@ -171,20 +174,23 @@ export function AboutScreen() {
                                     <Clock className="mt-1 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
                                     <span>{organization.schedule}</span>
                                 </p>
-                                <a
-                                    href={getPhoneHref(organization.phone)}
+                                <span
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.location.href = getPhoneHref(organization.phone);
+                                    }}
                                     className="flex gap-3 font-semibold text-text transition duration-300 hover:text-primary"
                                 >
                                     <Phone className="mt-1 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
                                     <span>{organization.phone}</span>
-                                </a>
+                                </span>
                             </div>
-                        </article>
+                        </Link>
                     ))}
                 </div>
             </section>
 
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 sm:px-6 lg:px-0 lg:pb-20">
+            <section className="mx-auto w-full max-w-302.5 px-5 pb-16 sm:px-6 lg:px-0 lg:pb-20">
                 <div
                     className="mb-5 flex flex-col gap-3 border-t border-border/70 pt-8 sm:flex-row sm:items-end sm:justify-between">
                     <div>

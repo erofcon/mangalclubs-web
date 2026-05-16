@@ -108,14 +108,14 @@ export function OrganizationScreen() {
                         Ресторан не найден
                     </h1>
                     <p className="mt-4 max-w-[520px] text-[15px] leading-7 text-text/68">
-                        Возможно, ссылка устарела. Вы можете вернуться к контактам и выбрать нужный адрес.
+                        Возможно, ссылка устарела. Вы можете вернуться на главную и выбрать нужный раздел.
                     </p>
                     <Link
-                        href="/contacts"
+                        href="/"
                         className="mt-8 inline-flex h-12 items-center gap-3 rounded-[6px] border border-border px-5 text-[14px] font-semibold text-text transition duration-300 hover:border-primary hover:text-primary"
                     >
                         <ArrowLeft className="h-4 w-4" strokeWidth={1.8}/>
-                        К контактам
+                        На главную
                     </Link>
                 </div>
             </main>
@@ -132,13 +132,13 @@ export function OrganizationScreen() {
         <main className="min-h-screen bg-background text-text">
             <section className="mx-auto w-full max-w-[1210px] px-5 pb-14 pt-8 sm:px-6 lg:px-0">
                 <Link
-                    href="/contacts"
+                    href="/about"
                     className="group inline-flex w-fit items-center gap-3 text-[14px] font-semibold text-text/75 transition duration-300 hover:text-primary"
                 >
                     <span className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-border/70 bg-background transition duration-300 group-hover:border-primary/70">
                         <ArrowLeft className="h-4 w-4" strokeWidth={1.8}/>
                     </span>
-                    Контакты
+                    О нас
                 </Link>
 
                 <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">

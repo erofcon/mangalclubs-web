@@ -3,7 +3,7 @@
 import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
 import {useState} from "react";
-import {ArrowLeft, Check, Clock3, type LucideIcon, MapPin, MessageCircle, Phone, Tag, Users} from "lucide-react";
+import {ArrowLeft, type LucideIcon, MapPin, MessageCircle, Phone} from "lucide-react";
 import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
 import {
     formatOrganizationAddress,
@@ -41,7 +41,7 @@ export function BookingSelectedScreen() {
     const bookingId = params?.id as string;
     const booking = BookingMocks.find((item) => String(item.id) === bookingId) as BookingWithGallery | undefined;
     const category = BookingCategories.find((item) => item.id === booking?.categoryId);
-    const categoryTitle = booking?.categoryTitle ?? category?.title ?? "Зона";
+    const categoryTitle = category?.title ?? "Зона";
     const galleryImages = getBookingImages(booking);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
@@ -82,25 +82,20 @@ export function BookingSelectedScreen() {
     const organization = getBookingOrganization(booking);
     const phoneHref = getPhoneHref(organization.phone);
     const whatsappHref = getWhatsappHref(organization.phone);
-    const purpose = booking.details?.find((detail) => detail.label.toLowerCase() === "подходит");
     const bookingFacts = [
-        {icon: Tag, label: "Формат", value: categoryTitle},
         {icon: MapPin, label: "Ресторан", value: organization.name},
-        booking.capacity ? {icon: Users, label: "Гости", value: booking.capacity} : null,
-        booking.time ? {icon: Clock3, label: "Время", value: booking.time} : null,
-        booking.priceNote ? {icon: Tag, label: "Условия", value: booking.priceNote} : null,
-        purpose ? {icon: Check, label: "Подходит", value: purpose.value} : null,
     ].filter((fact): fact is BookingFact => Boolean(fact));
 
     return (
         <main className="min-h-screen bg-background text-text">
-            <section className="mx-auto w-full max-w-[1210px] px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
+            <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
                 <button
                     type="button"
                     onClick={() => router.back()}
                     className="group inline-flex w-fit items-center gap-3 text-[14px] font-semibold text-text/75 transition duration-300 hover:text-primary"
                 >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-border/70 bg-background transition duration-300 group-hover:border-primary/70">
+                    <span
+                        className="flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-background transition duration-300 group-hover:border-primary/70">
                         <ArrowLeft className="h-4 w-4" strokeWidth={1.8}/>
                     </span>
                     Назад к выбору зоны
@@ -120,18 +115,6 @@ export function BookingSelectedScreen() {
                         <p className="mt-6 max-w-[680px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
                             {booking.description}
                         </p>
-
-                        <div className="mt-6 flex flex-wrap gap-2">
-                            {booking.capacity && (
-                                <QuickDetail icon={Users} label={booking.capacity}/>
-                            )}
-                            {booking.time && (
-                                <QuickDetail icon={Clock3} label={booking.time}/>
-                            )}
-                            {booking.priceNote && (
-                                <QuickDetail icon={Tag} label={booking.priceNote}/>
-                            )}
-                        </div>
 
                         {selectedImage && (
                             <button
@@ -195,20 +178,6 @@ export function BookingSelectedScreen() {
                             <p className="mt-5 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
                                 {booking.longDescription ?? organization.intro}
                             </p>
-
-                            {!!booking.features?.length && (
-                                <div className="mt-7 flex flex-wrap gap-2">
-                                    {booking.features.map((feature) => (
-                                        <span
-                                            key={feature}
-                                            className="inline-flex min-h-10 items-center gap-2 rounded-[6px] border border-border/55 px-3.5 py-2 text-[13px] text-text/76"
-                                        >
-                                            <Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={1.8}/>
-                                            {feature}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </section>
                     </div>
 
@@ -283,20 +252,6 @@ export function BookingSelectedScreen() {
 
             {imageLightbox.lightbox}
         </main>
-    );
-}
-
-type QuickDetailProps = {
-    icon: LucideIcon;
-    label: string;
-};
-
-function QuickDetail({icon: Icon, label}: QuickDetailProps) {
-    return (
-        <span className="inline-flex h-9 items-center gap-2 rounded-[5px] border border-border/60 bg-black/20 px-3 text-[12px] font-semibold text-text/72">
-            <Icon className="h-3.5 w-3.5 text-primary" strokeWidth={1.8}/>
-            {label}
-        </span>
     );
 }
 

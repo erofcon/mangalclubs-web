@@ -1,24 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import {ReactNode} from "react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import type {Organization} from "@/types/organization";
-import {formatOrganizationAddress} from "@/utils/organizations";
-
-const RestaurantMap = dynamic(
-    () =>
-        import("@/components/maps/RestaurantMap").then(
-            (mod) => mod.RestaurantMap
-        ),
-    {
-        ssr: false,
-        loading: () => (
-            <div className="h-full w-full animate-pulse bg-background"/>
-        ),
-    }
-);
 
 type RestaurantInfoModalProps = {
     isOpen: boolean;
@@ -35,14 +20,16 @@ export function RestaurantInfoModal({
                                     }: RestaurantInfoModalProps) {
     if (!isOpen) return null;
 
+    const mapSrc = getRestaurantMapSrc(organization);
+
     return (
         <ModalSkeleton
             onClose={onClose}
-            className="h-155 w-[calc(100vw-32px)] max-w-4xl p-0 sm:h-120"
+            className="h-dvh w-full max-w-4xl p-0 sm:h-120 sm:w-[calc(100vw-32px)]"
         >
             <div
                 className="flex h-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
-                <div className="order-2 flex flex-[0_0_45%] flex-col p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8">
+                <div className="order-2 flex min-h-0 flex-1 flex-col p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8">
                     <div className="space-y-5 text-text">
                         <div>
                             <div className="flex items-end gap-2">
@@ -67,21 +54,28 @@ export function RestaurantInfoModal({
                     </div>
 
                     {action ? (
-                        <div className="flex flex-1 flex-col pt-6">
+                        <div className="flex min-h-0 flex-1 flex-col pt-6">
                             {action}
                         </div>
                     ) : null}
                 </div>
 
-                <div className="order-1 flex-[0_0_55%] shrink-0 sm:order-2 sm:h-full sm:flex-1">
-                    <RestaurantMap
+                <div className="order-1 h-[60dvh] min-h-80 w-full shrink-0 sm:order-2 sm:h-full sm:min-h-0 sm:flex-1">
+                    <iframe
                         key={organization.id}
-                        name={organization.name}
-                        address={formatOrganizationAddress(organization)}
-                        coordinates={organization.coordinates}
+                        title={`Карта ${organization.name}`}
+                        src={mapSrc}
+                        className="h-full w-full border-0"
+                        loading="lazy"
                     />
                 </div>
             </div>
         </ModalSkeleton>
     );
+}
+
+function getRestaurantMapSrc(organization: Organization) {
+    const {latitude, longitude} = organization.coordinates;
+
+    return `https://yandex.com/map-widget/v1/?ll=${longitude}%2C${latitude}&z=16&pt=${longitude}%2C${latitude}%2Cpm2rdm`;
 }

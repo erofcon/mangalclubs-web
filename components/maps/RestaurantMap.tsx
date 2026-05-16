@@ -1,6 +1,7 @@
 "use client";
 
-import {MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
+import {useEffect} from "react";
+import {MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import L from "leaflet";
 
 type Coordinates = {
@@ -12,6 +13,7 @@ type RestaurantMapProps = {
     name: string;
     address: string;
     coordinates: Coordinates;
+    onSelectCoordinates?: (coordinates: Coordinates) => void;
 };
 
 const restaurantIcon = new L.Icon({
@@ -21,10 +23,42 @@ const restaurantIcon = new L.Icon({
     popupAnchor: [0, -38],
 });
 
+function MapCenterSync({coordinates}: { coordinates: Coordinates }) {
+    const map = useMap();
+
+    useEffect(() => {
+        map.setView(
+            [coordinates.latitude, coordinates.longitude],
+            map.getZoom(),
+            {animate: true}
+        );
+    }, [coordinates.latitude, coordinates.longitude, map]);
+
+    return null;
+}
+
+function MapClickHandler({
+                             onSelectCoordinates,
+                         }: {
+    onSelectCoordinates?: (coordinates: Coordinates) => void;
+}) {
+    useMapEvents({
+        click: (event) => {
+            onSelectCoordinates?.({
+                latitude: event.latlng.lat,
+                longitude: event.latlng.lng,
+            });
+        },
+    });
+
+    return null;
+}
+
 export function RestaurantMap({
                                   name,
                                   address,
                                   coordinates,
+                                  onSelectCoordinates,
                               }: RestaurantMapProps) {
     const apiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
 
@@ -42,7 +76,10 @@ export function RestaurantMap({
     ];
 
     return (
-        <div className="h-full w-full overflow-hidden">
+        <div
+            className={`h-full w-full overflow-hidden ${onSelectCoordinates ? "cursor-crosshair" : ""}`}
+            title={onSelectCoordinates ? "Выберите точку доставки на карте" : undefined}
+        >
             <MapContainer
                 center={position}
                 zoom={15}
@@ -55,6 +92,11 @@ export function RestaurantMap({
                 <TileLayer
                     url={`https://tiles.api-maps.yandex.ru/v1/tiles/?projection=web_mercator&x={x}&y={y}&z={z}&lang=ru_RU&l=map&apikey=${apiKey}`}
                 />
+
+                <MapCenterSync coordinates={coordinates}/>
+                {onSelectCoordinates && (
+                    <MapClickHandler onSelectCoordinates={onSelectCoordinates}/>
+                )}
 
                 <Marker position={position} icon={restaurantIcon}>
                     <Popup>

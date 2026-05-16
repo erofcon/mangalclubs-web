@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import {useEffect, useState} from "react";
-import {Menu, ShoppingCart, X, Search} from "lucide-react";
+import {Menu, ShoppingCart, X} from "lucide-react";
 import {Logo} from "@/feautures/header/Logo";
 import {DeliverySelector} from "@/feautures/header/DeliverySelector";
 import {LoginButton} from "@/feautures/header/LoginButton";
 import {MobileMenu} from "@/feautures/header/MobileMenu";
+import {MenuSearch} from "@/feautures/header/MenuSearch";
 import {topLinks} from "@/utils/constants";
 import {useCartStore} from "@/store/cart-store";
 import {useUIStore} from "@/store/ui-store";
@@ -64,7 +65,7 @@ export default function Header() {
                     ))}
                 </nav>
 
-                <div className="hidden items-center gap-6 md:flex">
+                <div className="hidden items-center gap-5 md:flex">
                     <button
                         type="button"
                         data-cart-target="header"
@@ -83,18 +84,19 @@ export default function Header() {
                             </span>
                         )}
                     </button>
-                    <button
-                        type="button"
-                        className="cursor-pointer text-text border p-2 rounded-[5px] border-border"
-                    >
-                        <Search className="h-4 w-4"/>
-                    </button>
+                    <MenuSearch variant="desktop"/>
                     <LoginButton/>
                 </div>
 
                 <div className="flex w-full items-center justify-between md:hidden">
                     <Logo size="mobile"/>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
+                        <MenuSearch
+                            variant="mobile"
+                            onOpenChange={(isSearchOpen) => {
+                                if (isSearchOpen) setIsOpen(false);
+                            }}
+                        />
                         <button
                             type="button"
                             aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
