@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {Bike, Check, Utensils} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
@@ -31,7 +31,6 @@ export function OrderTypeModal() {
                         </p>
                         <h1
                             className="text-[28px] font-normal leading-tight text-text"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             Как хотите получить заказ?
                         </h1>

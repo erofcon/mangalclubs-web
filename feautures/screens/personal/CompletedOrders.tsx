@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {type ReactNode} from "react";
 import {ArrowRight, ClipboardCheck, X} from "lucide-react";
@@ -36,7 +36,6 @@ export function CompletedOrders() {
                 </p>
                 <h2
                     className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                 >
                     Завершенные заказы
                 </h2>

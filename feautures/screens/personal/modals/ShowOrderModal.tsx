@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
@@ -32,7 +32,6 @@ export function ShowOrderModal() {
                     </p>
                     <h2
                         className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Выполнено
                     </h2>

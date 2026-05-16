@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
@@ -491,7 +491,6 @@ export function DeliveryTypeModal() {
                             </p>
                             <h2
                                 className="text-[28px] font-normal leading-tight text-text"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 Укажи адрес
                             </h2>

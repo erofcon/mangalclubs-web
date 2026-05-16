@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -103,7 +103,6 @@ export function OrganizationScreen() {
                     </p>
                     <h1
                         className="mt-3 text-[34px] font-normal leading-tight text-text"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Ресторан не найден
                     </h1>
@@ -148,7 +147,6 @@ export function OrganizationScreen() {
                         </p>
                         <h1
                             className="max-w-[820px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             {organization.name}
                         </h1>
@@ -209,7 +207,6 @@ export function OrganizationScreen() {
                             </p>
                             <h2
                                 className="mt-3 max-w-[700px] text-[34px] font-normal leading-tight text-text sm:text-[44px]"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 {content.lead}
                             </h2>
@@ -254,7 +251,6 @@ export function OrganizationScreen() {
                     </p>
                     <h2
                         className="mt-2 text-[28px] font-normal leading-tight text-text"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Позвонить или написать
                     </h2>
@@ -298,7 +294,6 @@ export function OrganizationScreen() {
                         </p>
                         <h2
                             className="mt-3 text-[30px] font-normal leading-tight text-text"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             {formatOrganizationAddress(organization)}
                         </h2>

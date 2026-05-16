@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useAuthStore} from "@/store/auth-store";
@@ -127,7 +127,6 @@ export function AuthCodeConfirm() {
                     </p>
                     <h1
                         className="text-center text-[28px] font-normal leading-tight text-text"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Введите код
                     </h1>

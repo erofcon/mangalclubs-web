@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import {ArrowRight, Beef} from "lucide-react";
 
 export function EmptyOrders() {
@@ -10,7 +10,6 @@ export function EmptyOrders() {
                 </p>
                 <h2
                     className="mt-2 text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                    style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                 >
                     Активные заказы
                 </h2>

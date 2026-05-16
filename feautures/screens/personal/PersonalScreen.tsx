@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {type ReactNode, useState} from "react";
 import {useRouter} from "next/navigation";
@@ -39,7 +39,6 @@ export function PersonalScreen() {
                             </p>
                             <h1
                                 className="max-w-[760px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 Профиль гостя Mangal Club.
                             </h1>
@@ -170,7 +169,6 @@ function ProfileInfo({phone}: ProfileInfoProps) {
                         </p>
                         <h2
                             className="mt-2 wrap-break-word text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             Имя гостя
                         </h2>

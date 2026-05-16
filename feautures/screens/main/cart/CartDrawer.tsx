@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import {X, ShoppingBag, Minus, Plus} from "lucide-react";
@@ -64,7 +64,6 @@ export function CartDrawer() {
                 <div className="flex shrink-0 items-center justify-between px-5 py-5 md:px-8">
                     <h2
                         className="text-[28px] font-normal leading-tight text-text md:text-[34px]"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Корзина
                     </h2>

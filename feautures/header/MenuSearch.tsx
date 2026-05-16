@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import {Search, X} from "lucide-react";
@@ -314,7 +314,6 @@ function SearchResults({
                         <section key={group.categoryId}>
                             <h3
                                 className="sticky top-0 z-10 border-b border-border/50 bg-background px-4 py-3 text-[18px] font-semibold leading-tight text-text"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 {group.categoryTitle}
                             </h3>

@@ -1,5 +1,4 @@
 import type {Metadata} from "next";
-import {Open_Sans} from "next/font/google";
 import "@/styles/globals.css";
 import "leaflet/dist/leaflet.css";
 import React from "react";

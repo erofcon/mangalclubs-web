@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {FormEvent, KeyboardEvent, useState} from "react";
 
@@ -121,7 +121,6 @@ export function AuthModal() {
                     </p>
                     <h1
                         className="text-center text-[28px] font-normal leading-tight text-text"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Войдите в профиль
                     </h1>

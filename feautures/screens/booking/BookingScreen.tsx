@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {useMemo, useState} from "react";
 import Image from "next/image";
@@ -221,7 +221,6 @@ export function BookingScreen() {
                                                 <span className="min-w-0">
                                                     <span
                                                         className="block wrap-break-word text-[22px] font-normal leading-7 text-text"
-                                                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                                                     >
                                                         {booking.title}
                                                     </span>

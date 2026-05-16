@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import {type ReactNode} from "react";
-import {ArrowUpRight, Clock, MapPin, Phone} from "lucide-react";
+import {ArrowUpRight} from "lucide-react";
 import {Organizations} from "@/mocks/mocks-data";
 import {topLinks} from "@/utils/constants";
-import {formatOrganizationAddress, getPhoneHref, getWhatsappHref, primaryOrganization} from "@/utils/organizations";
+import {getWhatsappHref, primaryOrganization} from "@/utils/organizations";
 
 const whatsappHref = getWhatsappHref(primaryOrganization.phone);
 

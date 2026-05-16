@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
@@ -59,7 +59,6 @@ export function BookingSelectedScreen() {
                     </p>
                     <h1
                         className="mt-3 text-[34px] font-normal leading-tight text-text"
-                        style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                     >
                         Зона не найдена
                     </h1>
@@ -108,7 +107,6 @@ export function BookingSelectedScreen() {
                         </p>
                         <h1
                             className="max-w-[760px] text-[45px] font-normal leading-[0.98] text-text sm:text-[64px] lg:text-[76px]"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             {booking.title}
                         </h1>
@@ -170,7 +168,6 @@ export function BookingSelectedScreen() {
                             </p>
                             <h2
                                 className="mt-2 max-w-[640px] text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                                style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                             >
                                 Кому подойдет
                             </h2>
@@ -187,7 +184,6 @@ export function BookingSelectedScreen() {
                         </p>
                         <h2
                             className="mt-2 text-[28px] font-normal leading-tight text-text"
-                            style={{fontFamily: "Georgia, 'Times New Roman', serif"}}
                         >
                             Уточнить свободное время
                         </h2>

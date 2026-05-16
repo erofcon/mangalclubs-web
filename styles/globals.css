@@ -2,58 +2,13 @@
 
 
 @theme {
-    /*Brand colors*/
-    /*--color-primary: #d6ad68;*/
     --color-primary: #FCB001;
-    /*--color-secondary: #F4900C;*/
-    /*--color-accent: #DD2E44;*/
-    /*text-[#c99a55]*/
-    /*Background colors*/
-    /*--color-background: #0B0C0F;*/
     --color-background: #070808;
-
-    /*unused*/
-    /*--color-surface: #14151A;*/
-    /*--color-card: #17181D;*/
-    /*--color-stroke: rgba(255, 255, 255, 0.06);*/
-    /*Text colors*/
     --color-text: #d8d0c5;
     --color-text-secondary: #8f867b;
-    --color-hover:   #E09A00;
+    --color-hover: #E09A00;
     --color-on-primary: #18130c;
-
-    /*!*unused*!*/
-    /*--color-text-secondary: #857E7E;*/
-    /*--color-text-muted: rgba(255, 255, 255, 0.70);*/
-    /*--color-text-on-primary: #000000;*/
-    /*UI elements*/
     --color-border: #615739;
-    /*--color-divider: #D9D9D9;*/
-    /*Status colors*/
-    /*--color-notification: #DD2E44;*/
-    /*--color-success: #33AC71;*/
-    /*--color-warning: #FCC21B;*/
-    /*--color-info: #BAE2FD;*/
-    /*!*Additional useful colors*!*/
-    /*--color-white: #FFFFFF;*/
-    /*--color-black: #000000;*/
-    /*--color-overlay: rgba(0, 0, 0, 0.45);*/
-}
-
-
-.shadow {
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.32);
-    transform: translateZ(0);
-}
-
-.font-condensed {
-    font-stretch: condensed;
-}
-
-.menu-items-grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: minmax(0, 1fr);
 }
 
 .booking-surface {
@@ -143,20 +98,6 @@
 .organization-choice:hover {
     transform: translateY(-1px);
 }
-
-@media (min-width: 640px) {
-    .menu-items-grid {
-        gap: 0.75rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 768px) {
-    .menu-items-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
 
 * {
     scrollbar-width: thin;
