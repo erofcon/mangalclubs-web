@@ -21,6 +21,9 @@ const SUPPRESS_CLICK_AFTER_SWIPE_MS = 320;
 const STORY_DRAG_START_DISTANCE = 6;
 const STORY_CUBE_SETTLE_MS = 260;
 const STORY_CUBE_COMMIT_PROGRESS = 0.28;
+const LOADING_OVERLAY_DELAY_MS = 180;
+
+const loadedMediaSources = new Set<string>();
 
 type StoryDirection = "previous" | "next";
 
@@ -55,10 +58,43 @@ function getMediaType(slide: {
 
 function preloadImageSource(src?: string) {
     if (!src || typeof window === "undefined") return;
+    if (loadedMediaSources.has(src)) return;
 
     const image = new window.Image();
     image.decoding = "async";
+    image.onload = () => {
+        loadedMediaSources.add(src);
+    };
     image.src = src;
+
+    if (image.complete && image.naturalWidth > 0) {
+        loadedMediaSources.add(src);
+    }
+}
+
+function isImageSlideReady(slide?: {
+    src: string;
+    type?: "image" | "video";
+} | null) {
+    return Boolean(
+        slide &&
+        getMediaType(slide) === "image" &&
+        loadedMediaSources.has(slide.src)
+    );
+}
+
+function preloadStorySlide(storyIndex: number | null, slideIndex: number) {
+    if (storyIndex === null) return;
+
+    const slide = StoriesData[storyIndex]?.slides[slideIndex];
+    if (!slide) return;
+
+    if (getMediaType(slide) === "video") {
+        preloadImageSource(slide.poster);
+        return;
+    }
+
+    preloadImageSource(slide.src);
 }
 
 function preloadStoryFirstSlide(storyIndex: number | null) {
@@ -262,6 +298,7 @@ export default function Stories() {
     const [activeSlideIndex, setActiveSlideIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [isMediaLoading, setIsMediaLoading] = useState(false);
+    const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(false);
     const [hasMediaError, setHasMediaError] = useState(false);
     const [storyCubeTransition, setStoryCubeTransition] =
         useState<StoryCubeTransition | null>(null);
@@ -303,10 +340,11 @@ export default function Stories() {
         return getMediaType(activeSlide);
     }, [activeSlide]);
 
-    const resetMediaState = useCallback(() => {
+    const resetMediaState = useCallback((targetSlide?: typeof activeSlide) => {
         imageTimerStartedAtRef.current = null;
         setProgress(0);
-        setIsMediaLoading(true);
+        setIsMediaLoading(!isImageSlideReady(targetSlide));
+        setIsLoadingOverlayVisible(false);
         setHasMediaError(false);
     }, []);
 
@@ -325,6 +363,7 @@ export default function Stories() {
         setActiveSlideIndex(0);
         setProgress(0);
         setIsMediaLoading(false);
+        setIsLoadingOverlayVisible(false);
         setHasMediaError(false);
         imageTimerStartedAtRef.current = null;
     }, [clearStoryCubeTransitionTimers]);
@@ -342,7 +381,7 @@ export default function Stories() {
             clearStoryCubeTransitionTimers();
             videoRef.current?.pause();
             setStoryCubeTransition(null);
-            resetMediaState();
+            resetMediaState(StoriesData[storyIndex]?.slides[0]);
             setActiveStoryIndex(storyIndex);
             setActiveSlideIndex(0);
         },
@@ -411,7 +450,7 @@ export default function Stories() {
 
             storyCubeTimerRef.current = window.setTimeout(() => {
                 if (shouldCommit) {
-                    resetMediaState();
+                    resetMediaState(StoriesData[storyCubeTransition.toStoryIndex]?.slides[0]);
                     setActiveStoryIndex(storyCubeTransition.toStoryIndex);
                     setActiveSlideIndex(0);
                 }
@@ -447,13 +486,13 @@ export default function Stories() {
         videoRef.current?.pause();
 
         if (activeSlideIndex < activeStory.slides.length - 1) {
-            resetMediaState();
+            resetMediaState(activeStory.slides[activeSlideIndex + 1]);
             setActiveSlideIndex((value) => value + 1);
             return;
         }
 
         if (activeStoryIndex < StoriesData.length - 1) {
-            resetMediaState();
+            resetMediaState(StoriesData[activeStoryIndex + 1]?.slides[0]);
             setActiveStoryIndex((value) => (value === null ? 0 : value + 1));
             setActiveSlideIndex(0);
             return;
@@ -474,7 +513,7 @@ export default function Stories() {
         videoRef.current?.pause();
 
         if (activeSlideIndex > 0) {
-            resetMediaState();
+            resetMediaState(activeStory.slides[activeSlideIndex - 1]);
             setActiveSlideIndex((value) => value - 1);
             return;
         }
@@ -482,7 +521,7 @@ export default function Stories() {
         if (activeStoryIndex > 0) {
             const previousStory = StoriesData[activeStoryIndex - 1];
 
-            resetMediaState();
+            resetMediaState(previousStory.slides[previousStory.slides.length - 1]);
             setActiveStoryIndex(activeStoryIndex - 1);
             setActiveSlideIndex(previousStory.slides.length - 1);
         }
@@ -637,7 +676,7 @@ export default function Stories() {
         (index: number) => {
             clearStoryCubeTransitionTimers();
             setStoryCubeTransition(null);
-            resetMediaState();
+            resetMediaState(StoriesData[index]?.slides[0]);
             setActiveStoryIndex(index);
             setActiveSlideIndex(0);
         },
@@ -654,6 +693,16 @@ export default function Stories() {
 
         return () => window.clearTimeout(timeoutId);
     }, [activeSlide, isMediaLoading]);
+
+    useEffect(() => {
+        if (!isMediaLoading || hasMediaError) return;
+
+        const timeoutId = window.setTimeout(() => {
+            setIsLoadingOverlayVisible(true);
+        }, LOADING_OVERLAY_DELAY_MS);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [hasMediaError, isMediaLoading]);
 
     useEffect(() => {
         if (
@@ -715,9 +764,17 @@ export default function Stories() {
     useEffect(() => {
         if (!isViewerOpen) return;
 
+        preloadStorySlide(activeStoryIndex, activeSlideIndex - 1);
+        preloadStorySlide(activeStoryIndex, activeSlideIndex + 1);
         preloadStoryFirstSlide(previousStoryIndex);
         preloadStoryFirstSlide(nextStoryIndex);
-    }, [isViewerOpen, nextStoryIndex, previousStoryIndex]);
+    }, [
+        activeSlideIndex,
+        activeStoryIndex,
+        isViewerOpen,
+        nextStoryIndex,
+        previousStoryIndex,
+    ]);
 
     useEffect(() => {
         return () => {
@@ -859,10 +916,12 @@ export default function Stories() {
                                     controls={false}
                                     onLoadedData={() => {
                                         setIsMediaLoading(false);
+                                        setIsLoadingOverlayVisible(false);
                                         setHasMediaError(false);
                                     }}
                                     onCanPlay={async (event) => {
                                         setIsMediaLoading(false);
+                                        setIsLoadingOverlayVisible(false);
                                         setHasMediaError(false);
 
                                         try {
@@ -874,6 +933,7 @@ export default function Stories() {
                                     onWaiting={() => setIsMediaLoading(true)}
                                     onPlaying={() => {
                                         setIsMediaLoading(false);
+                                        setIsLoadingOverlayVisible(false);
                                         setHasMediaError(false);
                                     }}
                                     onError={() => {
@@ -902,7 +962,9 @@ export default function Stories() {
                                     priority
                                     unoptimized={activeSlide.src.endsWith(".gif")}
                                     onLoad={() => {
+                                        loadedMediaSources.add(activeSlide.src);
                                         setIsMediaLoading(false);
+                                        setIsLoadingOverlayVisible(false);
                                         setHasMediaError(false);
                                     }}
                                     onError={() => {
@@ -912,7 +974,7 @@ export default function Stories() {
                                 />
                             )}
 
-                            {(isMediaLoading || hasMediaError) && (
+                            {(isLoadingOverlayVisible || hasMediaError) && (
                                 <div
                                     className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black text-sm text-white/80">
                                     {hasMediaError ? "Не удалось загрузить медиа" : "Загрузка..."}

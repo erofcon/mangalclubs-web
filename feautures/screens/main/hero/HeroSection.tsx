@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import {ArrowRight, CalendarDays} from "lucide-react";
+import {ArrowRight, CalendarDays, ShoppingBag, Sparkles, Truck, type LucideIcon} from "lucide-react";
 
-const heroHighlights = [
-    {value: "10:30–01:30", label: "каждый день"},
-    {value: "от 45 мин", label: "доставка"},
-    {value: "VIP", label: "кабинки"},
+type HeroService = {
+    label: string;
+    icon: LucideIcon;
+};
+
+const heroServices: HeroService[] = [
+    {label: "Доставка еды", icon: Truck},
+    {label: "Еда навынос", icon: ShoppingBag},
+    {label: "VIP кабинки", icon: Sparkles},
 ];
 
 export function HeroSection() {
@@ -557,27 +562,19 @@ export function HeroSection() {
                         </div>
                     </div>
 
-                    <div
-                        className="mt-9 grid max-w-135 grid-cols-3 overflow-hidden rounded-[10px]
-                        border border-white/9 bg-black/30 backdrop-blur-md"
-                    >
-                        {heroHighlights.map((item, index) => (
-                            <div
-                                key={item.label}
-                                className={[
-                                    "px-4 py-4 sm:px-5 sm:py-5",
-                                    index !== 0 ? "border-l border-white/8" : "",
-                                ].join(" ")}
-                            >
-                                <div
-                                    className="text-[12px] font-semibold leading-none tracking-normal text-text md:text-[19px]">
-                                    {item.value}
+                    <div className="max-w-120">
+                        <div
+                            className="mt-9 flex flex-col gap-4 overflow-hidden rounded-[10px] ps-1.5 md:max-w-160 md:flex-row md:justify-between"
+                        >
+                            {heroServices.map(({label, icon: Icon}) => (
+                                <div key={label} className="flex items-center justify-start gap-2">
+                                    <div className="rounded-lg border border-border bg-background p-1">
+                                        <Icon className="h-auto w-6 text-primary" strokeWidth={1.8}/>
+                                    </div>
+                                    <span>{label}</span>
                                 </div>
-                                <div className="mt-2 text-[12px] font-light tracking-normal leading-none text-text/60">
-                                    {item.label}
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

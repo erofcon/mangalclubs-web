@@ -446,7 +446,7 @@ export function CategoryNav({
                                         }`}
                                     >
                                         <span className="flex min-w-0 items-center gap-2.5">
-                                            {category.icon && (
+                                            {isBookingVariant && category.icon && (
                                                 <span
                                                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition duration-300 ${
                                                         isActive ? "text-primary" : "text-text/58 group-hover:text-primary"
@@ -540,7 +540,7 @@ export function CategoryNav({
                                         }`}
                                     >
                                         <span className="flex min-w-0 items-center gap-3">
-                                            {category.icon && (
+                                            {isBookingVariant && category.icon && (
                                                 <span
                                                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition duration-300 ${
                                                         isActive ? "text-primary" : "text-text/58 group-hover:text-primary"

@@ -7,24 +7,20 @@ export const categories: Category[] = [
     {
         id: "99",
         title: "Стейки из мраморной говядины",
-        icon: "steak",
     },
     {
         id: "98",
         title: "Мангал",
-        icon: "grill",
     },
     {
         id: "97",
         title: "Салаты",
-        icon: "grill",
     },
 ];
 export const menus: MenuCategory[] = [
     {
         id: categories[0].id,
         title: categories[0].title,
-        icon: "steak",
         items: [
             {
                 id: "1",
@@ -55,7 +51,6 @@ export const menus: MenuCategory[] = [
     {
         id: categories[1].id,
         title: categories[1].title,
-        icon: "grill",
         items: [
             {
                 id: "3",
@@ -110,7 +105,6 @@ export const menus: MenuCategory[] = [
     {
         id: categories[2].id,
         title: categories[2].title,
-        icon: "grill",
         items: [
             {
                 id: "11",
