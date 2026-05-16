@@ -80,7 +80,7 @@ export function HeroSection() {
                             type="button"
                             onClick={scrollToMenu}
                             className="group inline-flex h-12 min-w-52.5 items-center justify-center gap-4 rounded-md
-                            bg-primary px-6 text-[14px] font-semibold text-[#111111]
+                            bg-[#F1B94C] px-6 text-[14px] font-semibold text-[#111111]
                              cursor-pointer
                               transition duration-300 hover:-translate-y-0.5
                               hover:bg-[#ffc22b]"
@@ -94,7 +94,7 @@ export function HeroSection() {
                             href="/booking"
                             className="inline-flex h-12 min-w-57 items-center justify-center gap-4 rounded-md border border-[#f4c15d]/30 bg-[#4a2808]/75 px-6 text-[14px] font-semibold text-[#fff0d0] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.34)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#ffd071]/60"
                         >
-                            Забронировать стол
+                            Бронирование
                             <CalendarDays className="h-4 w-4 text-primary"/>
                         </Link>
                     </div>

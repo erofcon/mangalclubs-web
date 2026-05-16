@@ -2,7 +2,8 @@
 
 
 @theme {
-    --color-primary: #FCB001;
+    /*--color-primary: #FCB001;*/
+    --color-primary: #ECAC18;
     --color-background: #070808;
     --color-text: #d8d0c5;
     --color-text-secondary: #8f867b;
