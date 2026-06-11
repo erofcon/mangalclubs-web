@@ -5,6 +5,7 @@ import React from "react";
 import {Footer} from "@/feautures/footer/Footer";
 import Header from "@/feautures/header/Header";
 import {GlobalOverlays} from "@/feautures/GlobalOverlays";
+import {HealthGate} from "@/components/HealthGate";
 
 import {point} from "@/app/fonts";
 
@@ -22,10 +23,12 @@ export default function RootLayout({
     return (
         <html lang="ru">
         <body className={`${point.className} min-h-dvh overflow-x-hidden bg-background`}>
-        <Header/>
-        {children}
-        <Footer/>
-        <GlobalOverlays/>
+        <HealthGate>
+            <Header/>
+            {children}
+            <Footer/>
+            <GlobalOverlays/>
+        </HealthGate>
         </body>
         </html>
     );
