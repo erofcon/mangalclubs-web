@@ -6,6 +6,7 @@ import {useRef, useState} from "react";
 import {type MenuItem as MenuItemType} from "@/types/products";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useCartStore} from "@/store/cart-store";
+import {requestCartAddPermission} from "@/store/cart-gate-store";
 
 interface MenuItemModalProps {
     item: MenuItemType;
@@ -26,6 +27,11 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
     };
 
     const handleAddToCart = () => {
+        if (!requestCartAddPermission(item, quantity)) {
+            onClose();
+            return;
+        }
+
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
         if (!imageRect) {

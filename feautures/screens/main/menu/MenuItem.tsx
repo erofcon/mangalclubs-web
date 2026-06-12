@@ -5,6 +5,7 @@ import React, {useRef} from "react";
 import {ShoppingCart} from "lucide-react";
 import {MenuItem as MenuItemType} from "@/types/products";
 import {useCartStore} from "@/store/cart-store";
+import {requestCartAddPermission} from "@/store/cart-gate-store";
 
 interface MenuItemProps {
     item: MenuItemType;
@@ -16,6 +17,10 @@ export function MenuItem({item}: MenuItemProps) {
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
+
+        if (!requestCartAddPermission(item)) {
+            return;
+        }
 
         const imageRect = imageWrapperRef.current?.getBoundingClientRect();
 
