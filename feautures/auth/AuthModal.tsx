@@ -5,6 +5,7 @@ import {FormEvent, KeyboardEvent, useState} from "react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useAuthStore} from "@/store/auth-store";
 import {useUIStore} from "@/store/ui-store";
+import {cancelPendingCartFlow} from "@/store/cart-gate-store";
 
 
 const getRussianPhoneDigits = (value: string) => {
@@ -64,20 +65,26 @@ export function AuthModal() {
     const closeAuthModal = useUIStore((state) => state.closeAuthModal);
     const openAuthCodeConfirm = useUIStore((state) => state.openAuthCodeConfirm);
     const requestCode = useAuthStore((state) => state.requestCode);
+    const isRequestingCode = useAuthStore((state) => state.isRequestingCode);
+    const errorMessage = useAuthStore((state) => state.errorMessage);
+    const clearError = useAuthStore((state) => state.clearError);
 
     const [phone, setPhone] = useState("");
     const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
 
     const phoneDigits = phone.replace(/\D/g, "");
-    const canSubmit = phoneDigits.length === 11 && isAgreementAccepted;
+    const canSubmit = phoneDigits.length === 11 && isAgreementAccepted && !isRequestingCode;
 
     const handleClose = () => {
         setPhone("");
         setIsAgreementAccepted(false);
+        clearError();
+        cancelPendingCartFlow();
         closeAuthModal();
     };
 
     const handlePhoneChange = (value: string) => {
+        clearError();
         setPhone(formatRussianPhone(value));
     };
 
@@ -93,12 +100,15 @@ export function AuthModal() {
     };
 
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         if (!canSubmit) return;
 
-        requestCode(phone);
+        const isRequested = await requestCode(phone);
+
+        if (!isRequested) return;
+
         setPhone("");
         setIsAgreementAccepted(false);
         openAuthCodeConfirm();
@@ -139,6 +149,12 @@ export function AuthModal() {
                         className="mt-10 h-12 w-full rounded-[6px] border border-border bg-background px-4 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
                     />
 
+                    {errorMessage && (
+                        <p className="mt-3 text-sm font-medium text-red-500">
+                            {errorMessage}
+                        </p>
+                    )}
+
                     <label className="mt-5 flex items-start gap-3 text-xs leading-5 text-text/72">
                         <input
                             checked={isAgreementAccepted}
@@ -161,7 +177,11 @@ export function AuthModal() {
                     disabled={!canSubmit}
                     className="mt-auto h-12 w-full cursor-pointer rounded-[6px] bg-primary px-5 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    Отправить код в Telegram <br/> или СМС
+                    {isRequestingCode ? "Отправляем код..." : (
+                        <>
+                            Отправить код в Telegram <br/> или СМС
+                        </>
+                    )}
                 </button>
             </form>
         </ModalSkeleton>

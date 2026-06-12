@@ -38,7 +38,7 @@ export default function CartButton() {
                     openCart();
                 }}
                 className={`fixed right-5 bottom-10 z-10 flex h-12 cursor-pointer items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-on-primary transition-all duration-300 hover:-translate-y-0.5 md:bottom-14 md:hidden ${
-                    !isVisible ? "md:pointer-events-none md:translate-y-4 md:opacity-0" : ""
+                    !isVisible ? "pointer-events-none translate-y-4 opacity-0" : ""
                 }`}
             >
                 {!totalItems ? <Handbag size={18}/> : <span>{totalItems}</span>}

@@ -12,6 +12,7 @@ import {
     getWhatsappHref,
 } from "@/utils/organizations";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
+import {useAppDataStore} from "@/store/app-data-store";
 
 type BookingWithGallery = (typeof BookingMocks)[number] & {
     images?: string[];
@@ -42,6 +43,7 @@ export function BookingSelectedScreen() {
     const booking = BookingMocks.find((item) => String(item.id) === bookingId) as BookingWithGallery | undefined;
     const category = BookingCategories.find((item) => item.id === booking?.categoryId);
     const categoryTitle = category?.title ?? "Зона";
+    const organizations = useAppDataStore((state) => state.organizations);
     const galleryImages = getBookingImages(booking);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
@@ -78,7 +80,7 @@ export function BookingSelectedScreen() {
         );
     }
 
-    const organization = getBookingOrganization(booking);
+    const organization = getBookingOrganization(booking, organizations);
     const phoneHref = getPhoneHref(organization.phone);
     const whatsappHref = getWhatsappHref(organization.phone);
     const bookingFacts = [

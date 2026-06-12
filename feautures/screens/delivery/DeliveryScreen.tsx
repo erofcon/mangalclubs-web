@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import {ChevronRight} from "lucide-react";
-import {Organizations, deliveryZones} from "@/mocks/mocks-data";
-import {formatOrganizationAddress} from "@/utils/organizations";
+import {deliveryZones} from "@/mocks/mocks-data";
+import {formatOrganizationAddress, getOrganizationHref} from "@/utils/organizations";
+import {useAppDataStore} from "@/store/app-data-store";
 
 const formatPrice = (price: number | null) => (
     price ? `${price.toLocaleString("ru-RU")} ₽` : "без минимума"
@@ -20,6 +21,9 @@ const getDeliveryTime = (zoneId: string) => {
 };
 
 export function DeliveryScreen() {
+    const organizations = useAppDataStore((state) => state.organizations);
+    const pickupOrganizations = organizations.filter((organization) => organization.accepts_pickup !== false);
+
     return (
         <main className="min-h-screen overflow-hidden bg-background text-text">
             <section className="mx-auto w-full max-w-302.5 px-5 pb-16 pt-8 sm:px-6 lg:px-0 lg:pb-20">
@@ -81,10 +85,10 @@ export function DeliveryScreen() {
                             </p>
 
                             <div className="mt-7 space-y-3">
-                                {Organizations.map((organization) => (
+                                {pickupOrganizations.map((organization) => (
                                     <Link
                                         key={organization.id}
-                                        href={`/organization/${organization.id}`}
+                                        href={getOrganizationHref(organization)}
                                         className="group flex w-full min-w-0 cursor-pointer items-center justify-between gap-4 border-b border-border/55 pb-4 text-left transition duration-300 hover:border-primary/70"
                                     >
                                             <span className="flex min-w-0 gap-3">

@@ -3,6 +3,7 @@
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useAuthStore} from "@/store/auth-store";
 import {useUIStore} from "@/store/ui-store";
+import {cancelPendingCartFlow, continuePendingCartFlow} from "@/store/cart-gate-store";
 import React, {ChangeEvent, KeyboardEvent, useEffect, useRef, useState} from "react";
 
 export function AuthCodeConfirm() {
@@ -11,6 +12,9 @@ export function AuthCodeConfirm() {
     const pendingPhone = useAuthStore((state) => state.pendingPhone);
     const confirmCode = useAuthStore((state) => state.confirmCode);
     const clearPendingPhone = useAuthStore((state) => state.clearPendingPhone);
+    const isConfirmingCode = useAuthStore((state) => state.isConfirmingCode);
+    const errorMessage = useAuthStore((state) => state.errorMessage);
+    const clearError = useAuthStore((state) => state.clearError);
 
     const [code, setCode] = useState(["", "", "", ""]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -19,7 +23,7 @@ export function AuthCodeConfirm() {
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
     const enteredCode = code.join("");
-    const canConfirm = enteredCode.length === code.length;
+    const canConfirm = enteredCode.length === code.length && !isConfirmingCode;
 
     useEffect(() => {
         if (!isOpen || isTimeout) return;
@@ -51,6 +55,7 @@ export function AuthCodeConfirm() {
         const value = event.target.value.replace(/\D/g, "").slice(-1);
         const nextCode = [...code];
 
+        clearError();
         nextCode[index] = value;
         setCode(nextCode);
 
@@ -96,18 +101,24 @@ export function AuthCodeConfirm() {
         setActiveIndex(0);
         setTimeLeft(30);
         setIsTimeout(false);
+        clearError();
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!canConfirm) return;
 
-        confirmCode(enteredCode);
+        const isConfirmed = await confirmCode(enteredCode);
+
+        if (!isConfirmed) return;
+
         closeAuthCodeConfirm();
         resetTimer();
+        continuePendingCartFlow();
     };
 
     const handleClose = () => {
         clearPendingPhone();
+        cancelPendingCartFlow();
         closeAuthCodeConfirm();
         resetTimer();
     };
@@ -163,6 +174,12 @@ export function AuthCodeConfirm() {
                         ))}
                     </div>
 
+                    {errorMessage && (
+                        <p className="mt-4 text-center text-sm font-medium text-red-500">
+                            {errorMessage}
+                        </p>
+                    )}
+
                     {isTimeout ? (
                         <div className="mt-8 text-center">
                             <p className="text-xl font-semibold text-red-500">
@@ -189,7 +206,7 @@ export function AuthCodeConfirm() {
                     disabled={!canConfirm}
                     className="mt-4 h-12 w-full cursor-pointer rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    Подтвердить
+                    {isConfirmingCode ? "Проверяем код..." : "Подтвердить"}
                 </button>
             </div>
         </ModalSkeleton>

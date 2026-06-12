@@ -2,6 +2,7 @@
 
 import {ReactNode, useCallback, useEffect, useState} from "react";
 import {AlertTriangle, LoaderCircle, RefreshCcw} from "lucide-react";
+import {useAppDataStore} from "@/store/app-data-store";
 
 type HealthStatus = "checking" | "ready" | "error";
 
@@ -14,9 +15,7 @@ type HealthGateProps = {
 };
 
 const getHealthUrl = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
-
-    return apiUrl ? `${apiUrl}/health` : "/health";
+    return "/health";
 };
 
 const requestHealth = async (signal: AbortSignal) => {
@@ -39,16 +38,18 @@ const requestHealth = async (signal: AbortSignal) => {
 export function HealthGate({children}: HealthGateProps) {
     const [status, setStatus] = useState<HealthStatus>("checking");
     const [errorMessage, setErrorMessage] = useState("");
+    const initializeAppData = useAppDataStore((state) => state.initialize);
 
     const checkHealth = useCallback(async () => {
         const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+        const timeoutId = window.setTimeout(() => controller.abort(), 12000);
 
         setStatus("checking");
         setErrorMessage("");
 
         try {
             await requestHealth(controller.signal);
+            await initializeAppData(controller.signal);
             setStatus("ready");
         } catch (error) {
             setStatus("error");
@@ -62,15 +63,16 @@ export function HealthGate({children}: HealthGateProps) {
         } finally {
             window.clearTimeout(timeoutId);
         }
-    }, []);
+    }, [initializeAppData]);
 
     useEffect(() => {
         const controller = new AbortController();
-        const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+        const timeoutId = window.setTimeout(() => controller.abort(), 12000);
 
         const runInitialHealthCheck = async () => {
             try {
                 await requestHealth(controller.signal);
+                await initializeAppData(controller.signal);
                 setStatus("ready");
             } catch (error) {
                 setStatus("error");
@@ -92,7 +94,7 @@ export function HealthGate({children}: HealthGateProps) {
             controller.abort();
             window.clearTimeout(timeoutId);
         };
-    }, []);
+    }, [initializeAppData]);
 
     if (status === "ready") {
         return children;

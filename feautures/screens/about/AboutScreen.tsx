@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import {ArrowRight, Clock, MapPin, Phone} from "lucide-react";
-import {Organizations} from "@/mocks/mocks-data";
-import {formatOrganizationAddress, getPhoneHref} from "@/utils/organizations";
+import {formatOrganizationAddress, getOrganizationHref, getPhoneHref} from "@/utils/organizations";
+import {useAppDataStore} from "@/store/app-data-store";
 
 const principles = [
     {
@@ -21,12 +21,6 @@ const principles = [
     },
 ];
 
-const stats = [
-    {value: `${Organizations.length}`, label: "ресторана в Грозном"},
-    {value: "VIP", label: "кабинки для приватного отдыха"},
-    {value: "бронь", label: "столы и кабинки заранее"},
-];
-
 const galleryImages = [
     "/booking/609686908_18097555516907715_1890579568138563188_n..jpg",
     "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
@@ -34,6 +28,13 @@ const galleryImages = [
 ];
 
 export function AboutScreen() {
+    const organizations = useAppDataStore((state) => state.organizations);
+    const stats = [
+        {value: `${organizations.length}`, label: "ресторана в Грозном"},
+        {value: "VIP", label: "кабинки для приватного отдыха"},
+        {value: "бронь", label: "столы и кабинки заранее"},
+    ];
+
     return (
         <main className="min-h-screen bg-background text-text">
             <section className="mx-auto w-full max-w-[1210px] px-5 pb-14 pt-8 sm:px-6 lg:px-0">
@@ -150,9 +151,9 @@ export function AboutScreen() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    {Organizations.map((organization, index) => (
+                    {organizations.map((organization, index) => (
                         <Link
-                            href={'/organization/' + organization.id}
+                            href={getOrganizationHref(organization)}
                             key={organization.id}
                             className="rounded-lg border border-border/70 bg-[#0a0b0b] p-5 hover:scale-102 duration-200"
                         >

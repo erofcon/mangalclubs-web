@@ -3,10 +3,10 @@
 import Image from "next/image";
 import {Search, X} from "lucide-react";
 import {forwardRef, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {menus} from "@/mocks/mocks-data";
 import type {MenuItem as MenuItemType} from "@/types/products";
 import {MenuItemModal} from "@/feautures/screens/main/menu/MenuItemModal";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
+import {useAppDataStore} from "@/store/app-data-store";
 
 type MenuSearchProps = {
     variant: "desktop" | "mobile";
@@ -96,27 +96,17 @@ const synonymGroups = [
     ["салат", "овощи", "зелень", "помидоры", "томаты", "огурцы", "буррата", "капрезе"],
 ];
 
-const allMenuEntries: SearchEntry[] = menus.flatMap((category) =>
-    category.items.map((item) => ({
-        item,
-        categoryId: category.id,
-        categoryTitle: category.title,
-        searchableName: normalizeText(item.name),
-        searchableDescription: normalizeText(item.description),
-        searchableCategory: normalizeText(category.title),
-        searchableText: normalizeText(`${item.name} ${item.description} ${category.title}`),
-    })),
-);
-
 export function MenuSearch({variant, onOpenChange}: MenuSearchProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [selectedItem, setSelectedItem] = useState<MenuItemType | null>(null);
+    const menus = useAppDataStore((state) => state.menu);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isMobile = variant === "mobile";
     const trimmedQuery = query.trim();
-    const results = useMemo(() => searchMenu(trimmedQuery), [trimmedQuery]);
+    const menuEntries = useMemo(() => buildMenuEntries(menus), [menus]);
+    const results = useMemo(() => searchMenu(trimmedQuery, menuEntries), [menuEntries, trimmedQuery]);
 
     const openSearch = () => setIsOpen(true);
 
@@ -391,7 +381,21 @@ function HighlightedText({text, query}: { text: string; query: string }) {
     );
 }
 
-function searchMenu(query: string): SearchResult[] {
+function buildMenuEntries(menus: Array<{ id: string; title: string; items: MenuItemType[] }>): SearchEntry[] {
+    return menus.flatMap((category) =>
+        category.items.map((item) => ({
+            item,
+            categoryId: category.id,
+            categoryTitle: category.title,
+            searchableName: normalizeText(item.name),
+            searchableDescription: normalizeText(item.description),
+            searchableCategory: normalizeText(category.title),
+            searchableText: normalizeText(`${item.name} ${item.description} ${category.title}`),
+        })),
+    );
+}
+
+function searchMenu(query: string, allMenuEntries: SearchEntry[]): SearchResult[] {
     const variants = getQueryVariants(query);
 
     if (variants.length === 0) {

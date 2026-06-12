@@ -1,13 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {ArrowUpRight} from "lucide-react";
-import {Organizations} from "@/mocks/mocks-data";
 import {topLinks} from "@/utils/constants";
-import {getWhatsappHref, primaryOrganization} from "@/utils/organizations";
-
-const whatsappHref = getWhatsappHref(primaryOrganization.phone);
+import {getOrganizationHref, getWhatsappHref} from "@/utils/organizations";
+import {useAppDataStore} from "@/store/app-data-store";
 
 export function Footer() {
+    const organizations = useAppDataStore((state) => state.organizations);
+    const primaryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization) ?? organizations[0];
+    const whatsappHref = primaryOrganization ? getWhatsappHref(primaryOrganization.phone) : "#";
+
     return (
         <footer className="border-t border-border/70 bg-background text-text">
             <div className="mx-auto w-full max-w-302.5 px-5 py-10 sm:px-6 lg:px-0 lg:py-14">
@@ -71,12 +75,12 @@ export function Footer() {
                         </p>
 
                         <div className="mt-5 space-y-5">
-                            {Organizations.map((organization) => (
+                            {organizations.map((organization) => (
                                 <div
                                     key={organization.id}
                                 >
                                     <Link
-                                        href={'/organization/' + organization.id}
+                                        href={getOrganizationHref(organization)}
                                         className="group inline-flex items-center gap-2 text-[14px] font-semibold text-text/78 transition duration-300 hover:text-primary"
                                     >
                                         {organization.name}

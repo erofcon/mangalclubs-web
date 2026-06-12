@@ -94,6 +94,12 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                             {item.description}
                         </p>
 
+                        {item.weight && (
+                            <div className="mt-5 inline-flex min-h-9 items-center rounded-[6px] border border-border/70 px-3.5 text-[13px] font-semibold leading-none text-text/78">
+                                {item.weight}
+                            </div>
+                        )}
+
                         <div className="mt-6">
                             <h3 className="font-semibold text-text">
                                 Пищевая ценность

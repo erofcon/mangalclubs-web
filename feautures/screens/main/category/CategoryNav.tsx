@@ -3,8 +3,8 @@
 import {type ReactNode, useCallback, useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import {Menu, ShoppingCart, X} from "lucide-react";
-import {categories} from "@/mocks/mocks-data";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
+import {useAppDataStore} from "@/store/app-data-store";
 import {useCartStore} from "@/store/cart-store";
 import {useUIStore} from "@/store/ui-store";
 
@@ -580,7 +580,8 @@ export function CategoryNav({
 
 export function CategoriesNav() {
     const [isHeaderCartVisible, setIsHeaderCartVisible] = useState(true);
-
+    const categories = useAppDataStore((state) => state.categories);
+    const isMenuLoading = useAppDataStore((state) => state.isMenuLoading);
     const openCart = useUIStore((state) => state.openCart);
     const totalItems = useCartStore((state) =>
         state.items.reduce((sum, item) => sum + item.quantity, 0),
@@ -611,20 +612,19 @@ export function CategoriesNav() {
             <CategoryNav
                 items={categories}
                 sectionIdPrefix="menu"
+                showMenuButton={!isMenuLoading}
                 rightSlot={
                     <button
                         type="button"
                         data-cart-target="category"
                         tabIndex={isHeaderCartVisible ? -1 : 0}
                         onClick={openCart}
+                        style={{
+                            opacity: isHeaderCartVisible ? 0 : 1,
+                            pointerEvents: isHeaderCartVisible ? "none" : "auto",
+                        }}
                         className={`relative hidden h-10 w-10 cursor-pointer md:inline-flex
-                        items-center justify-center text-primary transition duration-300 hover:scale-105
-                        ${
-                            isHeaderCartVisible
-                                ? "pointer-events-none opacity-0"
-                                : "pointer-events-auto opacity-100"
-                        }
-                        `}
+                        items-center justify-center text-primary transition duration-300 hover:scale-105`}
                         aria-label="Открыть корзину"
                     >
                         <ShoppingCart className="h-6 w-6" strokeWidth={1.8}/>
@@ -644,7 +644,6 @@ export function CategoriesNav() {
         </>
     );
 }
-
 function FlyToCartLayer() {
     const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
 

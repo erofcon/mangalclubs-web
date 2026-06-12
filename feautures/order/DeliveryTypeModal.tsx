@@ -6,7 +6,10 @@ import {LoaderCircle, Navigation} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useUIStore} from "@/store/ui-store";
 import {useOrderStore} from "@/store/order-store";
+import {useAppDataStore} from "@/store/app-data-store";
 import {primaryOrganization} from "@/utils/organizations";
+import {getOrganizationAvailability} from "@/utils/availability";
+import {continuePendingCartFlow} from "@/store/cart-gate-store";
 
 const RestaurantMap = dynamic(
     () =>
@@ -157,6 +160,10 @@ export function DeliveryTypeModal() {
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
     const selectedDelivery = useOrderStore((state) => state.delivery);
     const selectDelivery = useOrderStore((state) => state.selectDelivery);
+    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization) ?? primaryOrganization;
+    const availabilityByOrganizationId = useAppDataStore((state) => state.availabilityByOrganizationId);
+    const deliveryAvailability = getOrganizationAvailability(defaultDeliveryOrganization, availabilityByOrganizationId);
+    const isDeliveryUnavailable = deliveryAvailability?.orders_available === false;
 
     const [form, setForm] = useState<DeliveryFormState>(() => (
         selectedDelivery
@@ -170,8 +177,8 @@ export function DeliveryTypeModal() {
             : initialForm
     ));
     const [mapCoordinates, setMapCoordinates] = useState<CoordinatesState>({
-        latitude: primaryOrganization.coordinates.latitude,
-        longitude: primaryOrganization.coordinates.longitude,
+        latitude: defaultDeliveryOrganization.coordinates.latitude,
+        longitude: defaultDeliveryOrganization.coordinates.longitude,
     });
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
@@ -202,8 +209,8 @@ export function DeliveryTypeModal() {
             setAddressError(null);
             setForm(initialForm);
             setMapCoordinates({
-                latitude: primaryOrganization.coordinates.latitude,
-                longitude: primaryOrganization.coordinates.longitude,
+                latitude: defaultDeliveryOrganization.coordinates.latitude,
+                longitude: defaultDeliveryOrganization.coordinates.longitude,
             });
             return;
         }
@@ -223,7 +230,7 @@ export function DeliveryTypeModal() {
             latitude: selectedDelivery.coordinates.latitude,
             longitude: selectedDelivery.coordinates.longitude,
         });
-    }, [isOpen, selectedDelivery]);
+    }, [defaultDeliveryOrganization, isOpen, selectedDelivery]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const applyResolvedAddress = useCallback((resolved: ResolvedAddress, coordinates?: CoordinatesState) => {
@@ -419,6 +426,8 @@ export function DeliveryTypeModal() {
     };
 
     const handleSave = () => {
+        if (isDeliveryUnavailable) return;
+
         const isSelected = selectDelivery({
             ...form,
             address: trimmedAddress,
@@ -428,6 +437,7 @@ export function DeliveryTypeModal() {
         if (isSelected) {
             closeDeliveryTypeModal();
             closeOrderTypeModal();
+            continuePendingCartFlow();
         }
     };
 
@@ -440,7 +450,8 @@ export function DeliveryTypeModal() {
             isAddressLockedToCoordinates ||
             (trimmedAddress === resolvedAddress && !addressError)
         ) &&
-        !addressError;
+        !addressError &&
+        !isDeliveryUnavailable;
 
     return (
         <ModalSkeleton
@@ -497,6 +508,12 @@ export function DeliveryTypeModal() {
                         </div>
 
                         <div className="mt-8 space-y-5">
+                            {isDeliveryUnavailable && (
+                                <div className="rounded-[6px] border border-primary/45 bg-primary/10 px-4 py-3 text-sm font-medium leading-6 text-text">
+                                    {deliveryAvailability.message || "Доставка временно недоступна. Попробуйте позже."}
+                                </div>
+                            )}
+
                             <div className="relative pt-2">
                                 <input
                                     type="text"

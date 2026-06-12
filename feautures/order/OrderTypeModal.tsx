@@ -4,6 +4,9 @@ import {Bike, Check, Utensils} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
+import {useAppDataStore} from "@/store/app-data-store";
+import {getOrganizationAvailability, getUnavailableOrganizations} from "@/utils/availability";
+import {cancelPendingCartFlow} from "@/store/cart-gate-store";
 
 export function OrderTypeModal() {
     const isOpen = useUIStore((state) => state.isOrderTypeModalOpen);
@@ -11,15 +14,30 @@ export function OrderTypeModal() {
     const openRestaurantTypeModal = useUIStore((state) => state.openRestaurantTypeModal);
     const openDeliveryTypeModal = useUIStore((state) => state.openDeliveryTypeModal);
     const orderType = useOrderStore((state) => state.orderType);
+    const organizations = useAppDataStore((state) => state.organizations);
+    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
+    const availabilityByOrganizationId = useAppDataStore((state) => state.availabilityByOrganizationId);
 
     if (!isOpen) return null;
 
+    const handleClose = () => {
+        cancelPendingCartFlow();
+        closeOrderTypeModal();
+    };
+
     const isDeliverySelected = orderType === "delivery";
     const isRestaurantSelected = orderType === "restaurant";
+    const deliveryAvailability = getOrganizationAvailability(defaultDeliveryOrganization, availabilityByOrganizationId);
+    const isDeliveryDisabled = deliveryAvailability?.orders_available === false;
+    const pickupOrganizations = organizations.filter((organization) => organization.accepts_pickup !== false);
+    const isRestaurantDisabled = getUnavailableOrganizations(
+        pickupOrganizations,
+        availabilityByOrganizationId,
+    ).length === pickupOrganizations.length;
 
     return (
         <ModalSkeleton
-            onClose={closeOrderTypeModal}
+            onClose={handleClose}
             className="sm:max-w-md sm:h-70"
         >
             <div
@@ -44,11 +62,13 @@ export function OrderTypeModal() {
                     <button
                         type="button"
                         onClick={openDeliveryTypeModal}
+                        disabled={isDeliveryDisabled}
                         className={`
                             flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] border px-5 text-sm font-semibold transition duration-300
                             ${isDeliverySelected
                             ? "border-primary bg-primary text-on-primary"
                             : "border-border bg-background text-text hover:border-primary hover:text-primary"}
+                            disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-text
                         `}
                     >
                         <Bike width={24} height={24}/>
@@ -59,11 +79,13 @@ export function OrderTypeModal() {
                     <button
                         type="button"
                         onClick={openRestaurantTypeModal}
+                        disabled={isRestaurantDisabled}
                         className={`
                             flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] border px-5 text-sm font-semibold transition duration-300
                             ${isRestaurantSelected
                             ? "border-primary bg-primary text-on-primary"
                             : "border-border bg-background text-text hover:border-primary hover:text-primary"}
+                            disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-text
                         `}
                     >
                         <Utensils width={16} height={16}/>

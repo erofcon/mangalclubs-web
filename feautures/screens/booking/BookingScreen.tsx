@@ -15,46 +15,48 @@ import {
     SquareParking,
     SlidersHorizontal,
 } from "lucide-react";
-import {BookingCategories, BookingMocks, Organizations} from "@/mocks/mocks-data";
+import {BookingCategories, BookingMocks} from "@/mocks/mocks-data";
 import {CategoryNav, type CategoryNavItem} from "@/feautures/screens/main/category/CategoryNav";
-import {formatOrganizationAddress, getBookingOrganization} from "@/utils/organizations";
+import {formatOrganizationAddress, getBookingOrganization, isBookingInOrganization} from "@/utils/organizations";
 import type {Organization} from "@/types/organization";
+import {useAppDataStore} from "@/store/app-data-store";
 
 const getCategoryBookings = (
     categoryId: string,
-    organizationId?: Organization["id"] | null,
+    organization?: Organization | null,
 ) => {
     return BookingMocks.filter((booking) => {
         const matchesCategory = booking.categoryId === categoryId;
-        const matchesOrganization = !organizationId || booking.organizationId === organizationId;
+        const matchesOrganization = !organization || isBookingInOrganization(booking, organization);
 
         return matchesCategory && matchesOrganization;
     });
 };
 
-const restaurantFilterNavItems: CategoryNavItem[] = [
-    ...Organizations.map((organization) => {
-        return {
+export function BookingScreen() {
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState<Organization["id"] | null>(null);
+    const organizations = useAppDataStore((state) => state.organizations);
+    const selectedOrganization = useMemo(() => (
+        organizations.find((organization) => organization.id === selectedOrganizationId) ?? null
+    ), [organizations, selectedOrganizationId]);
+    const restaurantFilterNavItems: CategoryNavItem[] = useMemo(() => (
+        organizations.map((organization) => ({
             id: organization.id,
             title: organization.name,
             meta: `${formatOrganizationAddress(organization)}`,
             icon: <MapPin className="h-4 w-4" strokeWidth={1.8}/>,
-        };
-    }),
-];
-
-export function BookingScreen() {
-    const [selectedOrganizationId, setSelectedOrganizationId] = useState<Organization["id"] | null>(null);
+        }))
+    ), [organizations]);
 
     const visibleBookingCategories = useMemo(() => {
         return BookingCategories.filter((category) => (
-            getCategoryBookings(category.id, selectedOrganizationId).length > 0
+            getCategoryBookings(category.id, selectedOrganization).length > 0
         ));
-    }, [selectedOrganizationId]);
+    }, [selectedOrganization]);
 
     const bookingCategoryNavItems = useMemo(() => {
         return visibleBookingCategories.map((category) => {
-            const count = getCategoryBookings(category.id, selectedOrganizationId).length;
+            const count = getCategoryBookings(category.id, selectedOrganization).length;
 
             return {
                 id: category.id,
@@ -63,7 +65,7 @@ export function BookingScreen() {
                 icon: <CategoryIcon categoryId={category.id} className="h-4 w-4"/>,
             };
         });
-    }, [selectedOrganizationId, visibleBookingCategories]);
+    }, [selectedOrganization, visibleBookingCategories]);
 
     return (
         <main className="min-h-screen bg-background text-text">
@@ -171,7 +173,7 @@ export function BookingScreen() {
             <section className="mx-auto w-full max-w-302.5 px-5 pb-16 sm:px-6 lg:px-0 lg:pb-20">
                 <div className="mt-4 space-y-14">
                     {visibleBookingCategories.map((category) => {
-                        const categoryBookings = getCategoryBookings(category.id, selectedOrganizationId);
+                        const categoryBookings = getCategoryBookings(category.id, selectedOrganization);
 
                         return (
                             <section
@@ -194,7 +196,7 @@ export function BookingScreen() {
 
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                     {categoryBookings.map((booking) => {
-                                        const organization = getBookingOrganization(booking);
+                                        const organization = getBookingOrganization(booking, organizations);
 
                                         return (
                                             <Link

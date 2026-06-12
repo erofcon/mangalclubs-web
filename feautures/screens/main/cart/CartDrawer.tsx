@@ -5,6 +5,9 @@ import {X, ShoppingBag, Minus, Plus} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 import {useCartStore} from "@/store/cart-store";
+import {useOrderStore} from "@/store/order-store";
+import {useAppDataStore} from "@/store/app-data-store";
+import {getCurrentOrderAvailability} from "@/utils/availability";
 
 const getProductPlural = (count: number) => {
     const lastTwoDigits = count % 100;
@@ -32,8 +35,21 @@ export function CartDrawer() {
     const removeItem = useCartStore((state) => state.removeItem);
     const incrementItem = useCartStore((state) => state.incrementItem);
     const decrementItem = useCartStore((state) => state.decrementItem);
+    const orderType = useOrderStore((state) => state.orderType);
+    const restaurant = useOrderStore((state) => state.restaurant);
+    const organizations = useAppDataStore((state) => state.organizations);
+    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
+    const availabilityByOrganizationId = useAppDataStore((state) => state.availabilityByOrganizationId);
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const orderAvailability = getCurrentOrderAvailability({
+        orderType,
+        restaurant,
+        organizations,
+        defaultDeliveryOrganization,
+        availabilityByOrganizationId,
+    });
+    const isCheckoutDisabled = orderAvailability.isUnavailable;
 
     useBodyScrollLock(isOpen);
 
@@ -162,7 +178,16 @@ export function CartDrawer() {
                             <span className="font-bold">{totalPrice.toLocaleString("ru-RU")}&nbsp;₽</span>
                         </div>
 
-                        <button className="h-12 w-full cursor-pointer rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5">
+                        {isCheckoutDisabled && (
+                            <div className="mb-4 rounded-[6px] border border-primary/45 bg-primary/10 px-4 py-3 text-sm font-medium leading-6 text-text">
+                                {orderAvailability.message}
+                            </div>
+                        )}
+
+                        <button
+                            disabled={isCheckoutDisabled}
+                            className="h-12 w-full cursor-pointer rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                        >
                             Оформить за {totalPrice.toLocaleString("ru-RU")}&nbsp;₽
                         </button>
                     </div>

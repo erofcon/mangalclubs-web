@@ -5,10 +5,11 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import {ArrowLeft, Check, Clock, type LucideIcon, MapPin, MessageCircle, Phone, Utensils} from "lucide-react";
-import {BookingMocks, Organizations} from "@/mocks/mocks-data";
-import {formatOrganizationAddress, getPhoneHref, getWhatsappHref} from "@/utils/organizations";
+import {BookingMocks} from "@/mocks/mocks-data";
+import {formatOrganizationAddress, getOrganizationByIdOrSlug, getPhoneHref, getWhatsappHref, isBookingInOrganization} from "@/utils/organizations";
 import type {Organization} from "@/types/organization";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
+import {useAppDataStore} from "@/store/app-data-store";
 
 type OrganizationPageContent = {
     eyebrow: string;
@@ -74,9 +75,9 @@ type BookingWithGallery = (typeof BookingMocks)[number] & {
     images?: string[];
 };
 
-const getOrganizationImages = (organizationId: Organization["id"]) => {
+const getOrganizationImages = (organization: Organization) => {
     const images = BookingMocks
-        .filter((booking) => booking.organizationId === organizationId)
+        .filter((booking) => isBookingInOrganization(booking, organization))
         .flatMap((booking: BookingWithGallery) => [booking.image, ...(booking.images ?? [])])
         .filter((image): image is string => Boolean(image));
 
@@ -85,10 +86,11 @@ const getOrganizationImages = (organizationId: Organization["id"]) => {
 
 export function OrganizationScreen() {
     const params = useParams();
-    const organizationId = params?.id as Organization["id"] | undefined;
-    const organization = Organizations.find((item) => item.id === organizationId);
+    const organizationIdOrSlug = params?.id as string | undefined;
+    const organizations = useAppDataStore((state) => state.organizations);
+    const organization = getOrganizationByIdOrSlug(organizationIdOrSlug, organizations);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const galleryImages = organization ? getOrganizationImages(organization.id) : [];
+    const galleryImages = organization ? getOrganizationImages(organization) : [];
     const imageLightbox = useImageLightbox({
         images: galleryImages,
         alt: organization ? `${organization.name} интерьер` : "Ресторан",
@@ -121,7 +123,7 @@ export function OrganizationScreen() {
         );
     }
 
-    const content = organizationContent[organization.id];
+    const content = getOrganizationContent(organization);
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0] ?? "/hero/hero-v2.png";
     const mapSrc = getOrganizationMapSrc(organization);
     const phoneHref = getPhoneHref(organization.phone);
@@ -367,4 +369,38 @@ function getOrganizationMapSrc(organization: Organization) {
     const {latitude, longitude} = organization.coordinates;
 
     return `https://yandex.com/map-widget/v1/?ll=${longitude}%2C${latitude}&z=16&pt=${longitude}%2C${latitude}%2Cpm2rdm`;
+}
+
+function getOrganizationContent(organization: Organization) {
+    return (
+        organizationContent[organization.id] ??
+        (organization.slug ? organizationContent[organization.slug] : undefined) ??
+        {
+            eyebrow: `Ресторан ${organization.name}`,
+            title: "Место для теплых встреч, самовывоза и вечеров с хорошей кухней.",
+            lead: organization.intro || `${organization.name} принимает гостей и помогает собрать удобный формат вечера.`,
+            description: organization.intro || "Команда подскажет по меню, бронированию, самовывозу и актуальному режиму работы ресторана.",
+            quote: "Выберите удобный адрес, а команда Mangal Clubs поможет с деталями заказа или визита.",
+            highlights: [
+                organization.accepts_pickup === false ? "Ресторан" : "Самовывоз",
+                organization.accepts_delivery === false ? "В зале" : "Доставка",
+                "Мясо с мангала",
+                "Бронирование",
+            ],
+            details: [
+                {
+                    title: "Адрес",
+                    text: formatOrganizationAddress(organization),
+                },
+                {
+                    title: "График",
+                    text: organization.schedule,
+                },
+                {
+                    title: "Связь",
+                    text: organization.phone,
+                },
+            ],
+        }
+    );
 }

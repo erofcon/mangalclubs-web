@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
-import {Organizations, menus} from "@/mocks/mocks-data";
 import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
 import {formatOrganizationAddress} from "@/utils/organizations";
+import {useAppDataStore} from "@/store/app-data-store";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ru-RU")} ₽`;
 
@@ -13,12 +13,15 @@ export function ShowOrderModal() {
     const isOpen = useUIStore((state) => state.isShowOrderModalOpen);
     const closeShowOrderModal = useUIStore((state) => state.closeShowOrderModal);
     const selectedRestaurant = useOrderStore((state) => state.restaurant);
-    const orderItem = menus[0].items[0];
-    const restaurant = selectedRestaurant ?? Organizations[0];
+    const menus = useAppDataStore((state) => state.menu);
+    const organizations = useAppDataStore((state) => state.organizations);
+    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
+    const orderItem = menus[0]?.items[0];
+    const restaurant = selectedRestaurant ?? defaultDeliveryOrganization ?? organizations[0];
     const quantity = 2;
-    const total = orderItem.price * quantity;
+    const total = (orderItem?.price ?? 0) * quantity;
 
-    if (!isOpen) return null;
+    if (!isOpen || !orderItem || !restaurant) return null;
 
     return (
         <ModalSkeleton
