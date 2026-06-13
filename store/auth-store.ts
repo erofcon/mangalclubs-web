@@ -2,11 +2,14 @@ import {create} from "zustand";
 import {createJSONStorage, persist} from "zustand/middleware";
 import {apiFetch} from "@/utils/api";
 
-type AuthUser = {
+export type AuthUser = {
     id?: string;
     subject_type?: string;
     phone?: string;
+    name?: string | null;
     email?: string | null;
+    birthday?: string | null;
+    avatarUrl?: string | null;
     role?: string;
 };
 
@@ -26,6 +29,7 @@ type AuthStore = {
     requestCode: (phone: string) => Promise<boolean>;
     confirmCode: (code: string) => Promise<boolean>;
     refreshTokens: () => Promise<boolean>;
+    setUser: (user: AuthUser | null) => void;
     clearPendingPhone: () => void;
     clearError: () => void;
     logout: () => void;
@@ -100,6 +104,8 @@ const applyTokenPair = (tokens: TokenPair) => ({
     isAuthenticated: true,
     errorMessage: null,
 });
+
+let refreshTokensPromise: Promise<boolean> | null = null;
 
 export const useAuthStore = create<AuthStore>()(
     persist(
@@ -193,33 +199,44 @@ export const useAuthStore = create<AuthStore>()(
             },
 
             refreshTokens: async () => {
-                const {accessToken, refreshToken, tokenType, expiresIn, user} = get();
+                if (refreshTokensPromise) {
+                    return refreshTokensPromise;
+                }
 
-                if (!accessToken || !refreshToken) {
+                const {refreshToken} = get();
+
+                if (!refreshToken) {
                     return false;
                 }
+
+                refreshTokensPromise = (async () => {
+                    try {
+                        const tokens = await apiFetch<TokenPair>("/api/v1/auth/refresh", {
+                            method: "POST",
+                            body: JSON.stringify({
+                                ...getDevicePayload(),
+                                refresh_token: refreshToken,
+                            }),
+                        });
+
+                        set(applyTokenPair(tokens));
+
+                        return true;
+                    } catch {
+                        get().logout();
+
+                        return false;
+                    }
+                })();
 
                 try {
-                    const tokens = await apiFetch<TokenPair>("/api/v1/auth/refresh", {
-                        method: "POST",
-                        body: JSON.stringify({
-                            access_token: accessToken,
-                            refresh_token: refreshToken,
-                            token_type: tokenType,
-                            expires_in: expiresIn ?? 0,
-                            user,
-                        }),
-                    });
-
-                    set(applyTokenPair(tokens));
-
-                    return true;
-                } catch {
-                    get().logout();
-
-                    return false;
+                    return await refreshTokensPromise;
+                } finally {
+                    refreshTokensPromise = null;
                 }
             },
+
+            setUser: (user) => set({user}),
 
             clearPendingPhone: () =>
                 set({

@@ -11,6 +11,34 @@ export const buildApiUrl = (path: string, params?: Record<string, string | null 
     return url.toString();
 };
 
+export class ApiError extends Error {
+    status: number;
+    payload: unknown;
+
+    constructor(message: string, status: number, payload: unknown) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        this.payload = payload;
+    }
+}
+
+export const isUnauthorizedError = (error: unknown) => (
+    error instanceof ApiError && error.status === 401
+);
+
+const parseJsonSafely = (text: string) => {
+    if (!text) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch {
+        return null;
+    }
+};
+
 export const apiFetch = async <T>(
     path: string,
     options: RequestInit & {
@@ -19,8 +47,9 @@ export const apiFetch = async <T>(
 ) => {
     const {params, ...requestOptions} = options;
     const headers = new Headers(requestOptions.headers);
+    const isFormDataBody = typeof FormData !== "undefined" && requestOptions.body instanceof FormData;
 
-    if (requestOptions.body && !headers.has("Content-Type")) {
+    if (requestOptions.body && !isFormDataBody && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
     }
 
@@ -31,7 +60,7 @@ export const apiFetch = async <T>(
     });
 
     if (!response.ok) {
-        const error = await response.json().catch(() => null);
+        const error = parseJsonSafely(await response.text().catch(() => ""));
         const detail = Array.isArray(error?.detail)
             ? error.detail
                 .map((item: {loc?: Array<string | number>; msg?: string}) => {
@@ -43,12 +72,24 @@ export const apiFetch = async <T>(
                 .join(", ")
             : error?.detail;
 
-        throw new Error(
+        throw new ApiError(
             detail ||
             error?.message ||
-            `Сервер ответил статусом ${response.status}`,
+            `Server responded with status ${response.status}`,
+            response.status,
+            error,
         );
     }
 
-    return (await response.json()) as T;
+    if (response.status === 204) {
+        return undefined as T;
+    }
+
+    const text = await response.text();
+
+    if (!text) {
+        return undefined as T;
+    }
+
+    return JSON.parse(text) as T;
 };

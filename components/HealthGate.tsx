@@ -1,6 +1,6 @@
 "use client";
 
-import {ReactNode, useCallback, useEffect, useState} from "react";
+import {ReactNode, useCallback, useEffect, useRef, useState} from "react";
 import {AlertTriangle, LoaderCircle, RefreshCcw} from "lucide-react";
 import {useAppDataStore} from "@/store/app-data-store";
 
@@ -14,8 +14,31 @@ type HealthGateProps = {
     children: ReactNode;
 };
 
+const HEALTH_CHECK_CACHE_KEY = "mangalclubs-health-ready-at";
+const HEALTH_CHECK_CACHE_TTL_MS = 5 * 60 * 1000;
+
 const getHealthUrl = () => {
     return "/health";
+};
+
+const hasRecentSuccessfulHealthCheck = () => {
+    if (typeof window === "undefined") return false;
+
+    try {
+        const readyAt = Number(window.sessionStorage.getItem(HEALTH_CHECK_CACHE_KEY));
+
+        return Number.isFinite(readyAt) && Date.now() - readyAt < HEALTH_CHECK_CACHE_TTL_MS;
+    } catch {
+        return false;
+    }
+};
+
+const rememberSuccessfulHealthCheck = () => {
+    try {
+        window.sessionStorage.setItem(HEALTH_CHECK_CACHE_KEY, String(Date.now()));
+    } catch {
+        // The health gate still works without the short-lived browser cache.
+    }
 };
 
 const requestHealth = async (signal: AbortSignal) => {
@@ -39,19 +62,36 @@ export function HealthGate({children}: HealthGateProps) {
     const [status, setStatus] = useState<HealthStatus>("checking");
     const [errorMessage, setErrorMessage] = useState("");
     const initializeAppData = useAppDataStore((state) => state.initialize);
+    const activeCheckRef = useRef<AbortController | null>(null);
 
     const checkHealth = useCallback(async () => {
+        activeCheckRef.current?.abort();
+
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+        activeCheckRef.current = controller;
 
         setStatus("checking");
         setErrorMessage("");
 
         try {
             await requestHealth(controller.signal);
-            await initializeAppData(controller.signal);
+
+            if (activeCheckRef.current !== controller) {
+                return;
+            }
+
+            rememberSuccessfulHealthCheck();
             setStatus("ready");
+
+            await initializeAppData(controller.signal).catch(() => {
+                // App data errors are stored in app-data-store and should not keep the health gate open.
+            });
         } catch (error) {
+            if (activeCheckRef.current !== controller) {
+                return;
+            }
+
             setStatus("error");
             setErrorMessage(
                 error instanceof Error && error.name === "AbortError"
@@ -62,27 +102,49 @@ export function HealthGate({children}: HealthGateProps) {
             );
         } finally {
             window.clearTimeout(timeoutId);
+
+            if (activeCheckRef.current === controller) {
+                activeCheckRef.current = null;
+            }
         }
     }, [initializeAppData]);
 
     useEffect(() => {
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+        const hasRecentSuccessfulCheck = hasRecentSuccessfulHealthCheck();
+        const shouldBlockRender = !hasRecentSuccessfulCheck;
+        let isActive = true;
 
         const runInitialHealthCheck = async () => {
+            if (hasRecentSuccessfulCheck) {
+                setStatus("ready");
+            } else {
+                setStatus("checking");
+            }
+
             try {
                 await requestHealth(controller.signal);
-                await initializeAppData(controller.signal);
-                setStatus("ready");
+
+                if (isActive) {
+                    rememberSuccessfulHealthCheck();
+                    setStatus("ready");
+                }
+
+                await initializeAppData(controller.signal).catch(() => {
+                    // App data errors are stored in app-data-store and should not keep the health gate open.
+                });
             } catch (error) {
-                setStatus("error");
-                setErrorMessage(
-                    error instanceof Error && error.name === "AbortError"
-                        ? "Сервер не ответил вовремя"
-                        : error instanceof Error
-                            ? error.message
-                            : "Не удалось проверить доступность сервиса",
-                );
+                if (isActive && shouldBlockRender) {
+                    setStatus("error");
+                    setErrorMessage(
+                        error instanceof Error && error.name === "AbortError"
+                            ? "Сервер не ответил вовремя"
+                            : error instanceof Error
+                                ? error.message
+                                : "Не удалось проверить доступность сервиса",
+                    );
+                }
             } finally {
                 window.clearTimeout(timeoutId);
             }
@@ -91,10 +153,47 @@ export function HealthGate({children}: HealthGateProps) {
         void runInitialHealthCheck();
 
         return () => {
+            isActive = false;
             controller.abort();
             window.clearTimeout(timeoutId);
         };
     }, [initializeAppData]);
+
+    useEffect(() => {
+        const restoreOrRecheck = () => {
+            if (hasRecentSuccessfulHealthCheck()) {
+                setStatus("ready");
+                return;
+            }
+
+            void checkHealth();
+        };
+
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) {
+                restoreOrRecheck();
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                restoreOrRecheck();
+            }
+        };
+
+        window.addEventListener("pageshow", handlePageShow);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("pageshow", handlePageShow);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+            const activeCheck = activeCheckRef.current;
+
+            activeCheckRef.current = null;
+            activeCheck?.abort();
+        };
+    }, [checkHealth]);
 
     if (status === "ready") {
         return children;

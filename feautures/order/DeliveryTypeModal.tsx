@@ -26,6 +26,9 @@ const RestaurantMap = dynamic(
 
 type DeliveryFormState = {
     address: string;
+    city: string;
+    street: string;
+    house: string;
     entrance: string;
     floor: string;
     apartment: string;
@@ -49,6 +52,9 @@ type ResolvedAddress = {
 
 const initialForm: DeliveryFormState = {
     address: "",
+    city: "",
+    street: "",
+    house: "",
     entrance: "",
     floor: "",
     apartment: "",
@@ -169,6 +175,9 @@ export function DeliveryTypeModal() {
         selectedDelivery
             ? {
                 address: selectedDelivery.address,
+                city: selectedDelivery.city ?? "",
+                street: selectedDelivery.street ?? "",
+                house: selectedDelivery.house ?? "",
                 entrance: selectedDelivery.entrance,
                 floor: selectedDelivery.floor,
                 apartment: selectedDelivery.apartment,
@@ -221,6 +230,9 @@ export function DeliveryTypeModal() {
         setAddressError(null);
         setForm({
             address: selectedDelivery.address,
+            city: selectedDelivery.city ?? "",
+            street: selectedDelivery.street ?? "",
+            house: selectedDelivery.house ?? "",
             entrance: selectedDelivery.entrance,
             floor: selectedDelivery.floor,
             apartment: selectedDelivery.apartment,
@@ -240,6 +252,9 @@ export function DeliveryTypeModal() {
         setForm((prev) => ({
             ...prev,
             address: resolved.address,
+            city: resolved.city,
+            street: resolved.street,
+            house: resolved.house,
         }));
 
         setMapCoordinates({
@@ -313,6 +328,9 @@ export function DeliveryTypeModal() {
             setForm((prev) => ({
                 ...prev,
                 address: "",
+                city: "",
+                street: "",
+                house: "",
             }));
             setMapCoordinates(coordinates);
 
@@ -414,6 +432,13 @@ export function DeliveryTypeModal() {
                 setForm((prev) => ({
                     ...prev,
                     [field]: event.target.value,
+                    ...(field === "address"
+                        ? {
+                            city: "",
+                            street: "",
+                            house: "",
+                        }
+                        : {}),
                 }));
             };
 

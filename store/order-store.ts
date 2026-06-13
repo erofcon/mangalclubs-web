@@ -6,6 +6,9 @@ export type OrderType = "delivery" | "restaurant";
 
 export type DeliveryOrderDetails = {
     address: string;
+    city: string;
+    street: string;
+    house: string;
     entrance: string;
     floor: string;
     apartment: string;
@@ -33,6 +36,9 @@ type OrderStore = {
 
 const trimDelivery = (delivery: DeliveryOrderInput): DeliveryOrderDetails => ({
     address: delivery.address.trim(),
+    city: (delivery.city ?? "").trim(),
+    street: (delivery.street ?? "").trim(),
+    house: (delivery.house ?? "").trim(),
     entrance: delivery.entrance.trim(),
     floor: delivery.floor.trim(),
     apartment: delivery.apartment.trim(),
