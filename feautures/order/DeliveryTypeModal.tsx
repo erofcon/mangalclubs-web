@@ -10,6 +10,12 @@ import {useAppDataStore} from "@/store/app-data-store";
 import {primaryOrganization} from "@/utils/organizations";
 import {getOrganizationAvailability} from "@/utils/availability";
 import {continuePendingCartFlow} from "@/store/cart-gate-store";
+import {
+    checkDeliveryZone,
+    type DeliveryCheckResult,
+    type DeliverySettings,
+    getDeliverySettings,
+} from "@/utils/delivery-zones";
 
 const RestaurantMap = dynamic(
     () =>
@@ -48,6 +54,30 @@ type ResolvedAddress = {
     latitude: number;
     longitude: number;
     hasHouseNumber: boolean;
+};
+
+const formatDeliveryPrice = (price: number) => (
+    `${price.toLocaleString("ru-RU")} ₽`
+);
+
+const getDeliveryCheckMessage = (deliveryCheck: DeliveryCheckResult | null) => {
+    if (!deliveryCheck) {
+        return "";
+    }
+
+    if (deliveryCheck.available && deliveryCheck.price !== null) {
+        return `Адрес в зоне доставки. Стоимость доставки ${formatDeliveryPrice(deliveryCheck.price)}.`;
+    }
+
+    if (deliveryCheck.reason === "outside_delivery_area") {
+        return "Адрес вне зоны доставки. Сейчас доставляем только по Грозному.";
+    }
+
+    if (deliveryCheck.reason === "delivery_tariff_not_configured") {
+        return "Для этого расстояния пока не настроен тариф доставки.";
+    }
+
+    return "Не удалось подтвердить доставку по этому адресу.";
 };
 
 const initialForm: DeliveryFormState = {
@@ -193,10 +223,18 @@ export function DeliveryTypeModal() {
     const [isAddressResolving, setIsAddressResolving] = useState(false);
     const [resolvedAddress, setResolvedAddress] = useState("");
     const [isAddressLockedToCoordinates, setIsAddressLockedToCoordinates] = useState(false);
+    const [deliverySettings, setDeliverySettings] = useState<DeliverySettings | null>(null);
+    const [deliverySettingsError, setDeliverySettingsError] = useState("");
+    const [deliveryCheck, setDeliveryCheck] = useState<DeliveryCheckResult | null>(null);
+    const [deliveryCheckError, setDeliveryCheckError] = useState("");
+    const [isDeliveryChecking, setIsDeliveryChecking] = useState(false);
+    const [shouldCheckDelivery, setShouldCheckDelivery] = useState(Boolean(selectedDelivery));
 
     const lastResolvedAddressRef = useRef("");
     const addressAbortRef = useRef<AbortController | null>(null);
     const reverseAddressAbortRef = useRef<AbortController | null>(null);
+    const deliverySettingsAbortRef = useRef<AbortController | null>(null);
+    const deliveryCheckAbortRef = useRef<AbortController | null>(null);
 
     const {locate, isLocating, locationError} = useGeolocation();
 
@@ -204,8 +242,36 @@ export function DeliveryTypeModal() {
         return () => {
             addressAbortRef.current?.abort();
             reverseAddressAbortRef.current?.abort();
+            deliverySettingsAbortRef.current?.abort();
+            deliveryCheckAbortRef.current?.abort();
         };
     }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const controller = new AbortController();
+        deliverySettingsAbortRef.current?.abort();
+        deliverySettingsAbortRef.current = controller;
+
+        getDeliverySettings(controller.signal)
+            .then((settings) => {
+                setDeliverySettings(settings);
+                setDeliverySettingsError("");
+            })
+            .catch((error) => {
+                if (controller.signal.aborted) return;
+
+                setDeliverySettings(null);
+                setDeliverySettingsError(
+                    error instanceof Error
+                        ? error.message
+                        : "Не удалось загрузить зону доставки.",
+                );
+            });
+
+        return () => controller.abort();
+    }, [isOpen]);
 
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
@@ -216,6 +282,9 @@ export function DeliveryTypeModal() {
             setResolvedAddress("");
             setIsAddressLockedToCoordinates(false);
             setAddressError(null);
+            setDeliveryCheck(null);
+            setDeliveryCheckError("");
+            setShouldCheckDelivery(false);
             setForm(initialForm);
             setMapCoordinates({
                 latitude: defaultDeliveryOrganization.coordinates.latitude,
@@ -228,6 +297,9 @@ export function DeliveryTypeModal() {
         setResolvedAddress(selectedDelivery.address);
         setIsAddressLockedToCoordinates(false);
         setAddressError(null);
+        setDeliveryCheck(null);
+        setDeliveryCheckError("");
+        setShouldCheckDelivery(true);
         setForm({
             address: selectedDelivery.address,
             city: selectedDelivery.city ?? "",
@@ -248,6 +320,9 @@ export function DeliveryTypeModal() {
     const applyResolvedAddress = useCallback((resolved: ResolvedAddress, coordinates?: CoordinatesState) => {
         lastResolvedAddressRef.current = resolved.address;
         setResolvedAddress(resolved.address);
+        setDeliveryCheck(null);
+        setDeliveryCheckError("");
+        setShouldCheckDelivery(resolved.hasHouseNumber);
 
         setForm((prev) => ({
             ...prev,
@@ -317,6 +392,7 @@ export function DeliveryTypeModal() {
         (coordinates: CoordinatesState) => {
             addressAbortRef.current?.abort();
             reverseAddressAbortRef.current?.abort();
+            deliveryCheckAbortRef.current?.abort();
 
             const controller = new AbortController();
             reverseAddressAbortRef.current = controller;
@@ -325,6 +401,9 @@ export function DeliveryTypeModal() {
             setResolvedAddress("");
             setIsAddressLockedToCoordinates(true);
             setAddressError(null);
+            setDeliveryCheck(null);
+            setDeliveryCheckError("");
+            setShouldCheckDelivery(false);
             setForm((prev) => ({
                 ...prev,
                 address: "",
@@ -394,6 +473,7 @@ export function DeliveryTypeModal() {
 
         if (!address || address.length < 6) {
             addressAbortRef.current?.abort();
+            deliveryCheckAbortRef.current?.abort();
             return;
         }
 
@@ -415,6 +495,52 @@ export function DeliveryTypeModal() {
         };
     }, [form.address, geocodeAddress, isAddressLockedToCoordinates, isOpen]);
 
+    /* eslint-disable react-hooks/set-state-in-effect */
+    useEffect(() => {
+        if (!isOpen || !shouldCheckDelivery || addressError) return;
+
+        const controller = new AbortController();
+        deliveryCheckAbortRef.current?.abort();
+        deliveryCheckAbortRef.current = controller;
+        setIsDeliveryChecking(true);
+        setDeliveryCheckError("");
+
+        checkDeliveryZone(
+            {
+                coordinates: mapCoordinates,
+                organizationSlug: defaultDeliveryOrganization.slug,
+            },
+            controller.signal,
+        )
+            .then((result) => {
+                setDeliveryCheck(result);
+            })
+            .catch((error) => {
+                if (controller.signal.aborted) return;
+
+                setDeliveryCheck(null);
+                setDeliveryCheckError(
+                    error instanceof Error
+                        ? error.message
+                        : "Не удалось проверить адрес доставки.",
+                );
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setIsDeliveryChecking(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [
+        addressError,
+        defaultDeliveryOrganization.slug,
+        isOpen,
+        mapCoordinates,
+        shouldCheckDelivery,
+    ]);
+    /* eslint-enable react-hooks/set-state-in-effect */
+
     if (!isOpen) return null;
 
     const handleChange =
@@ -423,8 +549,12 @@ export function DeliveryTypeModal() {
                 if (field === "address") {
                     addressAbortRef.current?.abort();
                     reverseAddressAbortRef.current?.abort();
+                    deliveryCheckAbortRef.current?.abort();
                     setAddressError(null);
                     setIsAddressResolving(false);
+                    setDeliveryCheck(null);
+                    setDeliveryCheckError("");
+                    setShouldCheckDelivery(false);
                     lastResolvedAddressRef.current = "";
                     setResolvedAddress("");
                 }
@@ -452,6 +582,14 @@ export function DeliveryTypeModal() {
 
     const handleSave = () => {
         if (isDeliveryUnavailable) return;
+        if (isDeliveryChecking || !deliveryCheck?.available) {
+            setDeliveryCheckError(
+                deliveryCheck
+                    ? getDeliveryCheckMessage(deliveryCheck)
+                    : "Дождитесь проверки адреса доставки.",
+            );
+            return;
+        }
 
         const isSelected = selectDelivery({
             ...form,
@@ -468,14 +606,18 @@ export function DeliveryTypeModal() {
 
     const isResolvingLocation = isLocating || isAddressResolving;
     const trimmedAddress = form.address.trim();
+    const deliveryCheckMessage = getDeliveryCheckMessage(deliveryCheck);
+    const isDeliveryCheckFailed = Boolean(deliveryCheck && !deliveryCheck.available);
     const canSaveAddress =
         Boolean(trimmedAddress) &&
         !isAddressResolving &&
+        !isDeliveryChecking &&
         (
             isAddressLockedToCoordinates ||
             (trimmedAddress === resolvedAddress && !addressError)
         ) &&
         !addressError &&
+        deliveryCheck?.available === true &&
         !isDeliveryUnavailable;
 
     return (
@@ -490,6 +632,7 @@ export function DeliveryTypeModal() {
                         name="Адрес доставки"
                         address={form.address.trim() || "Текущее местоположение"}
                         coordinates={mapCoordinates}
+                        deliveryArea={deliverySettings?.deliveryArea}
                         onSelectCoordinates={handleMapSelect}
                     />
 
@@ -539,6 +682,15 @@ export function DeliveryTypeModal() {
                                 </div>
                             )}
 
+                            <div className="rounded-[6px] border border-border/65 bg-black/20 px-4 py-3 text-sm leading-6 text-text/78">
+                                Зона доставки ограничена Грозным. Выберите точку внутри подсвеченной области на карте.
+                                {deliverySettingsError && (
+                                    <span className="mt-1 block font-medium text-primary">
+                                        {deliverySettingsError}
+                                    </span>
+                                )}
+                            </div>
+
                             <div className="relative pt-2">
                                 <input
                                     type="text"
@@ -552,6 +704,20 @@ export function DeliveryTypeModal() {
                                 {(locationError || addressError) && (
                                     <p className="mt-2 text-sm font-medium text-red-500">
                                         {locationError || addressError}
+                                    </p>
+                                )}
+
+                                {(isDeliveryChecking || deliveryCheckMessage || deliveryCheckError) && (
+                                    <p
+                                        className={`mt-2 text-sm font-medium ${
+                                            isDeliveryCheckFailed || deliveryCheckError
+                                                ? "text-red-500"
+                                                : "text-text/78"
+                                        }`}
+                                    >
+                                        {isDeliveryChecking
+                                            ? "Проверяем адрес в зоне доставки..."
+                                            : deliveryCheckError || deliveryCheckMessage}
                                     </p>
                                 )}
                             </div>

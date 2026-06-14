@@ -74,12 +74,12 @@ const formatWorkingHours = (workingHours?: WorkingHour[] | null) => {
 };
 
 const getWeekdayName = (weekday: number) => {
-    if (weekday >= 1 && weekday <= 7) {
-        return weekdayNames[weekday - 1];
-    }
-
     if (weekday >= 0 && weekday <= 6) {
         return weekdayNames[weekday];
+    }
+
+    if (weekday >= 1 && weekday <= 7) {
+        return weekdayNames[weekday - 1];
     }
 
     return String(weekday);

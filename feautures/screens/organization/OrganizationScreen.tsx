@@ -10,6 +10,7 @@ import {formatOrganizationAddress, getOrganizationByIdOrSlug, getPhoneHref, getW
 import type {Organization} from "@/types/organization";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
+import {getBookingGalleryImages} from "@/utils/bookings";
 
 type OrganizationPageContent = {
     eyebrow: string;
@@ -71,15 +72,10 @@ const organizationContent: Record<Organization["id"], OrganizationPageContent> =
     },
 };
 
-type BookingWithGallery = (typeof BookingMocks)[number] & {
-    images?: string[];
-};
-
 const getOrganizationImages = (organization: Organization) => {
     const images = BookingMocks
         .filter((booking) => isBookingInOrganization(booking, organization))
-        .flatMap((booking: BookingWithGallery) => [booking.image, ...(booking.images ?? [])])
-        .filter((image): image is string => Boolean(image));
+        .flatMap((booking) => getBookingGalleryImages(booking));
 
     return Array.from(new Set(images)).slice(0, 5);
 };

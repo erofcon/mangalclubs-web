@@ -1,8 +1,9 @@
 "use client";
 
-import {useEffect} from "react";
-import {MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {useEffect, useMemo} from "react";
+import {MapContainer, Marker, Polygon, Popup, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import L from "leaflet";
+import type {DeliveryArea} from "@/utils/delivery-zones";
 
 type Coordinates = {
     latitude: number;
@@ -13,6 +14,7 @@ type RestaurantMapProps = {
     name: string;
     address: string;
     coordinates: Coordinates;
+    deliveryArea?: DeliveryArea | null;
     onSelectCoordinates?: (coordinates: Coordinates) => void;
 };
 
@@ -33,6 +35,69 @@ function MapCenterSync({coordinates}: { coordinates: Coordinates }) {
             {animate: true}
         );
     }, [coordinates.latitude, coordinates.longitude, map]);
+
+    return null;
+}
+
+const ringToLeafletPositions = (ring: number[][]): [number, number][] => (
+    ring
+        .map(([longitude, latitude]) => [latitude, longitude] as [number, number])
+        .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude))
+);
+
+const deliveryAreaToPositions = (deliveryArea?: DeliveryArea | null) => {
+    if (!deliveryArea?.coordinates?.length) {
+        return [];
+    }
+
+    if (deliveryArea.type === "Polygon") {
+        return (deliveryArea.coordinates as number[][][]).map(ringToLeafletPositions);
+    }
+
+    return (deliveryArea.coordinates as number[][][][]).map((polygon) => (
+        polygon.map(ringToLeafletPositions)
+    ));
+};
+
+const collectLatLngPairs = (
+    value: unknown,
+    result: [number, number][] = [],
+) => {
+    if (!Array.isArray(value)) {
+        return result;
+    }
+
+    value.forEach((item) => {
+        if (
+            Array.isArray(item) &&
+            item.length === 2 &&
+            typeof item[0] === "number" &&
+            typeof item[1] === "number" &&
+            Number.isFinite(item[0]) &&
+            Number.isFinite(item[1])
+        ) {
+            result.push(item as [number, number]);
+            return;
+        }
+
+        collectLatLngPairs(item, result);
+    });
+
+    return result;
+};
+
+function DeliveryAreaBounds({positions}: { positions: ReturnType<typeof deliveryAreaToPositions> }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!positions.length) return;
+
+        const bounds = L.latLngBounds(collectLatLngPairs(positions));
+
+        if (bounds.isValid()) {
+            map.fitBounds(bounds.pad(0.12), {animate: false});
+        }
+    }, [map, positions]);
 
     return null;
 }
@@ -58,9 +123,14 @@ export function RestaurantMap({
                                   name,
                                   address,
                                   coordinates,
+                                  deliveryArea,
                                   onSelectCoordinates,
                               }: RestaurantMapProps) {
     const apiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
+    const deliveryAreaPositions = useMemo(
+        () => deliveryAreaToPositions(deliveryArea),
+        [deliveryArea],
+    );
 
     if (!apiKey) {
         return (
@@ -93,7 +163,22 @@ export function RestaurantMap({
                     url={`https://tiles.api-maps.yandex.ru/v1/tiles/?projection=web_mercator&x={x}&y={y}&z={z}&lang=ru_RU&l=map&apikey=${apiKey}`}
                 />
 
-                <MapCenterSync coordinates={coordinates}/>
+                {deliveryAreaPositions.length > 0 && (
+                    <>
+                        <Polygon
+                            positions={deliveryAreaPositions}
+                            pathOptions={{
+                                color: "#ECAC18",
+                                fillColor: "#ECAC18",
+                                fillOpacity: 0.15,
+                                opacity: 0.9,
+                                weight: 2,
+                            }}
+                        />
+                        <DeliveryAreaBounds positions={deliveryAreaPositions}/>
+                    </>
+                )}
+                {!deliveryAreaPositions.length && <MapCenterSync coordinates={coordinates}/>}
                 {onSelectCoordinates && (
                     <MapClickHandler onSelectCoordinates={onSelectCoordinates}/>
                 )}

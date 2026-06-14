@@ -10,8 +10,9 @@ import {
     useState,
 } from "react";
 import {ChevronLeft, ChevronRight, X} from "lucide-react";
-import {StoriesData} from "@/mocks/mocks-data";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
+import type {Story} from "@/types/story";
+import {loadStories} from "@/utils/stories";
 
 const DEFAULT_IMAGE_DURATION = 5000;
 const LOAD_TIMEOUT = 15000;
@@ -83,10 +84,10 @@ function isImageSlideReady(slide?: {
     );
 }
 
-function preloadStorySlide(storyIndex: number | null, slideIndex: number) {
+function preloadStorySlide(stories: Story[], storyIndex: number | null, slideIndex: number) {
     if (storyIndex === null) return;
 
-    const slide = StoriesData[storyIndex]?.slides[slideIndex];
+    const slide = stories[storyIndex]?.slides[slideIndex];
     if (!slide) return;
 
     if (getMediaType(slide) === "video") {
@@ -97,10 +98,10 @@ function preloadStorySlide(storyIndex: number | null, slideIndex: number) {
     preloadImageSource(slide.src);
 }
 
-function preloadStoryFirstSlide(storyIndex: number | null) {
+function preloadStoryFirstSlide(stories: Story[], storyIndex: number | null) {
     if (storyIndex === null) return;
 
-    const story = StoriesData[storyIndex];
+    const story = stories[storyIndex];
     const slide = story?.slides[0];
     if (!story || !slide) return;
 
@@ -118,8 +119,8 @@ function StoryJumpPreview({
                               story,
                               direction,
                               onClick,
-                          }: {
-    story: (typeof StoriesData)[number];
+}: {
+    story: Story;
     direction: StoryDirection;
     onClick: () => void;
 }) {
@@ -162,17 +163,23 @@ function StoryJumpPreviewPlaceholder() {
 }
 
 function StoryCubeFace({
+                           stories,
                            storyIndex,
                            slideIndex,
                            progressValue = 0,
                        }: {
+    stories: Story[];
     storyIndex: number;
     slideIndex: number;
     progressValue?: number;
 }) {
-    const story = StoriesData[storyIndex];
+    const story = stories[storyIndex];
+    if (!story) return null;
+
     const safeSlideIndex = Math.min(slideIndex, story.slides.length - 1);
     const slide = story.slides[safeSlideIndex] ?? story.slides[0];
+    if (!slide) return null;
+
     const mediaType = getMediaType(slide);
     const fallbackImage = mediaType === "video" ? slide.poster ?? story.previewImage : slide.src;
 
@@ -228,9 +235,11 @@ function StoryCubeFace({
 }
 
 function StoryCubeTransitionOverlay({
+                                        stories,
                                         transition,
                                         progressValue,
                                     }: {
+    stories: Story[];
     transition: StoryCubeTransition;
     progressValue: number;
 }) {
@@ -270,6 +279,7 @@ function StoryCubeTransitionOverlay({
                     }}
                 >
                     <StoryCubeFace
+                        stories={stories}
                         storyIndex={transition.fromStoryIndex}
                         slideIndex={transition.fromSlideIndex}
                         progressValue={progressValue}
@@ -284,6 +294,7 @@ function StoryCubeTransitionOverlay({
                     }}
                 >
                     <StoryCubeFace
+                        stories={stories}
                         storyIndex={transition.toStoryIndex}
                         slideIndex={0}
                     />
@@ -294,6 +305,9 @@ function StoryCubeTransitionOverlay({
 }
 
 export default function Stories() {
+    const [stories, setStories] = useState<Story[]>([]);
+    const [isStoriesLoading, setIsStoriesLoading] = useState(true);
+    const [hasStoriesError, setHasStoriesError] = useState(false);
     const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
     const [activeSlideIndex, setActiveSlideIndex] = useState(0);
     const [progress, setProgress] = useState(0);
@@ -316,7 +330,7 @@ export default function Stories() {
     const storyCubeTimerRef = useRef<number | null>(null);
 
     const activeStory =
-        activeStoryIndex !== null ? StoriesData[activeStoryIndex] : null;
+        activeStoryIndex !== null ? stories[activeStoryIndex] : null;
 
     const activeSlide = activeStory?.slides[activeSlideIndex] ?? null;
     const isViewerOpen = Boolean(activeStory && activeSlide);
@@ -325,13 +339,13 @@ export default function Stories() {
             ? activeStoryIndex - 1
             : null;
     const nextStoryIndex =
-        activeStoryIndex !== null && activeStoryIndex < StoriesData.length - 1
+        activeStoryIndex !== null && activeStoryIndex < stories.length - 1
             ? activeStoryIndex + 1
             : null;
     const previousStory =
-        previousStoryIndex !== null ? StoriesData[previousStoryIndex] : null;
+        previousStoryIndex !== null ? stories[previousStoryIndex] : null;
     const nextStory =
-        nextStoryIndex !== null ? StoriesData[nextStoryIndex] : null;
+        nextStoryIndex !== null ? stories[nextStoryIndex] : null;
 
     useBodyScrollLock(isViewerOpen);
 
@@ -339,6 +353,31 @@ export default function Stories() {
         if (!activeSlide) return null;
         return getMediaType(activeSlide);
     }, [activeSlide]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        loadStories(controller.signal)
+            .then((nextStories) => {
+                setStories(nextStories);
+            })
+            .catch((error) => {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+
+                console.error("Failed to load stories", error);
+                setHasStoriesError(true);
+                setStories([]);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setIsStoriesLoading(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, []);
 
     const resetMediaState = useCallback((targetSlide?: typeof activeSlide) => {
         imageTimerStartedAtRef.current = null;
@@ -372,7 +411,7 @@ export default function Stories() {
         (storyIndex: number) => {
             if (
                 storyIndex < 0 ||
-                storyIndex >= StoriesData.length ||
+                storyIndex >= stories.length ||
                 storyIndex === activeStoryIndex
             ) {
                 return;
@@ -381,11 +420,11 @@ export default function Stories() {
             clearStoryCubeTransitionTimers();
             videoRef.current?.pause();
             setStoryCubeTransition(null);
-            resetMediaState(StoriesData[storyIndex]?.slides[0]);
+            resetMediaState(stories[storyIndex]?.slides[0]);
             setActiveStoryIndex(storyIndex);
             setActiveSlideIndex(0);
         },
-        [activeStoryIndex, clearStoryCubeTransitionTimers, resetMediaState]
+        [activeStoryIndex, clearStoryCubeTransitionTimers, resetMediaState, stories]
     );
 
     const updateMobileStoryDrag = useCallback(
@@ -393,7 +432,7 @@ export default function Stories() {
             if (
                 activeStoryIndex === null ||
                 targetStoryIndex < 0 ||
-                targetStoryIndex >= StoriesData.length ||
+                targetStoryIndex >= stories.length ||
                 targetStoryIndex === activeStoryIndex
             ) {
                 return;
@@ -415,6 +454,7 @@ export default function Stories() {
             activeSlideIndex,
             activeStoryIndex,
             clearStoryCubeTransitionTimers,
+            stories.length,
         ]
     );
 
@@ -450,7 +490,7 @@ export default function Stories() {
 
             storyCubeTimerRef.current = window.setTimeout(() => {
                 if (shouldCommit) {
-                    resetMediaState(StoriesData[storyCubeTransition.toStoryIndex]?.slides[0]);
+                    resetMediaState(stories[storyCubeTransition.toStoryIndex]?.slides[0]);
                     setActiveStoryIndex(storyCubeTransition.toStoryIndex);
                     setActiveSlideIndex(0);
                 }
@@ -462,6 +502,7 @@ export default function Stories() {
         [
             clearStoryCubeTransitionTimers,
             resetMediaState,
+            stories,
             storyCubeTransition,
             suppressClickAfterSwipe,
         ]
@@ -491,8 +532,8 @@ export default function Stories() {
             return;
         }
 
-        if (activeStoryIndex < StoriesData.length - 1) {
-            resetMediaState(StoriesData[activeStoryIndex + 1]?.slides[0]);
+        if (activeStoryIndex < stories.length - 1) {
+            resetMediaState(stories[activeStoryIndex + 1]?.slides[0]);
             setActiveStoryIndex((value) => (value === null ? 0 : value + 1));
             setActiveSlideIndex(0);
             return;
@@ -505,6 +546,7 @@ export default function Stories() {
         activeSlideIndex,
         close,
         resetMediaState,
+        stories,
     ]);
 
     const prev = useCallback(() => {
@@ -519,7 +561,7 @@ export default function Stories() {
         }
 
         if (activeStoryIndex > 0) {
-            const previousStory = StoriesData[activeStoryIndex - 1];
+            const previousStory = stories[activeStoryIndex - 1];
 
             resetMediaState(previousStory.slides[previousStory.slides.length - 1]);
             setActiveStoryIndex(activeStoryIndex - 1);
@@ -530,6 +572,7 @@ export default function Stories() {
         activeStoryIndex,
         activeSlideIndex,
         resetMediaState,
+        stories,
     ]);
 
     const handlePreviousClick = useCallback(() => {
@@ -676,11 +719,11 @@ export default function Stories() {
         (index: number) => {
             clearStoryCubeTransitionTimers();
             setStoryCubeTransition(null);
-            resetMediaState(StoriesData[index]?.slides[0]);
+            resetMediaState(stories[index]?.slides[0]);
             setActiveStoryIndex(index);
             setActiveSlideIndex(0);
         },
-        [clearStoryCubeTransitionTimers, resetMediaState]
+        [clearStoryCubeTransitionTimers, resetMediaState, stories]
     );
 
     useEffect(() => {
@@ -764,16 +807,17 @@ export default function Stories() {
     useEffect(() => {
         if (!isViewerOpen) return;
 
-        preloadStorySlide(activeStoryIndex, activeSlideIndex - 1);
-        preloadStorySlide(activeStoryIndex, activeSlideIndex + 1);
-        preloadStoryFirstSlide(previousStoryIndex);
-        preloadStoryFirstSlide(nextStoryIndex);
+        preloadStorySlide(stories, activeStoryIndex, activeSlideIndex - 1);
+        preloadStorySlide(stories, activeStoryIndex, activeSlideIndex + 1);
+        preloadStoryFirstSlide(stories, previousStoryIndex);
+        preloadStoryFirstSlide(stories, nextStoryIndex);
     }, [
         activeSlideIndex,
         activeStoryIndex,
         isViewerOpen,
         nextStoryIndex,
         previousStoryIndex,
+        stories,
     ]);
 
     useEffect(() => {
@@ -785,6 +829,10 @@ export default function Stories() {
             }
         };
     }, [clearStoryCubeTransitionTimers]);
+
+    if (!isStoriesLoading && (hasStoriesError || stories.length === 0)) {
+        return null;
+    }
 
     return (
         <>
@@ -801,7 +849,17 @@ export default function Stories() {
 
                 <div
                     className="flex items-start justify-start gap-10 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {StoriesData.map((story, index) => (
+                    {isStoriesLoading && stories.length === 0 ? (
+                        Array.from({length: 3}).map((_, index) => (
+                            <div
+                                key={index}
+                                className="ms-6 flex min-w-23.5 flex-col items-center gap-3 md:ms-0"
+                            >
+                                <div className="h-40 w-35 animate-pulse rounded-lg bg-white/10"/>
+                                <div className="h-3 w-20 animate-pulse rounded-full bg-white/10"/>
+                            </div>
+                        ))
+                    ) : stories.map((story, index) => (
                         <button
                             key={story.id}
                             type="button"
@@ -818,7 +876,7 @@ export default function Stories() {
                                     ${
                                     index === 0
                                         ? "origin-left"
-                                        : index === StoriesData.length - 1
+                                        : index === stories.length - 1
                                             ? "origin-right"
                                             : "origin-center"
                                 }
@@ -1018,6 +1076,7 @@ export default function Stories() {
 
                             {storyCubeTransition && (
                                 <StoryCubeTransitionOverlay
+                                    stories={stories}
                                     transition={storyCubeTransition}
                                     progressValue={progress}
                                 />

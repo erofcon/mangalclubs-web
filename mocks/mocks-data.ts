@@ -276,6 +276,13 @@ export const Organizations: Organization[] = [
         city: "г. Грозный",
         address: "ул. Светлая улица, 105А",
         schedule: "Ежедневно с 11:30 до 02:30",
+        working_hours: Array.from({length: 7}, (_, weekday) => ({
+            weekday,
+            is_closed: false,
+            opens_at: "11:30:00",
+            closes_at: "02:30:00",
+            closes_next_day: true,
+        })),
         phone: "+7 (928) 340-50-50",
         intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
         coordinates: {
@@ -290,6 +297,13 @@ export const Organizations: Organization[] = [
         city: "г. Грозный",
         address: "ул. Окраинная, 4",
         schedule: "Ежедневно с 10:30 до 01:30",
+        working_hours: Array.from({length: 7}, (_, weekday) => ({
+            weekday,
+            is_closed: false,
+            opens_at: "10:30:00",
+            closes_at: "01:30:00",
+            closes_next_day: true,
+        })),
         phone: "+7 (983) 999-50-50",
         intro: "Команда Mangal Clubs переосмысливает приватность и комфорт. Здесь современное гостеприимство встречается с камерной атмосферой, а каждая кабинка становится уютным местом для встреч с близкими.",
         coordinates: {
@@ -487,52 +501,6 @@ export const BookingMocks: Booking[] = [
             "/booking/610683031_18097554145907715_1235544446749212874_n..jpg",
             "/booking/611264128_18097554673907715_2049357468313814860_n..jpg",
         ],
-    },
-];
-
-export type DeliveryZone = {
-    id: string;
-    minOrder: number | null;
-    price: number;
-};
-
-export const deliveryZones: DeliveryZone[] = [
-    {id: "0-3", minOrder: null, price: 200},
-    {id: "3-4", minOrder: 800, price: 250},
-    {id: "4-5", minOrder: 900, price: 300},
-    {id: "5-6", minOrder: 1000, price: 350},
-    {id: "6-7", minOrder: 1100, price: 400},
-    {id: "7-8", minOrder: 1200, price: 450},
-    {id: "8-9", minOrder: 1300, price: 500},
-    {
-        id: "9-10",
-        minOrder: 1400,
-        price: 550,
-    },
-    {
-        id: "10-11",
-        minOrder: 1500,
-        price: 600,
-    },
-    {
-        id: "11-12",
-        minOrder: 1600,
-        price: 650,
-    },
-    {
-        id: "12-13",
-        minOrder: 1700,
-        price: 700,
-    },
-    {
-        id: "13-14",
-        minOrder: 1800,
-        price: 750,
-    },
-    {
-        id: "14-15",
-        minOrder: 1900,
-        price: 800,
     },
 ];
 

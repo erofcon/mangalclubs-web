@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {FormEvent, useState} from "react";
+import {FormEvent, useEffect, useMemo, useState} from "react";
 import {AlertCircle, CheckCircle2, LoaderCircle, Minus, Plus, ShoppingBag, X} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
@@ -13,16 +13,27 @@ import {useAuthStore} from "@/store/auth-store";
 import {getCurrentOrderAvailability} from "@/utils/availability";
 import {createOrder, LAST_ORDER_ID_STORAGE_KEY} from "@/utils/orders";
 import type {OrderCreatePayload} from "@/utils/orders";
+import {checkDeliveryZone} from "@/utils/delivery-zones";
+import type {DeliveryCheckResult} from "@/utils/delivery-zones";
+import type {Organization, WorkingHour} from "@/types/organization";
 import {
     PAYMENT_REDIRECT_STATE_STORAGE_KEY,
     PAYMENT_REDIRECT_URL_STORAGE_KEY,
 } from "@/utils/payment-return";
 
-type DateMode = "asap" | "today" | "tomorrow";
+type DateMode = "asap" | "today" | "tomorrow" | "dayAfterTomorrow";
+type ScheduledDateMode = Exclude<DateMode, "asap">;
 
 type TimeSlot = {
     value: string;
     label: string;
+};
+
+type DateOption = {
+    mode: DateMode;
+    label: string;
+    slots: TimeSlot[];
+    disabled: boolean;
 };
 
 type CheckoutSuccess = {
@@ -30,6 +41,32 @@ type CheckoutSuccess = {
     orderNumber?: number;
     status?: string;
 };
+
+const formatDeliveryPrice = (price: number) => (
+    `${price.toLocaleString("ru-RU")} ₽`
+);
+
+const getDeliveryCheckErrorMessage = (result: DeliveryCheckResult) => {
+    if (result.reason === "outside_delivery_area") {
+        return "Адрес вне зоны доставки. Сейчас доставляем только по Грозному.";
+    }
+
+    if (result.reason === "delivery_tariff_not_configured") {
+        return "Для этого адреса пока не настроен тариф доставки.";
+    }
+
+    return "Доставка по этому адресу недоступна.";
+};
+
+const getDeliveryCheckKey = (delivery: DeliveryOrderDetails | null) => (
+    delivery
+        ? `${delivery.coordinates.latitude}:${delivery.coordinates.longitude}`
+        : ""
+);
+
+const getDeliveryTotal = (itemsTotal: number, deliveryPrice: number | null | undefined) => (
+    itemsTotal + (deliveryPrice ?? 0)
+);
 
 const getProductPlural = (count: number) => {
     const lastTwoDigits = count % 100;
@@ -52,6 +89,15 @@ const getProductPlural = (count: number) => {
 
 const padTimePart = (value: number) => String(value).padStart(2, "0");
 
+const SLOT_STEP_MINUTES = 30;
+const MIN_ORDER_DELAY_MINUTES = 30;
+
+const dateModeOffsets: Record<ScheduledDateMode, number> = {
+    today: 0,
+    tomorrow: 1,
+    dayAfterTomorrow: 2,
+};
+
 const addDays = (date: Date, days: number) => {
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + days);
@@ -73,65 +119,179 @@ const roundUpToHalfHour = (date: Date) => {
     return nextDate;
 };
 
-const getDateForMode = (mode: Exclude<DateMode, "asap">) => {
+const getDateForMode = (mode: ScheduledDateMode) => {
     const now = new Date();
 
-    return mode === "today" ? now : addDays(now, 1);
+    return addDays(now, dateModeOffsets[mode]);
 };
 
-const createTimeSlots = (mode: Exclude<DateMode, "asap">): TimeSlot[] => {
-    const day = getDateForMode(mode);
-    const start = new Date(day);
-    const end = new Date(day);
+const getWeekdayIndex = (date: Date) => (date.getDay() + 6) % 7;
 
-    if (mode === "today") {
-        const earliest = new Date();
-        earliest.setMinutes(earliest.getMinutes() + 30);
-        const roundedEarliest = roundUpToHalfHour(earliest);
+const getWorkingHourForDate = (workingHours: WorkingHour[] | undefined, date: Date) => (
+    workingHours?.find((item) => item.weekday === getWeekdayIndex(date))
+);
 
-        start.setHours(roundedEarliest.getHours(), roundedEarliest.getMinutes(), 0, 0);
-    } else {
-        start.setHours(10, 0, 0, 0);
-    }
+const getStartOfDay = (date: Date) => {
+    const nextDate = new Date(date);
 
-    end.setHours(23, 30, 0, 0);
+    nextDate.setHours(0, 0, 0, 0);
 
-    if (start > end) {
+    return nextDate;
+};
+
+const getEndOfDay = (date: Date) => {
+    const nextDate = new Date(date);
+
+    nextDate.setHours(23, 59, 59, 999);
+
+    return nextDate;
+};
+
+const maxDate = (first: Date, second: Date) => (
+    first > second ? first : second
+);
+
+const minDate = (first: Date, second: Date) => (
+    first < second ? first : second
+);
+
+const parseTimeParts = (value: string) => {
+    const [hours = "0", minutes = "0"] = value.replace("Z", "").split(":");
+
+    return {
+        hours: Number(hours),
+        minutes: Number(minutes),
+    };
+};
+
+const setTimeOnDate = (date: Date, value: string) => {
+    const nextDate = new Date(date);
+    const {hours, minutes} = parseTimeParts(value);
+
+    nextDate.setHours(hours, minutes, 0, 0);
+
+    return nextDate;
+};
+
+const formatSlotLabel = (date: Date) => (
+    `${padTimePart(date.getHours())}:${padTimePart(date.getMinutes())}`
+);
+
+const createTimeSlots = (
+    mode: ScheduledDateMode,
+    organization: Pick<Organization, "working_hours"> | null,
+): TimeSlot[] => {
+    const workingHours = organization?.working_hours;
+
+    if (!workingHours?.length) {
         return [];
     }
 
+    const day = getDateForMode(mode);
+    const dayStart = getStartOfDay(day);
+    const dayEnd = getEndOfDay(day);
+    const intervalBaseDates = [addDays(day, -1), day];
     const slots: TimeSlot[] = [];
-    const cursor = new Date(start);
+    const seenSlotValues = new Set<string>();
 
-    while (cursor <= end) {
-        const label = `${padTimePart(cursor.getHours())}:${padTimePart(cursor.getMinutes())}`;
+    intervalBaseDates.forEach((baseDate) => {
+        const workingHour = getWorkingHourForDate(workingHours, baseDate);
 
-        slots.push({
-            value: label,
-            label,
-        });
+        if (!workingHour || workingHour.is_closed) {
+            return;
+        }
 
-        cursor.setMinutes(cursor.getMinutes() + 30);
-    }
+        let start = setTimeOnDate(baseDate, workingHour.opens_at);
+        let end = setTimeOnDate(baseDate, workingHour.closes_at);
 
-    return slots;
+        if (workingHour.closes_next_day) {
+            end = addDays(end, 1);
+        }
+
+        start = maxDate(start, dayStart);
+        end = minDate(end, dayEnd);
+
+        if (mode === "today") {
+            const earliest = new Date();
+            earliest.setMinutes(earliest.getMinutes() + MIN_ORDER_DELAY_MINUTES);
+            const roundedEarliest = roundUpToHalfHour(earliest);
+
+            start = maxDate(start, roundedEarliest);
+        }
+
+        start = roundUpToHalfHour(start);
+
+        if (start > end) {
+            return;
+        }
+
+        const cursor = new Date(start);
+
+        while (cursor <= end) {
+            const value = cursor.toISOString();
+
+            if (!seenSlotValues.has(value)) {
+                seenSlotValues.add(value);
+                slots.push({
+                    value,
+                    label: formatSlotLabel(cursor),
+                });
+            }
+
+            cursor.setMinutes(cursor.getMinutes() + SLOT_STEP_MINUTES);
+        }
+    });
+
+    return slots.sort((first, second) => (
+        new Date(first.value).getTime() - new Date(second.value).getTime()
+    ));
 };
 
-const createCompleteBefore = (dateMode: DateMode, timeSlot: string) => {
+const createDateOptions = (
+    organization: Pick<Organization, "working_hours"> | null,
+): DateOption[] => {
+    const todaySlots = createTimeSlots("today", organization);
+    const tomorrowSlots = createTimeSlots("tomorrow", organization);
+    const dayAfterTomorrowSlots = createTimeSlots("dayAfterTomorrow", organization);
+
+    return [
+        {
+            mode: "asap",
+            label: "Ближайшее",
+            slots: todaySlots,
+            disabled: todaySlots.length === 0,
+        },
+        {
+            mode: "today",
+            label: "Сегодня",
+            slots: todaySlots,
+            disabled: todaySlots.length === 0,
+        },
+        {
+            mode: "tomorrow",
+            label: "Завтра",
+            slots: tomorrowSlots,
+            disabled: tomorrowSlots.length === 0,
+        },
+        {
+            mode: "dayAfterTomorrow",
+            label: "Послезавтра",
+            slots: dayAfterTomorrowSlots,
+            disabled: dayAfterTomorrowSlots.length === 0,
+        },
+    ];
+};
+
+const createCompleteBefore = (
+    dateMode: DateMode,
+    timeSlot: string,
+    organization: Pick<Organization, "working_hours"> | null,
+) => {
     if (dateMode === "asap") {
-        const date = new Date();
-
-        date.setMinutes(date.getMinutes() + 30);
-
-        return roundUpToHalfHour(date).toISOString();
+        return createTimeSlots("today", organization)[0]?.value ?? null;
     }
 
-    const [hours = "0", minutes = "0"] = timeSlot.split(":");
-    const date = getDateForMode(dateMode);
-
-    date.setHours(Number(hours), Number(minutes), 0, 0);
-
-    return date.toISOString();
+    return timeSlot || null;
 };
 
 const splitAddressFallback = (address: string) => {
@@ -182,6 +342,10 @@ export function CartDrawer() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [checkoutError, setCheckoutError] = useState("");
     const [checkoutSuccess, setCheckoutSuccess] = useState<CheckoutSuccess | null>(null);
+    const [deliveryCheckState, setDeliveryCheckState] = useState<{
+        key: string;
+        result: DeliveryCheckResult;
+    } | null>(null);
 
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -192,16 +356,68 @@ export function CartDrawer() {
         defaultDeliveryOrganization,
         availabilityByOrganizationId,
     });
-    const todaySlots = createTimeSlots("today");
-    const tomorrowSlots = createTimeSlots("tomorrow");
-    const currentTimeSlots = dateMode === "today" ? todaySlots : tomorrowSlots;
+    const dateOptions = useMemo(
+        () => createDateOptions(orderAvailability.organization),
+        [orderAvailability.organization],
+    );
+    const selectedDateOption = dateOptions.find((option) => option.mode === dateMode);
+    const firstAvailableDateOption = dateOptions.find((option) => !option.disabled);
+    const activeDateMode = selectedDateOption?.disabled
+        ? firstAvailableDateOption?.mode ?? dateMode
+        : dateMode;
+    const currentDateOption = dateOptions.find((option) => option.mode === activeDateMode) ?? dateOptions[0];
+    const currentTimeSlots = currentDateOption.slots;
     const selectedTimeSlot = currentTimeSlots.some((slot) => slot.value === timeSlot)
         ? timeSlot
         : currentTimeSlots[0]?.value ?? "";
-    const isScheduledModeWithoutSlots = dateMode !== "asap" && !selectedTimeSlot;
-    const isCheckoutDisabled = orderAvailability.isUnavailable || isSubmitting || isScheduledModeWithoutSlots;
+    const isSelectedDateDisabled = currentDateOption.disabled;
+    const isScheduledModeWithoutSlots = activeDateMode !== "asap" && !selectedTimeSlot;
+    const isCheckoutDisabled = orderAvailability.isUnavailable || isSubmitting || isSelectedDateDisabled || isScheduledModeWithoutSlots;
 
     useBodyScrollLock(isOpen);
+
+    const deliveryCheckKey = getDeliveryCheckKey(delivery);
+    const deliveryCheck = deliveryCheckState?.key === deliveryCheckKey
+        ? deliveryCheckState.result
+        : null;
+    const deliveryPrice = orderType === "delivery" && deliveryCheck?.available
+        ? deliveryCheck.price
+        : null;
+    const checkoutTotal = orderType === "delivery"
+        ? getDeliveryTotal(totalPrice, deliveryPrice)
+        : totalPrice;
+
+    useEffect(() => {
+        if (!isOpen || orderType !== "delivery" || !delivery) return;
+
+        const controller = new AbortController();
+
+        checkDeliveryZone(
+            {
+                coordinates: delivery.coordinates,
+                organizationSlug: defaultDeliveryOrganization?.slug,
+            },
+            controller.signal,
+        )
+            .then((result) => {
+                setDeliveryCheckState({
+                    key: getDeliveryCheckKey(delivery),
+                    result,
+                });
+            })
+            .catch(() => {
+                if (controller.signal.aborted) return;
+
+                setDeliveryCheckState(null);
+            });
+
+        return () => controller.abort();
+    }, [
+        defaultDeliveryOrganization?.slug,
+        delivery,
+        isOpen,
+        orderType,
+    ]);
 
     const buildOrderPayload = (): OrderCreatePayload | null => {
         const organization = orderAvailability.organization;
@@ -218,13 +434,18 @@ export function CartDrawer() {
             return null;
         }
 
+        const completeBefore = createCompleteBefore(activeDateMode, selectedTimeSlot, organization);
+
+        if (!completeBefore) {
+            setCheckoutError("На выбранную дату нет доступного времени для заказа.");
+            return null;
+        }
+
         const orderComment = comment.trim();
         const payload: OrderCreatePayload = {
             orderType: orderType === "restaurant" ? "pickup" : "delivery",
-            organizationId: organization.id,
-            organizationSlug: organization.slug,
             comment: orderComment || undefined,
-            completeBefore: createCompleteBefore(dateMode, selectedTimeSlot),
+            completeBefore,
             guestsCount: 1,
             items: items.map((item) => ({
                 productId: item.id,
@@ -233,6 +454,11 @@ export function CartDrawer() {
                 modifiers: [],
             })),
         };
+
+        if (orderType === "restaurant") {
+            payload.organizationId = organization.id;
+            payload.organizationSlug = organization.slug;
+        }
 
         if (orderType === "delivery" && delivery) {
             const address = getDeliveryAddressParts(delivery);
@@ -281,6 +507,24 @@ export function CartDrawer() {
         setIsSubmitting(true);
 
         try {
+            if (payload.orderType === "delivery" && payload.deliveryPoint) {
+                const result = await checkDeliveryZone({
+                    coordinates: payload.deliveryPoint.coordinates,
+                    organizationSlug: defaultDeliveryOrganization?.slug,
+                });
+
+                setDeliveryCheckState({
+                    key: getDeliveryCheckKey(delivery),
+                    result,
+                });
+
+                if (!result.available) {
+                    setCheckoutError(getDeliveryCheckErrorMessage(result));
+                    openDeliveryTypeModal();
+                    return;
+                }
+            }
+
             const createdOrder = await createOrder(payload, accessToken);
             const paymentUrl = createdOrder.payment?.paymentUrl;
 
@@ -306,8 +550,9 @@ export function CartDrawer() {
         if (!isAuthenticated) return "Войти и оформить";
         if (!orderType) return "Выбрать способ получения";
         if (orderType === "delivery" && !delivery) return "Указать адрес доставки";
+        if (orderType === "delivery" && deliveryPrice === null) return "Проверить доставку и оформить";
 
-        return `Оформить за ${totalPrice.toLocaleString("ru-RU")}\u00a0₽`;
+        return `Оформить за ${checkoutTotal.toLocaleString("ru-RU")}\u00a0₽`;
     })();
 
     return (
@@ -454,6 +699,21 @@ export function CartDrawer() {
                             <span className="font-bold">{totalPrice.toLocaleString("ru-RU")}&nbsp;₽</span>
                         </div>
 
+                        {orderType === "delivery" && delivery && (
+                            <div className="mb-4 rounded-[6px] border border-border/60 bg-black/20 px-4 py-3 text-sm leading-6 text-text/78">
+                                {deliveryCheck?.available && deliveryCheck.price !== null
+                                    ? `Доставка ориентировочно ${formatDeliveryPrice(deliveryCheck.price)}. Точную сумму уточним перед оплатой.`
+                                    : "Стоимость доставки уточним перед оплатой."}
+                            </div>
+                        )}
+
+                        {orderType === "delivery" && deliveryPrice !== null && (
+                            <div className="mb-4 flex items-end justify-between border-t border-border/50 pt-4 font-semibold md:text-lg">
+                                <span>Итого с доставкой</span>
+                                <span className="font-bold">{checkoutTotal.toLocaleString("ru-RU")}&nbsp;₽</span>
+                            </div>
+                        )}
+
                         <div className="space-y-4">
                             <textarea
                                 value={comment}
@@ -464,45 +724,26 @@ export function CartDrawer() {
 
                             <div>
                                 <p className="mb-2 text-sm font-semibold text-text/82">Когда приготовить заказ</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setDateMode("asap")}
-                                        className={`h-10 rounded-[6px] border px-2 text-xs font-semibold transition ${
-                                            dateMode === "asap"
-                                                ? "border-primary bg-primary text-on-primary"
-                                                : "border-border text-text hover:border-primary hover:text-primary"
-                                        }`}
-                                    >
-                                        Ближайшее
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setDateMode("today")}
-                                        disabled={todaySlots.length === 0}
-                                        className={`h-10 rounded-[6px] border px-2 text-xs font-semibold transition ${
-                                            dateMode === "today"
-                                                ? "border-primary bg-primary text-on-primary"
-                                                : "border-border text-text hover:border-primary hover:text-primary"
-                                        } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-border disabled:hover:text-text`}
-                                    >
-                                        Сегодня
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setDateMode("tomorrow")}
-                                        className={`h-10 rounded-[6px] border px-2 text-xs font-semibold transition ${
-                                            dateMode === "tomorrow"
-                                                ? "border-primary bg-primary text-on-primary"
-                                                : "border-border text-text hover:border-primary hover:text-primary"
-                                        }`}
-                                    >
-                                        Завтра
-                                    </button>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    {dateOptions.map((option) => (
+                                        <button
+                                            key={option.mode}
+                                            type="button"
+                                            onClick={() => setDateMode(option.mode)}
+                                            disabled={option.disabled}
+                                            className={`h-10 rounded-[6px] border px-2 text-xs font-semibold transition ${
+                                                activeDateMode === option.mode
+                                                    ? "border-primary bg-primary text-on-primary"
+                                                    : "border-border text-text hover:border-primary hover:text-primary"
+                                            } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-border disabled:hover:text-text`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
-                            {dateMode !== "asap" && (
+                            {activeDateMode !== "asap" && (
                                 <select
                                     value={selectedTimeSlot}
                                     onChange={(event) => setTimeSlot(event.target.value)}

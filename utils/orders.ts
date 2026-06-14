@@ -19,7 +19,7 @@ export type OrderCreateItem = {
 
 export type OrderCreatePayload = {
     orderType: OrderRequestType;
-    organizationId: string;
+    organizationId?: string;
     organizationSlug?: string;
     successUrl?: string;
     failUrl?: string;
