@@ -12,6 +12,7 @@ export function AppDataSync() {
     const restaurantId = useOrderStore((state) => state.restaurant?.id ?? null);
     const refreshMenuForCurrentOrder = useAppDataStore((state) => state.refreshMenuForCurrentOrder);
     const refreshOrganizationAvailability = useAppDataStore((state) => state.refreshOrganizationAvailability);
+    const isInitialized = useAppDataStore((state) => state.isInitialized);
     const isFirstRun = useRef(true);
     const lastAvailabilityCheckRef = useRef(0);
 
@@ -25,6 +26,8 @@ export function AppDataSync() {
     }, [orderType, refreshMenuForCurrentOrder, restaurantId]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+
         let controller: AbortController | null = null;
 
         const refreshAvailability = () => {
@@ -56,7 +59,7 @@ export function AppDataSync() {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             controller?.abort();
         };
-    }, [refreshOrganizationAvailability]);
+    }, [isInitialized, refreshOrganizationAvailability]);
 
     return null;
 }

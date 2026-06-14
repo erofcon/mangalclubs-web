@@ -17,6 +17,7 @@ export function OrderTypeModal() {
     const organizations = useAppDataStore((state) => state.organizations);
     const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
     const availabilityByOrganizationId = useAppDataStore((state) => state.availabilityByOrganizationId);
+    const isInitialized = useAppDataStore((state) => state.isInitialized);
 
     if (!isOpen) return null;
 
@@ -28,9 +29,9 @@ export function OrderTypeModal() {
     const isDeliverySelected = orderType === "delivery";
     const isRestaurantSelected = orderType === "restaurant";
     const deliveryAvailability = getOrganizationAvailability(defaultDeliveryOrganization, availabilityByOrganizationId);
-    const isDeliveryDisabled = deliveryAvailability?.orders_available === false;
+    const isDeliveryDisabled = !isInitialized || deliveryAvailability?.orders_available === false;
     const pickupOrganizations = organizations.filter((organization) => organization.accepts_pickup !== false);
-    const isRestaurantDisabled = getUnavailableOrganizations(
+    const isRestaurantDisabled = !isInitialized || getUnavailableOrganizations(
         pickupOrganizations,
         availabilityByOrganizationId,
     ).length === pickupOrganizations.length;

@@ -26,6 +26,7 @@ type AppDataStore = {
     menu: MenuCategory[];
     availabilityByOrganizationId: Record<string, OrganizationAvailability>;
     defaultDeliveryOrganization: Organization | null;
+    isInitialized: boolean;
     isInitializing: boolean;
     isMenuLoading: boolean;
     isAvailabilityRefreshing: boolean;
@@ -195,6 +196,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
     menu: normalizeMenu(fallbackMenus),
     availabilityByOrganizationId: {},
     defaultDeliveryOrganization: getDefaultDeliveryOrganization(fallbackOrganizations),
+    isInitialized: false,
     isInitializing: false,
     isMenuLoading: false,
     isAvailabilityRefreshing: false,
@@ -206,13 +208,18 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
         try {
             const apiOrganizations = await apiFetch<ApiOrganization[]>("/api/v1/organizations", {signal});
             const organizations = apiOrganizations.map(normalizeOrganization);
-            const menuResponse = await loadMenu(organizations, signal);
+            const [menuResponse, availabilityByOrganizationId] = await Promise.all([
+                loadMenu(organizations, signal),
+                loadAvailabilityMap(organizations, signal),
+            ]);
 
             set({
                 organizations,
                 categories: menuResponse.categories,
                 menu: normalizeMenu(menuResponse.menu),
+                availabilityByOrganizationId,
                 defaultDeliveryOrganization: getDefaultDeliveryOrganization(organizations),
+                isInitialized: true,
                 isInitializing: false,
                 isMenuLoading: false,
                 isAvailabilityRefreshing: false,
@@ -266,6 +273,11 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
 
         try {
             const availabilityByOrganizationId = await loadAvailabilityMap(organizations, signal);
+
+            if (get().organizations !== organizations) {
+                set({isAvailabilityRefreshing: false});
+                return;
+            }
 
             set({
                 availabilityByOrganizationId,

@@ -6,7 +6,10 @@ import {type ChangeEvent, type FormEvent, type ReactNode, useCallback, useEffect
 import {useRouter} from "next/navigation";
 import {
     Cake,
+    CalendarDays,
+    ChevronRight,
     Clock3,
+    ImageIcon,
     LoaderCircle,
     LogIn,
     LogOut,
@@ -19,8 +22,11 @@ import {
     User,
     WalletCards,
 } from "lucide-react";
+import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
+import {useAppDataStore} from "@/store/app-data-store";
 import {useAuthStore} from "@/store/auth-store";
 import {useUIStore} from "@/store/ui-store";
+import type {MenuCategory, MenuItem} from "@/types/products";
 import {
     deleteCustomerAvatar,
     getCurrentCustomerOrders,
@@ -119,23 +125,109 @@ const getOrderNumber = (order: CustomerOrder) => (
 );
 
 type OrderItemLike = CustomerOrderItem & {
+    image?: string;
+    imageUrl?: string;
+    productImage?: string;
     product?: {
         name?: string;
         title?: string;
+        image?: string;
+        imageUrl?: string;
     };
 };
 
-const getOrderItemName = (item: OrderItemLike) => (
+const getRawOrderItemName = (item: OrderItemLike) => (
     item.name ||
     item.productName ||
     item.title ||
     item.product?.name ||
-    item.product?.title ||
+    item.product?.title
+);
+
+const getOrderItemName = (item: OrderItemLike, menuItem?: MenuItem) => (
+    getRawOrderItemName(item) ||
+    menuItem?.name ||
     "Позиция заказа"
 );
 
 const getOrderItemQuantity = (item: CustomerOrderItem) => (
     item.amount ?? item.quantity ?? 1
+);
+
+const getOrderItemTotal = (item: CustomerOrderItem) => {
+    if (typeof item.sum === "number") return item.sum;
+    if (typeof item.total === "number") return item.total;
+    if (typeof item.price === "number") return item.price * getOrderItemQuantity(item);
+
+    return null;
+};
+
+const normalizeLookupKey = (value?: string | null) => value?.trim().toLowerCase();
+
+const buildMenuItemLookup = (menu: MenuCategory[]) => {
+    const lookup = new Map<string, MenuItem>();
+
+    menu.forEach((category) => {
+        category.items.forEach((item) => {
+            lookup.set(item.id, item);
+
+            const nameKey = normalizeLookupKey(item.name);
+
+            if (nameKey) {
+                lookup.set(nameKey, item);
+            }
+        });
+    });
+
+    return lookup;
+};
+
+const getMenuItemForOrderItem = (
+    item: OrderItemLike,
+    lookup: Map<string, MenuItem>,
+) => {
+    if (item.productId) {
+        const byId = lookup.get(item.productId);
+
+        if (byId) return byId;
+    }
+
+    const rawName = getRawOrderItemName(item);
+    const nameKey = normalizeLookupKey(rawName);
+
+    return nameKey ? lookup.get(nameKey) : undefined;
+};
+
+const getOrderItemImage = (item: OrderItemLike, menuItem?: MenuItem) => (
+    item.image ||
+    item.imageUrl ||
+    item.productImage ||
+    item.product?.image ||
+    item.product?.imageUrl ||
+    menuItem?.image ||
+    null
+);
+
+const getOrderItemsLabel = (order: CustomerOrder) => {
+    const count = order.items?.reduce((sum, item) => sum + getOrderItemQuantity(item), 0) ?? 0;
+
+    if (count === 0) return "Состав заказа";
+
+    const lastTwoDigits = count % 100;
+    const lastDigit = count % 10;
+    const label = lastTwoDigits >= 11 && lastTwoDigits <= 14
+        ? "позиций"
+        : lastDigit === 1
+            ? "позиция"
+            : lastDigit >= 2 && lastDigit <= 4
+                ? "позиции"
+                : "позиций";
+
+    return `${count.toLocaleString("ru-RU")} ${label}`;
+};
+
+const getOrderSummary = (order: CustomerOrder) => (
+    `Заказ ${getOrderNumber(order)} от ${formatDateTime(order.createdAt)} на ${formatMoney(order.totalSum)}`
 );
 
 export function PersonalScreen() {
@@ -725,6 +817,10 @@ function OrdersSection({
                            refreshingOrderIds,
                            onRefreshOrderStatus,
                        }: OrdersSectionProps) {
+    const menu = useAppDataStore((state) => state.menu);
+    const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+    const menuItemLookup = useMemo(() => buildMenuItemLookup(menu), [menu]);
+
     return (
         <>
             <OrderBlock
@@ -737,7 +833,9 @@ function OrdersSection({
                         <OrderCard
                             key={order.id}
                             order={order}
+                            menuItemLookup={menuItemLookup}
                             isRefreshing={refreshingOrderIds.includes(order.id)}
+                            onOpen={() => setSelectedOrder(order)}
                             onRefreshStatus={() => onRefreshOrderStatus(order.id)}
                         />
                     ))
@@ -753,10 +851,23 @@ function OrdersSection({
             >
                 {historyOrders.length > 0 ? (
                     historyOrders.map((order) => (
-                        <OrderCard key={order.id} order={order}/>
+                        <OrderCard
+                            key={order.id}
+                            order={order}
+                            menuItemLookup={menuItemLookup}
+                            onOpen={() => setSelectedOrder(order)}
+                        />
                     ))
                 ) : null}
             </OrderBlock>
+
+            {selectedOrder && (
+                <OrderDetailsModal
+                    order={selectedOrder}
+                    menuItemLookup={menuItemLookup}
+                    onClose={() => setSelectedOrder(null)}
+                />
+            )}
         </>
     );
 }
@@ -813,19 +924,30 @@ function EmptyOrdersState() {
 
 type OrderCardProps = {
     order: CustomerOrder;
+    menuItemLookup: Map<string, MenuItem>;
     isRefreshing?: boolean;
+    onOpen: () => void;
     onRefreshStatus?: () => void;
 };
 
-function OrderCard({order, isRefreshing = false, onRefreshStatus}: OrderCardProps) {
+function OrderCard({order, menuItemLookup, isRefreshing = false, onOpen, onRefreshStatus}: OrderCardProps) {
     const items = order.items ?? [];
+    const previewItems = items.slice(0, 3).map((item) => {
+        const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
+
+        return getOrderItemName(item, menuItem);
+    });
     const status = getCustomerOrderStatusDescriptor(order);
     const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
 
     return (
-        <article className="px-5 py-5 sm:px-6">
+        <article className="px-5 py-5 transition duration-300 hover:bg-white/[0.025] sm:px-6">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
+                <button
+                    type="button"
+                    onClick={onOpen}
+                    className="group min-w-0 flex-1 cursor-pointer text-left"
+                >
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex h-8 items-center rounded-[6px] border border-border/70 px-3 text-[12px] font-semibold text-primary">
                             {getOrderTypeLabel(order.orderType)}
@@ -836,21 +958,31 @@ function OrderCard({order, isRefreshing = false, onRefreshStatus}: OrderCardProp
                         )}
                     </div>
 
-                    <h3 className="mt-4 wrap-break-word text-[19px] font-semibold leading-7 text-text">
-                        Заказ {getOrderNumber(order)}
-                    </h3>
+                    <div className="mt-4 flex min-w-0 items-start gap-3">
+                        <div className="min-w-0">
+                            <h3 className="wrap-break-word text-[19px] font-semibold leading-7 text-text transition duration-300 group-hover:text-primary">
+                                {getOrderSummary(order)}
+                            </h3>
+                            <p className="mt-2 wrap-break-word text-[13px] leading-5 text-text/62">
+                                {previewItems.length > 0
+                                    ? previewItems.join(", ")
+                                    : "Состав заказа будет доступен в деталях"}
+                            </p>
+                        </div>
+                        <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-primary transition duration-300 group-hover:translate-x-1"/>
+                    </div>
 
                     <div className="mt-3 grid gap-3 text-[13px] leading-5 text-text/68 sm:grid-cols-2">
                         <OrderMeta
-                            icon={<Clock3 className="h-4 w-4" strokeWidth={1.8}/>}
-                            label={formatDateTime(order.createdAt)}
+                            icon={<PackageCheck className="h-4 w-4" strokeWidth={1.8}/>}
+                            label={getOrderItemsLabel(order)}
                         />
                         <OrderMeta
                             icon={<WalletCards className="h-4 w-4" strokeWidth={1.8}/>}
                             label={formatMoney(order.totalSum)}
                         />
                     </div>
-                </div>
+                </button>
 
                 {onRefreshStatus && (
                     <button
@@ -868,32 +1000,179 @@ function OrderCard({order, isRefreshing = false, onRefreshStatus}: OrderCardProp
                     </button>
                 )}
             </div>
-
-            {items.length > 0 && (
-                <div className="mt-5 rounded-[6px] border border-border/55">
-                    {items.map((item, index) => (
-                        <div
-                            key={`${getOrderItemName(item)}-${index}`}
-                            className="flex items-start justify-between gap-4 border-b border-border/45 px-4 py-3 last:border-b-0"
-                        >
-                            <div className="min-w-0">
-                                <p className="wrap-break-word text-[14px] font-semibold leading-6 text-text">
-                                    {getOrderItemName(item)}
-                                </p>
-                                <p className="mt-1 text-[12px] text-text/55">
-                                    {getOrderItemQuantity(item)} шт.
-                                </p>
-                            </div>
-                            {typeof item.price === "number" && (
-                                <span className="shrink-0 text-[13px] font-semibold text-text/78">
-                                    {formatMoney(item.price)}
-                                </span>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
         </article>
+    );
+}
+
+type OrderDetailsModalProps = {
+    order: CustomerOrder;
+    menuItemLookup: Map<string, MenuItem>;
+    onClose: () => void;
+};
+
+function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalProps) {
+    const items = order.items ?? [];
+    const status = getCustomerOrderStatusDescriptor(order);
+    const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
+
+    return (
+        <ModalSkeleton
+            onClose={onClose}
+            className="w-full sm:max-w-3xl"
+        >
+            <div className="flex max-h-dvh min-h-dvh w-full flex-col overflow-y-auto bg-background p-5 text-text sm:max-h-[86dvh] sm:min-h-0 sm:rounded-[8px] sm:border sm:border-border/70 sm:p-6">
+                <div className="pr-12 sm:pr-0">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                        Заказ {getOrderNumber(order)}
+                    </p>
+                    <h2 className="mt-2 wrap-break-word text-[28px] font-normal leading-tight text-text sm:text-[34px]">
+                        {formatMoney(order.totalSum)}
+                    </h2>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                    <span className="inline-flex h-8 items-center rounded-[6px] border border-border/70 px-3 text-[12px] font-semibold text-primary">
+                        {getOrderTypeLabel(order.orderType)}
+                    </span>
+                    <StatusBadge label={`Заказ: ${status.label}`} tone={status.tone}/>
+                    {paymentStatus && (
+                        <StatusBadge label={`Оплата: ${paymentStatus.label}`} tone={paymentStatus.tone}/>
+                    )}
+                </div>
+
+                <div className="mt-6 grid overflow-hidden rounded-[8px] border border-border/70 sm:grid-cols-3">
+                    <OrderDetail
+                        icon={<CalendarDays className="h-4 w-4" strokeWidth={1.8}/>}
+                        label="Дата заказа"
+                        value={formatDateTime(order.createdAt)}
+                    />
+                    <OrderDetail
+                        icon={<Clock3 className="h-4 w-4" strokeWidth={1.8}/>}
+                        label="Ко времени"
+                        value={formatDateTime(order.completeBefore)}
+                    />
+                    <OrderDetail
+                        icon={<WalletCards className="h-4 w-4" strokeWidth={1.8}/>}
+                        label="Сумма"
+                        value={formatMoney(order.totalSum)}
+                    />
+                </div>
+
+                <div className="mt-6 overflow-hidden rounded-[8px] border border-border/70">
+                    <div className="border-b border-border/55 px-4 py-4">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Состав
+                        </p>
+                    </div>
+
+                    {items.length > 0 ? (
+                        <div className="divide-y divide-border/45">
+                            {items.map((item, index) => {
+                                const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
+                                const itemName = getOrderItemName(item, menuItem);
+                                const image = getOrderItemImage(item, menuItem);
+                                const quantity = getOrderItemQuantity(item);
+                                const itemTotal = getOrderItemTotal(item);
+
+                                return (
+                                    <div
+                                        key={`${item.productId ?? item.id ?? itemName}-${index}`}
+                                        className="flex gap-4 px-4 py-4"
+                                    >
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[6px] border border-border/55 bg-black/25">
+                                            {image ? (
+                                                <Image
+                                                    src={image}
+                                                    alt={itemName}
+                                                    fill
+                                                    sizes="80px"
+                                                    className="object-contain p-1"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-primary/70">
+                                                    <ImageIcon className="h-8 w-8" strokeWidth={1.5}/>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="min-w-0">
+                                                    <p className="wrap-break-word text-[15px] font-semibold leading-6 text-text">
+                                                        {itemName}
+                                                    </p>
+                                                    <p className="mt-1 text-[12px] text-text/55">
+                                                        {quantity} шт.
+                                                        {typeof item.price === "number" ? ` x ${formatMoney(item.price)}` : ""}
+                                                    </p>
+                                                </div>
+
+                                                {typeof itemTotal === "number" && (
+                                                    <span className="shrink-0 text-[14px] font-semibold text-text">
+                                                        {formatMoney(itemTotal)}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {item.modifiers && item.modifiers.length > 0 && (
+                                                <div className="mt-3 space-y-1 text-[12px] leading-5 text-text/58">
+                                                    {item.modifiers.map((modifier, modifierIndex) => {
+                                                        const modifierMenuItem = getMenuItemForOrderItem(modifier, menuItemLookup);
+
+                                                        return (
+                                                            <p key={`${modifier.productId ?? modifier.id ?? modifierIndex}`}>
+                                                                + {getOrderItemName(modifier, modifierMenuItem)} · {getOrderItemQuantity(modifier)} шт.
+                                                            </p>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-5 text-[14px] leading-6 text-text/68">
+                            Состав заказа не пришел в ответе сервера.
+                        </div>
+                    )}
+                </div>
+
+                {order.comment && (
+                    <div className="mt-6 rounded-[8px] border border-border/70 px-4 py-4">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            Комментарий
+                        </p>
+                        <p className="mt-3 wrap-break-word text-[14px] leading-6 text-text/74">
+                            {order.comment}
+                        </p>
+                    </div>
+                )}
+            </div>
+        </ModalSkeleton>
+    );
+}
+
+type OrderDetailProps = {
+    icon: ReactNode;
+    label: string;
+    value: string;
+};
+
+function OrderDetail({icon, label, value}: OrderDetailProps) {
+    return (
+        <div className="border-b border-border/45 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+            <span className="mb-4 inline-flex text-primary">
+                {icon}
+            </span>
+            <p className="text-[12px] leading-none text-text/58">
+                {label}
+            </p>
+            <p className="mt-3 wrap-break-word text-[14px] font-semibold leading-6 text-text">
+                {value}
+            </p>
+        </div>
     );
 }
 
