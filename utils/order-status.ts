@@ -78,6 +78,18 @@ const terminalFailedPaymentStatuses = new Set([
     "payment_expired",
 ]);
 
+const payablePaymentStatuses = new Set([
+    "payment_pending",
+    "payment_form_created",
+]);
+
+const terminalOrderStatuses = new Set([
+    "delivered",
+    "closed",
+    "cancelled",
+    "canceled",
+]);
+
 const normalizeStatusKey = (value: string) => (
     value.replace(/[\s_-]+/g, "").toLowerCase()
 );
@@ -121,8 +133,22 @@ export const isFailedPaymentStatus = (status?: string | null) => (
     Boolean(status && terminalFailedPaymentStatuses.has(status))
 );
 
-export const shouldShowOrderInHistory = (order: Pick<CustomerOrder, "paymentStatus">) => (
-    isFailedPaymentStatus(order.paymentStatus)
+export const canContinueOrderPayment = (
+    order: Pick<CustomerOrder, "paymentStatus" | "payment">,
+) => (
+    Boolean(
+        order.paymentStatus &&
+        payablePaymentStatuses.has(order.paymentStatus) &&
+        order.payment?.paymentUrl,
+    )
+);
+
+export const shouldShowOrderInHistory = (
+    order: Pick<CustomerOrder, "paymentStatus" | "orderStatus" | "creationStatus">,
+) => (
+    isFailedPaymentStatus(order.paymentStatus) ||
+    order.creationStatus === "Error" ||
+    Boolean(order.orderStatus && terminalOrderStatuses.has(normalizeStatusKey(order.orderStatus)))
 );
 
 export const getCustomerOrderStatusDescriptor = (

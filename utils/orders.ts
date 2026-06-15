@@ -63,15 +63,7 @@ export type OrderCreateOut = {
     iikoOrderServiceType: string;
     paymentStatus: PaymentStatus;
     totalSum: number;
-    payment: {
-        id: string;
-        status: PaymentStatus;
-        amount: number;
-        amountKopecks: number;
-        bankOrderId: string;
-        bankPaymentId: string;
-        paymentUrl: string;
-    };
+    payment?: OrderPayment | null;
     orderInfo?: {
         id?: string;
         posId?: string;
@@ -88,6 +80,16 @@ export type PaymentStatus =
     | "payment_failed"
     | "payment_cancelled"
     | "payment_expired";
+
+export type OrderPayment = {
+    id?: string;
+    status?: PaymentStatus | string | null;
+    amount?: number | null;
+    amountKopecks?: number | null;
+    bankOrderId?: string | null;
+    bankPaymentId?: string | null;
+    paymentUrl?: string | null;
+};
 
 export type OrderCreationStatus =
     | "PaymentPending"
@@ -109,6 +111,7 @@ export type OrderStatusOut = {
     orderStatus?: string | null;
     paymentStatus?: PaymentStatus | string | null;
     paymentAmountKopecks?: number | null;
+    payment?: OrderPayment | null;
     number?: number;
     sum?: number;
     totalSum?: number | null;

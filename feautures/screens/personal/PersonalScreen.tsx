@@ -14,9 +14,11 @@ import {
     LogIn,
     LogOut,
     Mail,
+    MapPin,
     PackageCheck,
     Phone,
     RefreshCw,
+    ReceiptText,
     Trash2,
     Upload,
     User,
@@ -40,11 +42,17 @@ import {
     type CustomerProfile,
 } from "@/utils/customer-profile";
 import {
+    canContinueOrderPayment,
     getCustomerOrderStatusDescriptor,
     getPaymentStatusDescriptor,
     shouldShowOrderInHistory,
     type StatusTone,
 } from "@/utils/order-status";
+import {
+    PAYMENT_REDIRECT_STATE_STORAGE_KEY,
+    PAYMENT_REDIRECT_URL_STORAGE_KEY,
+} from "@/utils/payment-return";
+import {LAST_ORDER_ID_STORAGE_KEY} from "@/utils/orders";
 
 type ActiveTab = "info" | "orders";
 
@@ -87,6 +95,37 @@ const formatDateTime = (value?: string | null) => {
     });
 };
 
+const formatDate = (value?: string | null) => {
+    if (!value) return "Дата не указана";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+};
+
+const formatTime = (value?: string | null) => {
+    if (!value) return null;
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
 const formatBirthday = (value?: string | null) => {
     if (!value) return "Не указана";
 
@@ -124,6 +163,12 @@ const getOrderNumber = (order: CustomerOrder) => (
     order.iikoExternalNumber || order.id
 );
 
+const getShortOrderNumber = (order: CustomerOrder) => {
+    const number = getOrderNumber(order);
+
+    return number.length > 10 ? number.slice(0, 8) : number;
+};
+
 type OrderItemLike = CustomerOrderItem & {
     image?: string;
     imageUrl?: string;
@@ -160,6 +205,21 @@ const getOrderItemTotal = (item: CustomerOrderItem) => {
     if (typeof item.price === "number") return item.price * getOrderItemQuantity(item);
 
     return null;
+};
+
+const getOrderItemsCount = (order: CustomerOrder) => (
+    order.items?.reduce((sum, item) => sum + getOrderItemQuantity(item), 0) ?? 0
+);
+
+const pluralizeOrderItems = (count: number) => {
+    const lastTwoDigits = count % 100;
+    const lastDigit = count % 10;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return "позиций";
+    if (lastDigit === 1) return "позиция";
+    if (lastDigit >= 2 && lastDigit <= 4) return "позиции";
+
+    return "позиций";
 };
 
 const normalizeLookupKey = (value?: string | null) => value?.trim().toLowerCase();
@@ -209,26 +269,107 @@ const getOrderItemImage = (item: OrderItemLike, menuItem?: MenuItem) => (
 );
 
 const getOrderItemsLabel = (order: CustomerOrder) => {
-    const count = order.items?.reduce((sum, item) => sum + getOrderItemQuantity(item), 0) ?? 0;
+    const count = getOrderItemsCount(order);
 
     if (count === 0) return "Состав заказа";
 
-    const lastTwoDigits = count % 100;
-    const lastDigit = count % 10;
-    const label = lastTwoDigits >= 11 && lastTwoDigits <= 14
-        ? "позиций"
-        : lastDigit === 1
-            ? "позиция"
-            : lastDigit >= 2 && lastDigit <= 4
-                ? "позиции"
-                : "позиций";
-
-    return `${count.toLocaleString("ru-RU")} ${label}`;
+    return `${count.toLocaleString("ru-RU")} ${pluralizeOrderItems(count)}`;
 };
 
-const getOrderSummary = (order: CustomerOrder) => (
-    `Заказ ${getOrderNumber(order)} от ${formatDateTime(order.createdAt)} на ${formatMoney(order.totalSum)}`
+const getOrderTitle = (order: CustomerOrder) => (
+    `${getOrderTypeLabel(order.orderType)} №${getShortOrderNumber(order)}`
 );
+
+const getOrderTimingLabel = (order: CustomerOrder) => {
+    const completeTime = formatTime(order.completeBefore);
+
+    if (completeTime) return `К ${completeTime}`;
+
+    if (order.completeBefore) return `К ${formatDateTime(order.completeBefore)}`;
+
+    return "Время уточняется";
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => (
+    typeof value === "object" && value !== null
+);
+
+const readString = (value: unknown) => (
+    typeof value === "string" && value.trim() ? value.trim() : null
+);
+
+const getDeliveryAddressLabel = (order: CustomerOrder) => {
+    if (order.orderType !== "delivery" || !isRecord(order.deliveryPoint)) return null;
+
+    const address = isRecord(order.deliveryPoint.address) ? order.deliveryPoint.address : null;
+
+    if (!address) return null;
+
+    const streetValue = address.street;
+    const street = isRecord(streetValue) ? readString(streetValue.name) : readString(streetValue);
+    const city = readString(address.city);
+    const house = readString(address.house);
+    const building = readString(address.building);
+    const flat = readString(address.flat);
+    const entrance = readString(address.entrance);
+    const floor = readString(address.floor);
+    const mainAddress = [
+        street,
+        house ? `д. ${house}` : null,
+        building ? `к. ${building}` : null,
+    ].filter(Boolean).join(", ");
+    const details = [
+        flat ? `кв. ${flat}` : null,
+        entrance ? `подъезд ${entrance}` : null,
+        floor ? `этаж ${floor}` : null,
+    ].filter(Boolean).join(", ");
+
+    return [city, mainAddress, details].filter(Boolean).join(", ") || null;
+};
+
+    const getDeliveryPrice = (order: CustomerOrder) => {
+    if (!isRecord(order.deliveryPoint) || !isRecord(order.deliveryPoint.deliveryCalculation)) return null;
+
+    const price = order.deliveryPoint.deliveryCalculation.price;
+
+    return typeof price === "number" ? price : null;
+};
+
+const openPaymentUrl = (paymentUrl: string, orderId: string) => {
+    window.localStorage.setItem(LAST_ORDER_ID_STORAGE_KEY, orderId);
+    window.sessionStorage.setItem(PAYMENT_REDIRECT_URL_STORAGE_KEY, paymentUrl);
+    window.localStorage.setItem(PAYMENT_REDIRECT_URL_STORAGE_KEY, paymentUrl);
+    window.sessionStorage.removeItem(PAYMENT_REDIRECT_STATE_STORAGE_KEY);
+    window.localStorage.removeItem(PAYMENT_REDIRECT_STATE_STORAGE_KEY);
+    window.location.href = "/order-payment/redirect";
+};
+
+const getOrderPlaceLabel = (order: CustomerOrder) => {
+    const deliveryAddress = getDeliveryAddressLabel(order);
+
+    if (deliveryAddress) return deliveryAddress;
+    if (order.orderType === "delivery") return "Адрес доставки уточняется";
+    if (order.organizationSlug) return `Ресторан ${order.organizationSlug}`;
+
+    return "Самовывоз из ресторана";
+};
+
+const getOrderPreviewText = (
+    order: CustomerOrder,
+    menuItemLookup: Map<string, MenuItem>,
+) => {
+    const items = order.items ?? [];
+    const names = items.slice(0, 3).map((item) => {
+        const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
+
+        return getOrderItemName(item, menuItem);
+    });
+    const hiddenCount = Math.max(items.length - names.length, 0);
+
+    if (names.length === 0) return "Состав заказа будет доступен в деталях";
+
+    return hiddenCount > 0 ? `${names.join(", ")} и еще ${hiddenCount}` : names.join(", ");
+};
 
 export function PersonalScreen() {
     const [activeTab, setActiveTab] = useState<ActiveTab>("info");
@@ -297,6 +438,20 @@ export function PersonalScreen() {
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         void loadPersonalData();
+    }, [loadPersonalData]);
+
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (!event.persisted) return;
+
+            void loadPersonalData();
+        };
+
+        window.addEventListener("pageshow", handlePageShow);
+
+        return () => {
+            window.removeEventListener("pageshow", handlePageShow);
+        };
     }, [loadPersonalData]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -438,6 +593,14 @@ export function PersonalScreen() {
         }
     };
 
+    const handleContinuePayment = (order: CustomerOrder) => {
+        const paymentUrl = order.payment?.paymentUrl;
+
+        if (!canContinueOrderPayment(order) || !paymentUrl) return;
+
+        openPaymentUrl(paymentUrl, order.id);
+    };
+
     if (isLoading) {
         return (
             <main className="min-h-screen bg-background text-text">
@@ -560,6 +723,7 @@ export function PersonalScreen() {
                                 historyOrders={displayedHistoryOrders}
                                 refreshingOrderIds={refreshingOrderIds}
                                 onRefreshOrderStatus={handleRefreshOrderStatus}
+                                onContinuePayment={handleContinuePayment}
                             />
                         )}
                     </div>
@@ -809,6 +973,7 @@ type OrdersSectionProps = {
     historyOrders: CustomerOrder[];
     refreshingOrderIds: string[];
     onRefreshOrderStatus: (orderId: string) => void;
+    onContinuePayment: (order: CustomerOrder) => void;
 };
 
 function OrdersSection({
@@ -816,6 +981,7 @@ function OrdersSection({
                            historyOrders,
                            refreshingOrderIds,
                            onRefreshOrderStatus,
+                           onContinuePayment,
                        }: OrdersSectionProps) {
     const menu = useAppDataStore((state) => state.menu);
     const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
@@ -837,6 +1003,7 @@ function OrdersSection({
                             isRefreshing={refreshingOrderIds.includes(order.id)}
                             onOpen={() => setSelectedOrder(order)}
                             onRefreshStatus={() => onRefreshOrderStatus(order.id)}
+                            onContinuePayment={() => onContinuePayment(order)}
                         />
                     ))
                 ) : (
@@ -865,6 +1032,7 @@ function OrdersSection({
                 <OrderDetailsModal
                     order={selectedOrder}
                     menuItemLookup={menuItemLookup}
+                    onContinuePayment={() => onContinuePayment(selectedOrder)}
                     onClose={() => setSelectedOrder(null)}
                 />
             )}
@@ -928,17 +1096,23 @@ type OrderCardProps = {
     isRefreshing?: boolean;
     onOpen: () => void;
     onRefreshStatus?: () => void;
+    onContinuePayment?: () => void;
 };
 
-function OrderCard({order, menuItemLookup, isRefreshing = false, onOpen, onRefreshStatus}: OrderCardProps) {
+function OrderCard({
+                       order,
+                       menuItemLookup,
+                       isRefreshing = false,
+                       onOpen,
+                       onRefreshStatus,
+                       onContinuePayment,
+                   }: OrderCardProps) {
     const items = order.items ?? [];
-    const previewItems = items.slice(0, 3).map((item) => {
-        const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
-
-        return getOrderItemName(item, menuItem);
-    });
     const status = getCustomerOrderStatusDescriptor(order);
     const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
+    const canContinuePayment = canContinueOrderPayment(order);
+    const itemsCount = getOrderItemsCount(order);
+    const deliveryPrice = getDeliveryPrice(order);
 
     return (
         <article className="px-5 py-5 transition duration-300 hover:bg-white/[0.025] sm:px-6">
@@ -958,111 +1132,243 @@ function OrderCard({order, menuItemLookup, isRefreshing = false, onOpen, onRefre
                         )}
                     </div>
 
-                    <div className="mt-4 flex min-w-0 items-start gap-3">
-                        <div className="min-w-0">
-                            <h3 className="wrap-break-word text-[19px] font-semibold leading-7 text-text transition duration-300 group-hover:text-primary">
-                                {getOrderSummary(order)}
-                            </h3>
-                            <p className="mt-2 wrap-break-word text-[13px] leading-5 text-text/62">
-                                {previewItems.length > 0
-                                    ? previewItems.join(", ")
-                                    : "Состав заказа будет доступен в деталях"}
+                    <div className="mt-4 flex min-w-0 gap-4">
+                        <OrderPreviewImages
+                            items={items}
+                            menuItemLookup={menuItemLookup}
+                        />
+                        <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-start gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="wrap-break-word text-[20px] font-semibold leading-7 text-text transition duration-300 group-hover:text-primary">
+                                        {getOrderTitle(order)}
+                                    </h3>
+                                    <p className="mt-1 text-[13px] leading-5 text-text/58">
+                                        {formatDate(order.createdAt)} · {getOrderTimingLabel(order)}
+                                    </p>
+                                </div>
+                                <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-primary transition duration-300 group-hover:translate-x-1"/>
+                            </div>
+
+                            <p className="mt-3 wrap-break-word text-[14px] leading-6 text-text/72">
+                                {getOrderPreviewText(order, menuItemLookup)}
                             </p>
                         </div>
-                        <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-primary transition duration-300 group-hover:translate-x-1"/>
                     </div>
 
-                    <div className="mt-3 grid gap-3 text-[13px] leading-5 text-text/68 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-3 text-[13px] leading-5 text-text/68 sm:grid-cols-2">
                         <OrderMeta
                             icon={<PackageCheck className="h-4 w-4" strokeWidth={1.8}/>}
-                            label={getOrderItemsLabel(order)}
+                            label={itemsCount > 0 ? `${getOrderItemsLabel(order)} в заказе` : getOrderItemsLabel(order)}
                         />
                         <OrderMeta
                             icon={<WalletCards className="h-4 w-4" strokeWidth={1.8}/>}
                             label={formatMoney(order.totalSum)}
                         />
+                        <OrderMeta
+                            icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
+                            label={getOrderPlaceLabel(order)}
+                        />
+                        <OrderMeta
+                            icon={<ReceiptText className="h-4 w-4" strokeWidth={1.8}/>}
+                            label={deliveryPrice !== null ? `Доставка ${formatMoney(deliveryPrice)}` : `№ ${getOrderNumber(order)}`}
+                        />
                     </div>
                 </button>
 
                 {onRefreshStatus && (
-                    <button
-                        type="button"
-                        onClick={onRefreshStatus}
-                        disabled={isRefreshing}
-                        className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-                    >
-                        {isRefreshing ? (
-                            <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.8}/>
-                        ) : (
-                            <RefreshCw className="h-4 w-4" strokeWidth={1.8}/>
+                    <div className="flex shrink-0 flex-col gap-3 sm:flex-row md:flex-col">
+                        {canContinuePayment && onContinuePayment && (
+                            <button
+                                type="button"
+                                onClick={onContinuePayment}
+                                className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded-[6px] bg-primary px-4 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
+                            >
+                                <WalletCards className="h-4 w-4" strokeWidth={1.8}/>
+                                Продолжить оплату
+                            </button>
                         )}
-                        Обновить статус
-                    </button>
+                        <button
+                            type="button"
+                            onClick={onRefreshStatus}
+                            disabled={isRefreshing}
+                            className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                        >
+                            {isRefreshing ? (
+                                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.8}/>
+                            ) : (
+                                <RefreshCw className="h-4 w-4" strokeWidth={1.8}/>
+                            )}
+                            Обновить статус
+                        </button>
+                    </div>
                 )}
             </div>
         </article>
     );
 }
 
+type OrderPreviewImagesProps = {
+    items: CustomerOrderItem[];
+    menuItemLookup: Map<string, MenuItem>;
+};
+
+function OrderPreviewImages({items, menuItemLookup}: OrderPreviewImagesProps) {
+    const previewItems = items.slice(0, 3);
+    const hiddenCount = Math.max(items.length - previewItems.length, 0);
+
+    if (previewItems.length === 0) {
+        return (
+            <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[6px] border border-border/55 bg-black/20 text-primary/70 sm:h-20 sm:w-20">
+                <ImageIcon className="h-7 w-7" strokeWidth={1.5}/>
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid h-18 w-18 shrink-0 grid-cols-2 gap-1 sm:h-20 sm:w-20">
+            {previewItems.map((item, index) => {
+                const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
+                const itemName = getOrderItemName(item, menuItem);
+                const image = getOrderItemImage(item, menuItem);
+                const isLastWithHidden = index === previewItems.length - 1 && hiddenCount > 0;
+
+                return (
+                    <div
+                        key={`${item.productId ?? item.id ?? itemName}-${index}`}
+                        className={[
+                            "relative overflow-hidden rounded-[6px] border border-border/55 bg-black/25",
+                            previewItems.length === 1 ? "col-span-2 row-span-2" : "",
+                            previewItems.length === 2 && index === 0 ? "row-span-2" : "",
+                        ].join(" ")}
+                    >
+                        {image ? (
+                            <Image
+                                src={image}
+                                alt={itemName}
+                                fill
+                                sizes="80px"
+                                className="object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center text-primary/70">
+                                <ImageIcon className="h-5 w-5" strokeWidth={1.5}/>
+                            </div>
+                        )}
+                        {isLastWithHidden && (
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/62 text-[12px] font-semibold text-white">
+                                +{hiddenCount}
+                            </span>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 type OrderDetailsModalProps = {
     order: CustomerOrder;
     menuItemLookup: Map<string, MenuItem>;
+    onContinuePayment?: () => void;
     onClose: () => void;
 };
 
-function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalProps) {
+function OrderDetailsModal({order, menuItemLookup, onContinuePayment, onClose}: OrderDetailsModalProps) {
     const items = order.items ?? [];
     const status = getCustomerOrderStatusDescriptor(order);
     const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
+    const canContinuePayment = canContinueOrderPayment(order);
+    const deliveryPrice = getDeliveryPrice(order);
 
     return (
         <ModalSkeleton
             onClose={onClose}
-            className="w-full sm:max-w-3xl"
+            className="w-full sm:max-w-[680px]"
         >
-            <div className="flex max-h-dvh min-h-dvh w-full flex-col overflow-y-auto bg-background p-5 text-text sm:max-h-[86dvh] sm:min-h-0 sm:rounded-[8px] sm:border sm:border-border/70 sm:p-6">
-                <div className="pr-12 sm:pr-0">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+            <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-text sm:h-auto sm:max-h-[calc(100dvh-32px)] sm:min-h-0 sm:rounded-[8px] sm:border sm:border-border/70">
+                <div className="shrink-0 border-b border-border/55 px-5 pb-4 pt-5 pr-16 sm:px-6 sm:pb-4 sm:pt-5 sm:pr-16">
+                    <p className="wrap-break-word text-[10px] font-semibold uppercase tracking-[0.18em] text-primary sm:text-[11px]">
                         Заказ {getOrderNumber(order)}
                     </p>
-                    <h2 className="mt-2 wrap-break-word text-[28px] font-normal leading-tight text-text sm:text-[34px]">
-                        {formatMoney(order.totalSum)}
+                    <h2 className="mt-2 wrap-break-word text-[24px] font-normal leading-tight text-text sm:text-[28px]">
+                        {getOrderTitle(order)}
                     </h2>
-                </div>
+                    <p className="mt-2 wrap-break-word text-[12px] leading-5 text-text/64 sm:text-[13px]">
+                        {formatDateTime(order.createdAt)} · {getOrderItemsLabel(order)} · {formatMoney(order.totalSum)}
+                    </p>
 
-                <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex h-8 items-center rounded-[6px] border border-border/70 px-3 text-[12px] font-semibold text-primary">
-                        {getOrderTypeLabel(order.orderType)}
-                    </span>
-                    <StatusBadge label={`Заказ: ${status.label}`} tone={status.tone}/>
-                    {paymentStatus && (
-                        <StatusBadge label={`Оплата: ${paymentStatus.label}`} tone={paymentStatus.tone}/>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="inline-flex min-h-7 items-center rounded-[6px] border border-border/70 px-2.5 py-1 text-[11px] font-semibold leading-4 text-primary">
+                            {getOrderTypeLabel(order.orderType)}
+                        </span>
+                        <StatusBadge label={`Заказ: ${status.label}`} tone={status.tone}/>
+                        {paymentStatus && (
+                            <StatusBadge label={`Оплата: ${paymentStatus.label}`} tone={paymentStatus.tone}/>
+                        )}
+                    </div>
+
+                    {canContinuePayment && onContinuePayment && (
+                        <button
+                            type="button"
+                            onClick={onContinuePayment}
+                            className="mt-4 inline-flex h-11 items-center justify-center gap-3 rounded-[6px] bg-primary px-4 text-[14px] font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5"
+                        >
+                            <WalletCards className="h-4 w-4" strokeWidth={1.8}/>
+                            Продолжить оплату
+                        </button>
                     )}
                 </div>
 
-                <div className="mt-6 grid overflow-hidden rounded-[8px] border border-border/70 sm:grid-cols-3">
-                    <OrderDetail
-                        icon={<CalendarDays className="h-4 w-4" strokeWidth={1.8}/>}
-                        label="Дата заказа"
-                        value={formatDateTime(order.createdAt)}
-                    />
-                    <OrderDetail
-                        icon={<Clock3 className="h-4 w-4" strokeWidth={1.8}/>}
-                        label="Ко времени"
-                        value={formatDateTime(order.completeBefore)}
-                    />
-                    <OrderDetail
-                        icon={<WalletCards className="h-4 w-4" strokeWidth={1.8}/>}
-                        label="Сумма"
-                        value={formatMoney(order.totalSum)}
-                    />
-                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        <OrderDetail
+                            icon={<CalendarDays className="h-3.5 w-3.5" strokeWidth={1.8}/>}
+                            label="Дата заказа"
+                            value={formatDateTime(order.createdAt)}
+                        />
+                        <OrderDetail
+                            icon={<Clock3 className="h-3.5 w-3.5" strokeWidth={1.8}/>}
+                            label="Ко времени"
+                            value={formatDateTime(order.completeBefore)}
+                        />
+                        <OrderDetail
+                            icon={<WalletCards className="h-3.5 w-3.5" strokeWidth={1.8}/>}
+                            label="Сумма"
+                            value={formatMoney(order.totalSum)}
+                        />
+                        <OrderDetail
+                            icon={<MapPin className="h-3.5 w-3.5" strokeWidth={1.8}/>}
+                            label={order.orderType === "delivery" ? "Доставка" : "Самовывоз"}
+                            value={getOrderPlaceLabel(order)}
+                        />
+                    </div>
 
-                <div className="mt-6 overflow-hidden rounded-[8px] border border-border/70">
-                    <div className="border-b border-border/55 px-4 py-4">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
-                            Состав
-                        </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                        <OrderInfoPill
+                            label="Телефон"
+                            value={order.phone || "Не указан"}
+                        />
+                        <OrderInfoPill
+                            label="Гостей"
+                            value={typeof order.guestsCount === "number" ? String(order.guestsCount) : "1"}
+                        />
+                        <OrderInfoPill
+                            label="Доставка"
+                            value={deliveryPrice !== null ? formatMoney(deliveryPrice) : "Без отдельной строки"}
+                        />
+                    </div>
+
+                <div className="mt-4 overflow-hidden rounded-[8px] border border-border/70">
+                    <div className="border-b border-border/55 px-4 py-3">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                Состав
+                            </p>
+                            <p className="text-[12px] font-semibold text-text/62">
+                                {getOrderItemsLabel(order)}
+                            </p>
+                        </div>
                     </div>
 
                     {items.length > 0 ? (
@@ -1077,20 +1383,20 @@ function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalPr
                                 return (
                                     <div
                                         key={`${item.productId ?? item.id ?? itemName}-${index}`}
-                                        className="flex gap-4 px-4 py-4"
+                                        className="flex gap-3 px-4 py-3"
                                     >
-                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[6px] border border-border/55 bg-black/25">
+                                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[6px] border border-border/55 bg-black/25 sm:h-18 sm:w-18">
                                             {image ? (
                                                 <Image
                                                     src={image}
                                                     alt={itemName}
                                                     fill
-                                                    sizes="80px"
+                                                    sizes="72px"
                                                     className="object-contain p-1"
                                                 />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center text-primary/70">
-                                                    <ImageIcon className="h-8 w-8" strokeWidth={1.5}/>
+                                                    <ImageIcon className="h-6 w-6" strokeWidth={1.5}/>
                                                 </div>
                                             )}
                                         </div>
@@ -1098,17 +1404,19 @@ function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalPr
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                                 <div className="min-w-0">
-                                                    <p className="wrap-break-word text-[15px] font-semibold leading-6 text-text">
+                                                    <p className="wrap-break-word text-[14px] font-semibold leading-5 text-text">
                                                         {itemName}
                                                     </p>
-                                                    <p className="mt-1 text-[12px] text-text/55">
-                                                        {quantity} шт.
-                                                        {typeof item.price === "number" ? ` x ${formatMoney(item.price)}` : ""}
-                                                    </p>
+                                                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-4 text-text/55">
+                                                        <span>{quantity} шт.</span>
+                                                        {typeof item.price === "number" && <span>{formatMoney(item.price)} за шт.</span>}
+                                                        {item.sizeName && <span>{item.sizeName}</span>}
+                                                        {item.sku && <span>SKU {item.sku}</span>}
+                                                    </div>
                                                 </div>
 
                                                 {typeof itemTotal === "number" && (
-                                                    <span className="shrink-0 text-[14px] font-semibold text-text">
+                                                    <span className="shrink-0 text-[13px] font-semibold text-text">
                                                         {formatMoney(itemTotal)}
                                                     </span>
                                                 )}
@@ -1118,14 +1426,22 @@ function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalPr
                                                 <div className="mt-3 space-y-1 text-[12px] leading-5 text-text/58">
                                                     {item.modifiers.map((modifier, modifierIndex) => {
                                                         const modifierMenuItem = getMenuItemForOrderItem(modifier, menuItemLookup);
+                                                        const modifierTotal = getOrderItemTotal(modifier);
 
                                                         return (
                                                             <p key={`${modifier.productId ?? modifier.id ?? modifierIndex}`}>
                                                                 + {getOrderItemName(modifier, modifierMenuItem)} · {getOrderItemQuantity(modifier)} шт.
+                                                                {typeof modifierTotal === "number" ? ` · ${formatMoney(modifierTotal)}` : ""}
                                                             </p>
                                                         );
                                                     })}
                                                 </div>
+                                            )}
+
+                                            {item.comment && (
+                                                <p className="mt-3 wrap-break-word text-[12px] leading-5 text-text/58">
+                                                    Комментарий: {item.comment}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
@@ -1133,24 +1449,54 @@ function OrderDetailsModal({order, menuItemLookup, onClose}: OrderDetailsModalPr
                             })}
                         </div>
                     ) : (
-                        <div className="px-4 py-5 text-[14px] leading-6 text-text/68">
+                        <div className="px-4 py-4 text-[13px] leading-5 text-text/68">
                             Состав заказа не пришел в ответе сервера.
                         </div>
                     )}
                 </div>
 
                 {order.comment && (
-                    <div className="mt-6 rounded-[8px] border border-border/70 px-4 py-4">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
+                    <div className="mt-4 rounded-[8px] border border-border/70 px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                             Комментарий
                         </p>
-                        <p className="mt-3 wrap-break-word text-[14px] leading-6 text-text/74">
+                        <p className="mt-2 wrap-break-word text-[13px] leading-5 text-text/74">
                             {order.comment}
                         </p>
                     </div>
                 )}
+
+                {order.orderType === "delivery" && getDeliveryAddressLabel(order) && (
+                    <div className="mt-4 rounded-[8px] border border-border/70 px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                            Адрес
+                        </p>
+                        <p className="mt-2 wrap-break-word text-[13px] leading-5 text-text/74">
+                            {getDeliveryAddressLabel(order)}
+                        </p>
+                    </div>
+                )}
+                </div>
             </div>
         </ModalSkeleton>
+    );
+}
+
+type OrderInfoPillProps = {
+    label: string;
+    value: string;
+};
+
+function OrderInfoPill({label, value}: OrderInfoPillProps) {
+    return (
+        <div className="rounded-[6px] border border-border/60 bg-black/15 px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                {label}
+            </p>
+            <p className="mt-1.5 wrap-break-word text-[12px] font-semibold leading-5 text-text">
+                {value}
+            </p>
+        </div>
     );
 }
 
@@ -1162,14 +1508,14 @@ type OrderDetailProps = {
 
 function OrderDetail({icon, label, value}: OrderDetailProps) {
     return (
-        <div className="border-b border-border/45 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-            <span className="mb-4 inline-flex text-primary">
+        <div className="min-w-0 rounded-[6px] border border-border/60 bg-black/15 px-3 py-2.5">
+            <span className="mb-2 inline-flex text-primary">
                 {icon}
             </span>
-            <p className="text-[12px] leading-none text-text/58">
+            <p className="text-[11px] leading-none text-text/58">
                 {label}
             </p>
-            <p className="mt-3 wrap-break-word text-[14px] font-semibold leading-6 text-text">
+            <p className="mt-2 wrap-break-word text-[12px] font-semibold leading-5 text-text">
                 {value}
             </p>
         </div>
@@ -1191,7 +1537,7 @@ type StatusBadgeProps = {
 
 function StatusBadge({label, tone}: StatusBadgeProps) {
     return (
-        <span className={`inline-flex min-h-8 max-w-full items-center rounded-[6px] border px-3 py-1 text-[12px] font-semibold leading-4 ${statusBadgeClasses[tone]}`}>
+        <span className={`inline-flex min-h-7 max-w-full items-center rounded-[6px] border px-2.5 py-1 text-[11px] font-semibold leading-4 ${statusBadgeClasses[tone]}`}>
             <span className="wrap-break-word">{label}</span>
         </span>
     );

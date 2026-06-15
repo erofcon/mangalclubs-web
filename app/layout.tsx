@@ -84,7 +84,6 @@ export default function RootLayout({
                         window.addEventListener("pageshow", function () {
                             if (getStorageValue(redirectStateKey) !== "left") return;
 
-                            removeStorageValue(returnKey);
                             removeStorageValue(redirectUrlKey);
                             removeStorageValue(redirectStateKey);
                             window.location.replace("/");

@@ -1,6 +1,6 @@
 import {apiFetch} from "@/utils/api";
 import {runWithAuthRefresh} from "@/utils/authenticated-api";
-import type {OrderCreationStatus, PaymentStatus} from "@/utils/orders";
+import type {OrderCreationStatus, OrderPayment, PaymentStatus} from "@/utils/orders";
 
 export type CustomerProfile = {
     id: string;
@@ -22,15 +22,49 @@ export type CustomerProfilePatch = {
 export type CustomerOrderItem = {
     id?: string;
     productId?: string;
+    productSizeId?: string;
     name?: string;
     productName?: string;
     title?: string;
+    image?: string;
+    imageUrl?: string;
+    productImage?: string;
+    sizeName?: string | null;
+    sku?: string | null;
+    comment?: string | null;
     amount?: number;
     quantity?: number;
     price?: number;
     sum?: number;
     total?: number;
     modifiers?: CustomerOrderItem[];
+    product?: {
+        name?: string;
+        title?: string;
+        image?: string;
+        imageUrl?: string;
+    };
+};
+
+export type CustomerDeliveryPoint = {
+    address?: {
+        city?: string;
+        street?: string | {
+            name?: string;
+            city?: string;
+        };
+        house?: string;
+        building?: string | null;
+        flat?: string | null;
+        entrance?: string | null;
+        floor?: string | null;
+        doorphone?: string | null;
+    };
+    comment?: string | null;
+    deliveryCalculation?: {
+        distanceKm?: number | null;
+        price?: number | null;
+    };
 };
 
 export type CustomerOrder = {
@@ -42,7 +76,7 @@ export type CustomerOrder = {
     comment?: string | null;
     completeBefore?: string | null;
     guestsCount?: number;
-    deliveryPoint?: unknown;
+    deliveryPoint?: CustomerDeliveryPoint | Record<string, unknown> | null;
     items?: CustomerOrderItem[];
     iikoOrderId?: string | null;
     iikoExternalNumber?: string | null;
@@ -50,6 +84,7 @@ export type CustomerOrder = {
     orderStatus?: string | null;
     paymentStatus?: PaymentStatus | string | null;
     paymentAmountKopecks?: number | null;
+    payment?: OrderPayment | null;
     notificationEvent?: "pickup_ready" | "delivery_on_way" | "delivery_delivered" | null;
     totalSum?: number | null;
     createdAt?: string;
@@ -63,6 +98,7 @@ export type CustomerOrderStatus = Partial<CustomerOrder> & {
     notificationEvent?: CustomerOrder["notificationEvent"];
     paymentStatus?: PaymentStatus | string | null;
     paymentAmountKopecks?: number | null;
+    payment?: OrderPayment | null;
     totalSum?: number | null;
 };
 
