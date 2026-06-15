@@ -38,7 +38,7 @@ type DateOption = {
 
 type CheckoutSuccess = {
     orderId: string;
-    orderNumber?: number;
+    publicNumber?: string;
     status?: string;
 };
 
@@ -603,9 +603,9 @@ export function CartDrawer() {
                             </div>
                             <p className="text-xl font-bold text-text">Заказ отправлен</p>
                             <p className="mt-2 max-w-80 text-sm leading-6 text-text/68">
-                                {checkoutSuccess.orderNumber
-                                    ? `Номер заказа: ${checkoutSuccess.orderNumber}.`
-                                    : `ID заказа: ${checkoutSuccess.orderId}.`}
+                                {checkoutSuccess.publicNumber
+                                    ? `Номер заказа: ${checkoutSuccess.publicNumber}.`
+                                    : "Номер заказа скоро появится."}
                                 {checkoutSuccess.status ? ` Статус: ${checkoutSuccess.status}.` : ""}
                             </p>
                         </div>

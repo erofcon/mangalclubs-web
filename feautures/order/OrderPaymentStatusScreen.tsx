@@ -190,6 +190,7 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
             : {label: "Ожидаем", tone: "progress" as const};
     const Icon = copy.icon;
     const isProgress = copy.tone === "progress" && !isPaymentFailed(status) && !isOrderSuccessful(status);
+    const publicOrderNumber = status?.publicNumber || "";
 
     const handleReturnToCart = () => {
         router.push("/");
@@ -226,7 +227,7 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
                     </p>
 
                     <div className="mt-8 grid gap-3 rounded-[8px] border border-border/70 bg-black/15 px-5 py-5 text-sm leading-6 sm:grid-cols-2">
-                        <StatusMeta label="ID заказа" value={orderId || "Не найден"}/>
+                        <StatusMeta label="Номер заказа" value={publicOrderNumber || "Уточняется"}/>
                         <StatusMeta
                             label="Статус оплаты"
                             value={paymentDescriptor.label}
@@ -242,7 +243,7 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
 
                     {!orderId && (
                         <div className="mt-5 rounded-[6px] border border-red-500/45 bg-red-500/10 px-4 py-3 text-sm font-medium leading-6 text-red-100">
-                            Не нашли локальный ID заказа. Вернитесь в корзину и попробуйте оформить заказ еще раз.
+                            Не нашли данные заказа. Вернитесь в корзину и попробуйте оформить заказ еще раз.
                         </div>
                     )}
 

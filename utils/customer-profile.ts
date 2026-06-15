@@ -69,6 +69,7 @@ export type CustomerDeliveryPoint = {
 
 export type CustomerOrder = {
     id: string;
+    publicNumber: string;
     organizationId: string;
     organizationSlug?: string;
     orderType?: "delivery" | "pickup";
@@ -93,6 +94,7 @@ export type CustomerOrder = {
 
 export type CustomerOrderStatus = Partial<CustomerOrder> & {
     id?: string;
+    publicNumber?: string | null;
     orderStatus?: string | null;
     creationStatus?: OrderCreationStatus | string | null;
     notificationEvent?: CustomerOrder["notificationEvent"];

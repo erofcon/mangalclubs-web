@@ -52,6 +52,7 @@ export type OrderCreatePayload = {
 
 export type OrderCreateOut = {
     id: string;
+    publicNumber: string;
     customerId?: string | null;
     correlationId?: string;
     organizationId: string;
@@ -100,7 +101,8 @@ export type OrderCreationStatus =
     | "Error";
 
 export type OrderStatusOut = {
-    id: string;
+    id?: string | null;
+    publicNumber?: string | null;
     correlationId?: string;
     organizationId?: string;
     organizationSlug?: string;

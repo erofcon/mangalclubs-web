@@ -25,6 +25,9 @@ type AuthStore = {
     isRequestingCode: boolean;
     isConfirmingCode: boolean;
     errorMessage: string | null;
+    otpRetryAfterSeconds: number;
+    otpRetryStartedAt: number | null;
+    otpResendAvailableAt: string | null;
 
     requestCode: (phone: string) => Promise<boolean>;
     confirmCode: (code: string) => Promise<boolean>;
@@ -41,6 +44,13 @@ type TokenPair = {
     token_type: string;
     expires_in: number;
     user: AuthUser;
+};
+
+type OtpRequested = {
+    ok: boolean;
+    message: string;
+    retry_after_seconds?: number;
+    resend_available_at?: string | null;
 };
 
 const DEVICE_ID_STORAGE_KEY = "mangalclubs-device-id";
@@ -93,6 +103,30 @@ const getDevicePayload = () => ({
     device_name: getDeviceName(),
 });
 
+const getSafeRetryAfterSeconds = (value: number | undefined) => {
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        return 0;
+    }
+
+    return Math.ceil(value);
+};
+
+const getAuthErrorMessage = (error: unknown, fallback: string) => {
+    if (!(error instanceof Error)) {
+        return fallback;
+    }
+
+    if (error.message === "Invalid or expired code") {
+        return "Неверный или просроченный код";
+    }
+
+    if (error.message === "Invalid phone number") {
+        return "Введите корректный номер телефона";
+    }
+
+    return error.message;
+};
+
 const applyTokenPair = (tokens: TokenPair) => ({
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
@@ -103,6 +137,9 @@ const applyTokenPair = (tokens: TokenPair) => ({
     pendingPhoneForApi: null,
     isAuthenticated: true,
     errorMessage: null,
+    otpRetryAfterSeconds: 0,
+    otpRetryStartedAt: null,
+    otpResendAvailableAt: null,
 });
 
 let refreshTokensPromise: Promise<boolean> | null = null;
@@ -121,6 +158,9 @@ export const useAuthStore = create<AuthStore>()(
             isRequestingCode: false,
             isConfirmingCode: false,
             errorMessage: null,
+            otpRetryAfterSeconds: 0,
+            otpRetryStartedAt: null,
+            otpResendAvailableAt: null,
 
             requestCode: async (phone) => {
                 const phoneForApi = normalizePhoneForApi(phone);
@@ -131,7 +171,7 @@ export const useAuthStore = create<AuthStore>()(
                 });
 
                 try {
-                    await apiFetch("/api/v1/auth/customer/otp/request", {
+                    const result = await apiFetch<OtpRequested>("/api/v1/auth/customer/otp/request", {
                         method: "POST",
                         body: JSON.stringify({
                             ...getDevicePayload(),
@@ -143,15 +183,16 @@ export const useAuthStore = create<AuthStore>()(
                         pendingPhone: phone,
                         pendingPhoneForApi: phoneForApi,
                         isRequestingCode: false,
+                        otpRetryAfterSeconds: getSafeRetryAfterSeconds(result.retry_after_seconds),
+                        otpRetryStartedAt: Date.now(),
+                        otpResendAvailableAt: result.resend_available_at ?? null,
                     });
 
                     return true;
                 } catch (error) {
                     set({
                         isRequestingCode: false,
-                        errorMessage: error instanceof Error
-                            ? error.message
-                            : "Не удалось отправить код",
+                        errorMessage: getAuthErrorMessage(error, "Не удалось отправить код"),
                     });
 
                     return false;
@@ -189,9 +230,7 @@ export const useAuthStore = create<AuthStore>()(
                 } catch (error) {
                     set({
                         isConfirmingCode: false,
-                        errorMessage: error instanceof Error
-                            ? error.message
-                            : "Не удалось подтвердить код",
+                        errorMessage: getAuthErrorMessage(error, "Не удалось подтвердить код"),
                     });
 
                     return false;
@@ -243,6 +282,9 @@ export const useAuthStore = create<AuthStore>()(
                     pendingPhone: null,
                     pendingPhoneForApi: null,
                     errorMessage: null,
+                    otpRetryAfterSeconds: 0,
+                    otpRetryStartedAt: null,
+                    otpResendAvailableAt: null,
                 }),
 
             clearError: () => set({errorMessage: null}),
@@ -260,6 +302,9 @@ export const useAuthStore = create<AuthStore>()(
                     isRequestingCode: false,
                     isConfirmingCode: false,
                     errorMessage: null,
+                    otpRetryAfterSeconds: 0,
+                    otpRetryStartedAt: null,
+                    otpResendAvailableAt: null,
                 }),
         }),
         {

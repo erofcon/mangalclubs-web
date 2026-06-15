@@ -4,44 +4,51 @@ import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useAuthStore} from "@/store/auth-store";
 import {useUIStore} from "@/store/ui-store";
 import {cancelPendingCartFlow, continuePendingCartFlow} from "@/store/cart-gate-store";
-import React, {ChangeEvent, KeyboardEvent, useEffect, useRef, useState} from "react";
+import React, {ChangeEvent, KeyboardEvent, useEffect, useMemo, useRef, useState} from "react";
 
 export function AuthCodeConfirm() {
     const isOpen = useUIStore((state) => state.isAuthCodeConfirmOpen);
     const closeAuthCodeConfirm = useUIStore((state) => state.closeAuthCodeConfirm);
     const pendingPhone = useAuthStore((state) => state.pendingPhone);
+    const requestCode = useAuthStore((state) => state.requestCode);
     const confirmCode = useAuthStore((state) => state.confirmCode);
     const clearPendingPhone = useAuthStore((state) => state.clearPendingPhone);
+    const isRequestingCode = useAuthStore((state) => state.isRequestingCode);
     const isConfirmingCode = useAuthStore((state) => state.isConfirmingCode);
     const errorMessage = useAuthStore((state) => state.errorMessage);
     const clearError = useAuthStore((state) => state.clearError);
+    const otpRetryAfterSeconds = useAuthStore((state) => state.otpRetryAfterSeconds);
+    const otpRetryStartedAt = useAuthStore((state) => state.otpRetryStartedAt);
 
     const [code, setCode] = useState(["", "", "", ""]);
     const [activeIndex, setActiveIndex] = useState(0);
-    const [isTimeout, setIsTimeout] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(30);
+    const [currentTime, setCurrentTime] = useState(() => Date.now());
+    const [codeInputKey, setCodeInputKey] = useState(0);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
     const enteredCode = code.join("");
-    const canConfirm = enteredCode.length === code.length && !isConfirmingCode;
+    const timeLeft = useMemo(() => {
+        if (!otpRetryStartedAt) {
+            return Math.max(0, otpRetryAfterSeconds);
+        }
+
+        const elapsedSeconds = Math.max(0, Math.floor((currentTime - otpRetryStartedAt) / 1000));
+
+        return Math.max(0, otpRetryAfterSeconds - elapsedSeconds);
+    }, [currentTime, otpRetryAfterSeconds, otpRetryStartedAt]);
+    const canConfirm = enteredCode.length === code.length && !isConfirmingCode && !isRequestingCode;
+    const canShowResend = timeLeft <= 0 && Boolean(pendingPhone);
+    const canResend = canShowResend && !isRequestingCode;
 
     useEffect(() => {
-        if (!isOpen || isTimeout) return;
+        if (!isOpen) return;
 
         const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    setIsTimeout(true);
-                    return 0;
-                }
-
-                return prev - 1;
-            });
+            setCurrentTime(Date.now());
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isOpen, isTimeout]);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -96,12 +103,32 @@ export function AuthCodeConfirm() {
         setActiveIndex(nextIndex);
     };
 
-    const resetTimer = () => {
+    const resetCodeInput = (shouldClearError = true) => {
         setCode(["", "", "", ""]);
         setActiveIndex(0);
-        setTimeLeft(30);
-        setIsTimeout(false);
-        clearError();
+        setCodeInputKey((value) => value + 1);
+
+        if (shouldClearError) {
+            clearError();
+        }
+
+        requestAnimationFrame(() => {
+            inputRefs.current[0]?.focus();
+        });
+    };
+
+    const handleResend = async () => {
+        if (!pendingPhone || !canResend) return;
+
+        resetCodeInput();
+
+        const isRequested = await requestCode(pendingPhone);
+
+        if (!isRequested) return;
+
+        requestAnimationFrame(() => {
+            inputRefs.current[0]?.focus();
+        });
     };
 
     const handleConfirm = async () => {
@@ -109,10 +136,13 @@ export function AuthCodeConfirm() {
 
         const isConfirmed = await confirmCode(enteredCode);
 
-        if (!isConfirmed) return;
+        if (!isConfirmed) {
+            resetCodeInput(false);
+            return;
+        }
 
         closeAuthCodeConfirm();
-        resetTimer();
+        resetCodeInput();
         continuePendingCartFlow();
     };
 
@@ -120,7 +150,7 @@ export function AuthCodeConfirm() {
         clearPendingPhone();
         cancelPendingCartFlow();
         closeAuthCodeConfirm();
-        resetTimer();
+        resetCodeInput();
     };
 
     if (!isOpen) return null;
@@ -146,7 +176,7 @@ export function AuthCodeConfirm() {
                         Код уже в пути! Проверьте Telegram или СМС на {pendingPhone}
                     </p>
 
-                    <div className="mt-9 flex w-full justify-center gap-2.5 sm:gap-3">
+                    <div key={codeInputKey} className="mt-9 flex w-full justify-center gap-2.5 sm:gap-3">
                         {code.map((digit, index) => (
                             <input
                                 key={index}
@@ -180,17 +210,15 @@ export function AuthCodeConfirm() {
                         </p>
                     )}
 
-                    {isTimeout ? (
-                        <div className="mt-8 text-center">
-                            <p className="text-xl font-semibold text-red-500">
-                                Время для ввода кода истекло. Попробуйте снова.
-                            </p>
+                    {canShowResend ? (
+                        <div className="mt-8 flex flex-col items-center gap-3 text-center">
                             <button
                                 type="button"
-                                onClick={resetTimer}
-                                className="cursor-pointer text-sm font-semibold text-primary underline"
+                                onClick={handleResend}
+                                disabled={isRequestingCode}
+                                className="cursor-pointer text-sm font-semibold text-primary underline disabled:pointer-events-none disabled:opacity-50"
                             >
-                                Нажмите для повторной отправки
+                                {isRequestingCode ? "Отправляем код..." : "Отправить код повторно"}
                             </button>
                         </div>
                     ) : (
@@ -206,7 +234,7 @@ export function AuthCodeConfirm() {
                     disabled={!canConfirm}
                     className="mt-4 h-12 w-full cursor-pointer rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    {isConfirmingCode ? "Проверяем код..." : "Подтвердить"}
+                    {isConfirmingCode ? "Проверяем код..." : isRequestingCode ? "Отправляем код..." : "Подтвердить"}
                 </button>
             </div>
         </ModalSkeleton>

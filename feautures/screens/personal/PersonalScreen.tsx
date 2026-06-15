@@ -160,7 +160,7 @@ const getOrderTypeLabel = (orderType?: CustomerOrder["orderType"]) => {
 };
 
 const getOrderNumber = (order: CustomerOrder) => (
-    order.iikoExternalNumber || order.id
+    order.publicNumber || order.iikoExternalNumber || order.id
 );
 
 const getShortOrderNumber = (order: CustomerOrder) => {
