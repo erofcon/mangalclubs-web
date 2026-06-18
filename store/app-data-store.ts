@@ -3,7 +3,6 @@ import {apiFetch} from "@/utils/api";
 import {normalizeMenu} from "@/utils/menu";
 import type {Category, MenuCategory} from "@/types/products";
 import type {Organization, OrganizationAvailability, WorkingHour} from "@/types/organization";
-import {Organizations as fallbackOrganizations, categories as fallbackCategories, menus as fallbackMenus} from "@/mocks/mocks-data";
 import {useOrderStore} from "@/store/order-store";
 
 type ApiOrganization = Omit<Organization, "schedule" | "working_hours"> & {
@@ -304,11 +303,11 @@ const loadAvailabilityMap = async (organizations: Organization[], signal?: Abort
 };
 
 export const useAppDataStore = create<AppDataStore>((set, get) => ({
-    organizations: fallbackOrganizations,
-    categories: fallbackCategories,
-    menu: normalizeMenu(fallbackMenus),
+    organizations: [],
+    categories: [],
+    menu: [],
     availabilityByOrganizationId: {},
-    defaultDeliveryOrganization: getDefaultDeliveryOrganization(fallbackOrganizations),
+    defaultDeliveryOrganization: null,
     isInitialized: false,
     isInitializing: false,
     isMenuLoading: false,

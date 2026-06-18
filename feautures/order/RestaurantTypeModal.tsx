@@ -29,7 +29,9 @@ export function RestaurantTypeModal() {
         firstAvailablePickupOrganization?.id ??
         pickupOrganizations[0]?.id;
     const activeOrganization = getOrganizationById(activeOrganizationId, pickupOrganizations);
-    const activeAvailability = getOrganizationAvailability(activeOrganization, availabilityByOrganizationId);
+    const activeAvailability = activeOrganization
+        ? getOrganizationAvailability(activeOrganization, availabilityByOrganizationId)
+        : undefined;
     const isActiveUnavailable = activeAvailability?.orders_available === false;
 
     const handleClose = () => {
@@ -38,7 +40,7 @@ export function RestaurantTypeModal() {
     };
 
     const handleSelect = () => {
-        if (isActiveUnavailable) return;
+        if (!activeOrganization || isActiveUnavailable) return;
 
         const isSelected = selectRestaurant(activeOrganization);
 
@@ -61,7 +63,7 @@ export function RestaurantTypeModal() {
                     <div
                         className="organization-choice-grid min-h-0 flex-1 content-start items-start overflow-y-auto pr-1">
                         {pickupOrganizations.map((organization) => {
-                            const isActive = organization.id === activeOrganization.id;
+                            const isActive = organization.id === activeOrganization?.id;
                             const availability = getOrganizationAvailability(organization, availabilityByOrganizationId);
                             const isUnavailable = availability?.orders_available === false;
 
@@ -96,12 +98,17 @@ export function RestaurantTypeModal() {
                                 </button>
                             );
                         })}
+                        {pickupOrganizations.length === 0 && (
+                            <div className="rounded-[6px] border border-border/60 px-4 py-5 text-[14px] leading-6 text-text/68">
+                                Рестораны для самовывоза пока не загружены.
+                            </div>
+                        )}
                     </div>
 
                     <button
                         type="button"
                         onClick={handleSelect}
-                        disabled={isActiveUnavailable}
+                        disabled={!activeOrganization || isActiveUnavailable}
                         className="mt-4 h-12 w-full shrink-0 cursor-pointer rounded-[6px] bg-primary text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                     >
                         Выбрать ресторан

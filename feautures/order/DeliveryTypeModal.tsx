@@ -4,10 +4,10 @@ import dynamic from "next/dynamic";
 import {ChangeEvent, useCallback, useEffect, useRef, useState} from "react";
 import {LoaderCircle, Navigation} from "lucide-react";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
+import {apiFetch} from "@/utils/api";
 import {useUIStore} from "@/store/ui-store";
 import {useOrderStore} from "@/store/order-store";
 import {useAppDataStore} from "@/store/app-data-store";
-import {primaryOrganization} from "@/utils/organizations";
 import {getOrganizationAvailability} from "@/utils/availability";
 import {continuePendingCartFlow} from "@/store/cart-gate-store";
 import {
@@ -120,6 +120,11 @@ const initialForm: DeliveryFormState = {
     comment: "",
 };
 
+const DEFAULT_DELIVERY_COORDINATES: CoordinatesState = {
+    latitude: 43.318746,
+    longitude: 45.698942,
+};
+
 function useGeolocation() {
     const [isLocating, setIsLocating] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
@@ -225,10 +230,13 @@ export function DeliveryTypeModal() {
     const closeOrderTypeModal = useUIStore((state) => state.closeOrderTypeModal);
     const selectedDelivery = useOrderStore((state) => state.delivery);
     const selectDelivery = useOrderStore((state) => state.selectDelivery);
-    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization) ?? primaryOrganization;
+    const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
     const availabilityByOrganizationId = useAppDataStore((state) => state.availabilityByOrganizationId);
-    const deliveryAvailability = getOrganizationAvailability(defaultDeliveryOrganization, availabilityByOrganizationId);
+    const deliveryAvailability = defaultDeliveryOrganization
+        ? getOrganizationAvailability(defaultDeliveryOrganization, availabilityByOrganizationId)
+        : undefined;
     const isDeliveryUnavailable = deliveryAvailability?.orders_available === false;
+    const initialMapCoordinates = defaultDeliveryOrganization?.coordinates ?? DEFAULT_DELIVERY_COORDINATES;
 
     const [form, setForm] = useState<DeliveryFormState>(() => (
         selectedDelivery
@@ -245,8 +253,8 @@ export function DeliveryTypeModal() {
             : initialForm
     ));
     const [mapCoordinates, setMapCoordinates] = useState<CoordinatesState>({
-        latitude: defaultDeliveryOrganization.coordinates.latitude,
-        longitude: defaultDeliveryOrganization.coordinates.longitude,
+        latitude: initialMapCoordinates.latitude,
+        longitude: initialMapCoordinates.longitude,
     });
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
@@ -314,8 +322,8 @@ export function DeliveryTypeModal() {
             setShouldCheckDelivery(false);
             setForm(initialForm);
             setMapCoordinates({
-                latitude: defaultDeliveryOrganization.coordinates.latitude,
-                longitude: defaultDeliveryOrganization.coordinates.longitude,
+                latitude: initialMapCoordinates.latitude,
+                longitude: initialMapCoordinates.longitude,
             });
             return;
         }
@@ -341,7 +349,7 @@ export function DeliveryTypeModal() {
             latitude: selectedDelivery.coordinates.latitude,
             longitude: selectedDelivery.coordinates.longitude,
         });
-    }, [defaultDeliveryOrganization, isOpen, selectedDelivery]);
+    }, [initialMapCoordinates.latitude, initialMapCoordinates.longitude, isOpen, selectedDelivery]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const applyResolvedAddress = useCallback((resolved: GeocodedAddress) => {
@@ -406,16 +414,10 @@ export function DeliveryTypeModal() {
                     lon: String(mapCoordinates.longitude),
                 });
 
-                const response = await fetch(`/api/geocode/search?${params}`, {
+                const resolved = await apiFetch<GeocodedAddress>("/api/v1/geocode/search", {
                     signal,
+                    params: Object.fromEntries(params.entries()),
                 });
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => null);
-                    throw new Error(error?.message || "Не удалось найти адрес. Если включен VPN, необходимо выключить.");
-                }
-
-                const resolved = (await response.json()) as GeocodedAddress;
 
                 if (signal.aborted) return;
 
@@ -484,7 +486,7 @@ export function DeliveryTypeModal() {
         checkDeliveryZone(
             {
                 coordinates: mapCoordinates,
-                organizationSlug: defaultDeliveryOrganization.slug,
+                organizationSlug: defaultDeliveryOrganization?.slug,
             },
             controller.signal,
         )
@@ -541,7 +543,7 @@ export function DeliveryTypeModal() {
         return () => controller.abort();
     }, [
         addressError,
-        defaultDeliveryOrganization.slug,
+        defaultDeliveryOrganization?.slug,
         isAddressFromCoordinates,
         isOpen,
         mapCoordinates,

@@ -5,12 +5,10 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import {ArrowLeft, Check, Clock, type LucideIcon, MapPin, MessageCircle, Phone} from "lucide-react";
-import {BookingMocks} from "@/mocks/mocks-data";
-import {formatOrganizationAddress, getOrganizationByIdOrSlug, getOrganizationWhatsappHref, getPhoneHref, isBookingInOrganization} from "@/utils/organizations";
+import {formatOrganizationAddress, getOrganizationByIdOrSlug, getOrganizationWhatsappHref, getPhoneHref} from "@/utils/organizations";
 import type {Organization} from "@/types/organization";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
-import {getBookingGalleryImages} from "@/utils/bookings";
 
 const YANDEX_MAPS_TERMS_URL = "https://yandex.ru/legal/maps_api/ru/";
 
@@ -26,11 +24,7 @@ type OrganizationPageContent = {
 };
 
 const getOrganizationImages = (organization: Organization) => {
-    const images = BookingMocks
-        .filter((booking) => isBookingInOrganization(booking, organization))
-        .flatMap((booking) => getBookingGalleryImages(booking));
-
-    return Array.from(new Set([organization.photo_url, ...images].filter(Boolean) as string[])).slice(0, 5);
+    return Array.from(new Set([organization.photo_url].filter(Boolean) as string[]));
 };
 
 export function OrganizationScreen() {
