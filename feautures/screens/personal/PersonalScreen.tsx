@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {type ChangeEvent, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState} from "react";
+import {type ChangeEvent, type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useRouter} from "next/navigation";
 import {
     Cake,
@@ -15,6 +15,7 @@ import {
     LogOut,
     Mail,
     MapPin,
+    Bell,
     PackageCheck,
     Phone,
     RefreshCw,
@@ -27,10 +28,12 @@ import {
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import {useAppDataStore} from "@/store/app-data-store";
 import {useAuthStore} from "@/store/auth-store";
+import {useNotificationStore} from "@/store/notification-store";
 import {useUIStore} from "@/store/ui-store";
 import type {MenuCategory, MenuItem} from "@/types/products";
 import {
     deleteCustomerAvatar,
+    deleteCustomerProfile,
     getCurrentCustomerOrders,
     getCustomerOrderStatus,
     getCustomerProfile,
@@ -53,6 +56,10 @@ import {
     PAYMENT_REDIRECT_URL_STORAGE_KEY,
 } from "@/utils/payment-return";
 import {LAST_ORDER_ID_STORAGE_KEY} from "@/utils/orders";
+import {
+    getCustomerUnreadNotifications,
+    type CustomerOrderNotification,
+} from "@/utils/notifications";
 
 type ActiveTab = "info" | "orders";
 
@@ -67,6 +74,8 @@ const initialForm: ProfileFormState = {
     email: "",
     birthday: "",
 };
+
+const ORDER_NOTIFICATIONS_POLL_INTERVAL_MS = 30_000;
 
 const supportedAvatarTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -377,10 +386,12 @@ export function PersonalScreen() {
     const [form, setForm] = useState<ProfileFormState>(initialForm);
     const [currentOrders, setCurrentOrders] = useState<CustomerOrder[]>([]);
     const [historyOrders, setHistoryOrders] = useState<CustomerOrder[]>([]);
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [refreshingOrderIds, setRefreshingOrderIds] = useState<string[]>([]);
     const [message, setMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
@@ -389,8 +400,14 @@ export function PersonalScreen() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const setUser = useAuthStore((state) => state.setUser);
     const logout = useAuthStore((state) => state.logout);
+    const unreadNotifications = useNotificationStore((state) => state.unreadNotifications);
+    const setUnreadNotifications = useNotificationStore((state) => state.setUnreadNotifications);
+    const clearUnreadNotifications = useNotificationStore((state) => state.clearUnreadNotifications);
+    const markOrderNotificationsRead = useNotificationStore((state) => state.markOrderRead);
     const openAuthModal = useUIStore((state) => state.openAuthModal);
     const router = useRouter();
+    const seenNotificationIdsRef = useRef<Set<string>>(new Set());
+    const hasLoadedNotificationsRef = useRef(false);
 
     const syncProfile = useCallback((nextProfile: CustomerProfile) => {
         setProfile(nextProfile);
@@ -405,12 +422,79 @@ export function PersonalScreen() {
         });
     }, [setUser]);
 
+    const showBrowserNotifications = useCallback((notifications: CustomerOrderNotification[]) => {
+        if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") {
+            return;
+        }
+
+        notifications.forEach((notification) => {
+            const browserNotification = new Notification(notification.title, {
+                body: notification.body,
+                tag: `order-${notification.orderId}-${notification.eventType}`,
+                icon: "/logo.png",
+            });
+
+            browserNotification.onclick = () => {
+                window.focus();
+                setActiveTab("orders");
+            };
+        });
+    }, []);
+
+    const syncUnreadNotifications = useCallback((nextNotifications: CustomerOrderNotification[]) => {
+        const nextSeenIds = new Set(seenNotificationIdsRef.current);
+        const newNotifications = nextNotifications.filter((notification) => !nextSeenIds.has(notification.id));
+
+        nextNotifications.forEach((notification) => {
+            nextSeenIds.add(notification.id);
+        });
+
+        seenNotificationIdsRef.current = nextSeenIds;
+        setUnreadNotifications(nextNotifications);
+
+        if (hasLoadedNotificationsRef.current && newNotifications.length > 0) {
+            showBrowserNotifications(newNotifications);
+        }
+
+        hasLoadedNotificationsRef.current = true;
+    }, [setUnreadNotifications, showBrowserNotifications]);
+
+    const loadUnreadNotifications = useCallback(async () => {
+        if (!accessToken || !isAuthenticated) {
+            seenNotificationIdsRef.current = new Set();
+            hasLoadedNotificationsRef.current = false;
+            clearUnreadNotifications();
+            return;
+        }
+
+        const unread = await getCustomerUnreadNotifications(accessToken);
+
+        syncUnreadNotifications(unread.notifications);
+    }, [accessToken, clearUnreadNotifications, isAuthenticated, syncUnreadNotifications]);
+
+    const loadPersonalUpdates = useCallback(async () => {
+        if (!accessToken || !isAuthenticated) return;
+
+        const [nextCurrentOrders, nextHistoryOrders, nextUnreadNotifications] = await Promise.all([
+            getCurrentCustomerOrders(accessToken),
+            getHistoryCustomerOrders(accessToken),
+            getCustomerUnreadNotifications(accessToken),
+        ]);
+
+        setCurrentOrders(nextCurrentOrders);
+        setHistoryOrders(nextHistoryOrders);
+        syncUnreadNotifications(nextUnreadNotifications.notifications);
+    }, [accessToken, isAuthenticated, syncUnreadNotifications]);
+
     const loadPersonalData = useCallback(async () => {
         if (!accessToken || !isAuthenticated) {
             setIsLoading(false);
             setProfile(null);
             setCurrentOrders([]);
             setHistoryOrders([]);
+            clearUnreadNotifications();
+            seenNotificationIdsRef.current = new Set();
+            hasLoadedNotificationsRef.current = false;
             return;
         }
 
@@ -419,26 +503,37 @@ export function PersonalScreen() {
         setMessage("");
 
         try {
-            const [nextProfile, nextCurrentOrders, nextHistoryOrders] = await Promise.all([
+            const [nextProfile, nextCurrentOrders, nextHistoryOrders, nextUnreadNotifications] = await Promise.all([
                 getCustomerProfile(accessToken),
                 getCurrentCustomerOrders(accessToken),
                 getHistoryCustomerOrders(accessToken),
+                getCustomerUnreadNotifications(accessToken),
             ]);
 
             syncProfile(nextProfile);
             setCurrentOrders(nextCurrentOrders);
             setHistoryOrders(nextHistoryOrders);
+            syncUnreadNotifications(nextUnreadNotifications.notifications);
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : "Не удалось загрузить личный кабинет.");
         } finally {
             setIsLoading(false);
         }
-    }, [accessToken, isAuthenticated, syncProfile]);
+    }, [accessToken, clearUnreadNotifications, isAuthenticated, syncProfile, syncUnreadNotifications]);
 
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         void loadPersonalData();
     }, [loadPersonalData]);
+
+    useEffect(() => {
+        if (typeof window === "undefined" || !("Notification" in window)) {
+            setNotificationPermission("unsupported");
+            return;
+        }
+
+        setNotificationPermission(Notification.permission);
+    }, []);
 
     useEffect(() => {
         const handlePageShow = (event: PageTransitionEvent) => {
@@ -453,9 +548,35 @@ export function PersonalScreen() {
             window.removeEventListener("pageshow", handlePageShow);
         };
     }, [loadPersonalData]);
+
+    useEffect(() => {
+        if (!accessToken || !isAuthenticated) return;
+
+        const intervalId = window.setInterval(() => {
+            void loadPersonalUpdates().catch(() => {
+                // Ignore transient polling errors; the full profile refresh still reports failures.
+            });
+        }, ORDER_NOTIFICATIONS_POLL_INTERVAL_MS);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [accessToken, isAuthenticated, loadPersonalUpdates]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const avatarSrc = useMemo(() => getAvatarSrc(profile?.avatarUrl), [profile?.avatarUrl]);
+    const unreadNotificationsByOrderId = useMemo(() => {
+        const lookup = new Map<string, CustomerOrderNotification[]>();
+
+        unreadNotifications.forEach((notification) => {
+            const current = lookup.get(notification.orderId) ?? [];
+
+            lookup.set(notification.orderId, [...current, notification]);
+        });
+
+        return lookup;
+    }, [unreadNotifications]);
+    const unreadNotificationsCount = unreadNotifications.length;
     const displayedCurrentOrders = useMemo(
         () => currentOrders.filter((order) => !shouldShowOrderInHistory(order)),
         [currentOrders],
@@ -469,9 +590,63 @@ export function PersonalScreen() {
         return [...movedToHistory, ...historyOrders];
     }, [currentOrders, historyOrders]);
 
+    const handleRequestNotificationPermission = async () => {
+        if (typeof window === "undefined" || !("Notification" in window)) {
+            setNotificationPermission("unsupported");
+            setErrorMessage("Ваш браузер не поддерживает системные уведомления.");
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+
+        setNotificationPermission(permission);
+
+        if (permission === "granted") {
+            setMessage("Уведомления браузера включены для новых статусов заказа.");
+            setErrorMessage("");
+        } else if (permission === "denied") {
+            setErrorMessage("Уведомления заблокированы в настройках браузера.");
+            setMessage("");
+        }
+    };
+
+    const handleOpenOrder = async (order: CustomerOrder) => {
+        setActiveTab("orders");
+
+        if (!accessToken || !unreadNotificationsByOrderId.has(order.id)) return;
+
+        try {
+            await markOrderNotificationsRead(order.id, accessToken);
+        } catch {
+            void loadUnreadNotifications().catch(() => undefined);
+        }
+    };
+
     const handleLogout = () => {
         logout();
         router.replace("/");
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!accessToken || isDeletingAccount) return;
+
+        const confirmed = window.confirm("Удалить аккаунт? Это действие нельзя отменить.");
+
+        if (!confirmed) return;
+
+        setIsDeletingAccount(true);
+        setMessage("");
+        setErrorMessage("");
+
+        try {
+            await deleteCustomerProfile(accessToken);
+            logout();
+            router.replace("/");
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : "Не удалось удалить аккаунт.");
+        } finally {
+            setIsDeletingAccount(false);
+        }
     };
 
     const handleFormChange =
@@ -681,6 +856,7 @@ export function PersonalScreen() {
                                 <TabButton
                                     isActive={activeTab === "orders"}
                                     onClick={() => setActiveTab("orders")}
+                                    badgeCount={unreadNotificationsCount}
                                 >
                                     Заказы
                                 </TabButton>
@@ -721,7 +897,12 @@ export function PersonalScreen() {
                             <OrdersSection
                                 currentOrders={displayedCurrentOrders}
                                 historyOrders={displayedHistoryOrders}
+                                unreadNotificationsByOrderId={unreadNotificationsByOrderId}
+                                unreadNotificationsCount={unreadNotificationsCount}
+                                notificationPermission={notificationPermission}
                                 refreshingOrderIds={refreshingOrderIds}
+                                onRequestNotificationPermission={handleRequestNotificationPermission}
+                                onOpenOrder={handleOpenOrder}
                                 onRefreshOrderStatus={handleRefreshOrderStatus}
                                 onContinuePayment={handleContinuePayment}
                             />
@@ -737,10 +918,25 @@ export function PersonalScreen() {
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="flex h-12 w-full items-center justify-center gap-3 rounded-[6px] border border-border/70 px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                                disabled={isDeletingAccount}
+                                className="flex h-12 w-full items-center justify-center gap-3 rounded-[6px] border border-border/70 px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                             >
                                 <LogOut className="h-4 w-4" strokeWidth={1.8}/>
                                 Выйти
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={isDeletingAccount}
+                                className="flex h-12 w-full items-center justify-center gap-3 rounded-[6px] border border-red-500/45 px-5 text-[14px] font-semibold text-red-200 transition duration-300 hover:-translate-y-0.5 hover:border-red-400 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                            >
+                                {isDeletingAccount ? (
+                                    <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.8}/>
+                                ) : (
+                                    <Trash2 className="h-4 w-4" strokeWidth={1.8}/>
+                                )}
+                                Удалить аккаунт
                             </button>
                         </div>
                     </aside>
@@ -754,22 +950,34 @@ type TabButtonProps = {
     children: string;
     isActive: boolean;
     onClick: () => void;
+    badgeCount?: number;
 };
 
-function TabButton({children, isActive, onClick}: TabButtonProps) {
+function TabButton({children, isActive, onClick, badgeCount = 0}: TabButtonProps) {
     return (
         <button
             type="button"
             onClick={onClick}
             className={[
-                "flex h-11 w-full cursor-pointer items-center justify-between rounded-[6px] border px-4 text-left text-[14px] font-semibold transition duration-300",
+                "flex h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-[6px] border px-4 text-left text-[14px] font-semibold transition duration-300",
                 isActive
                     ? "border-primary bg-primary text-on-primary"
                     : "border-border/70 text-text hover:border-primary hover:text-primary",
             ].join(" ")}
         >
-            {children}
-            <span className={isActive ? "h-1.5 w-1.5 rounded-full bg-on-primary" : "h-1.5 w-1.5 rounded-full bg-primary/55"}/>
+            <span>{children}</span>
+            {badgeCount > 0 ? (
+                <span
+                    className={[
+                        "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[11px] font-bold leading-none",
+                        isActive ? "bg-background text-primary" : "bg-primary text-on-primary",
+                    ].join(" ")}
+                >
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                </span>
+            ) : (
+                <span className={isActive ? "h-1.5 w-1.5 rounded-full bg-on-primary" : "h-1.5 w-1.5 rounded-full bg-primary/55"}/>
+            )}
         </button>
     );
 }
@@ -971,7 +1179,12 @@ function ProfileValue({icon, label, value}: ProfileValueProps) {
 type OrdersSectionProps = {
     currentOrders: CustomerOrder[];
     historyOrders: CustomerOrder[];
+    unreadNotificationsByOrderId: Map<string, CustomerOrderNotification[]>;
+    unreadNotificationsCount: number;
+    notificationPermission: NotificationPermission | "unsupported";
     refreshingOrderIds: string[];
+    onRequestNotificationPermission: () => void;
+    onOpenOrder: (order: CustomerOrder) => void;
     onRefreshOrderStatus: (orderId: string) => void;
     onContinuePayment: (order: CustomerOrder) => void;
 };
@@ -979,7 +1192,12 @@ type OrdersSectionProps = {
 function OrdersSection({
                            currentOrders,
                            historyOrders,
+                           unreadNotificationsByOrderId,
+                           unreadNotificationsCount,
+                           notificationPermission,
                            refreshingOrderIds,
+                           onRequestNotificationPermission,
+                           onOpenOrder,
                            onRefreshOrderStatus,
                            onContinuePayment,
                        }: OrdersSectionProps) {
@@ -989,23 +1207,37 @@ function OrdersSection({
 
     return (
         <>
+            <OrderNotificationsPanel
+                unreadNotificationsCount={unreadNotificationsCount}
+                notificationPermission={notificationPermission}
+                onRequestNotificationPermission={onRequestNotificationPermission}
+            />
+
             <OrderBlock
                 title="Текущие заказы"
                 eyebrow="Сейчас"
                 emptyText="Когда появится новый заказ, его статус можно будет отслеживать здесь."
             >
                 {currentOrders.length > 0 ? (
-                    currentOrders.map((order) => (
-                        <OrderCard
-                            key={order.id}
-                            order={order}
-                            menuItemLookup={menuItemLookup}
-                            isRefreshing={refreshingOrderIds.includes(order.id)}
-                            onOpen={() => setSelectedOrder(order)}
-                            onRefreshStatus={() => onRefreshOrderStatus(order.id)}
-                            onContinuePayment={() => onContinuePayment(order)}
-                        />
-                    ))
+                    currentOrders.map((order) => {
+                        const orderNotifications = unreadNotificationsByOrderId.get(order.id) ?? [];
+
+                        return (
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                menuItemLookup={menuItemLookup}
+                                unreadNotifications={orderNotifications}
+                                isRefreshing={refreshingOrderIds.includes(order.id)}
+                                onOpen={() => {
+                                    setSelectedOrder(order);
+                                    void onOpenOrder(order);
+                                }}
+                                onRefreshStatus={() => onRefreshOrderStatus(order.id)}
+                                onContinuePayment={() => onContinuePayment(order)}
+                            />
+                        );
+                    })
                 ) : (
                     <EmptyOrdersState/>
                 )}
@@ -1017,14 +1249,22 @@ function OrdersSection({
                 emptyText="Завершенные заказы будут храниться здесь."
             >
                 {historyOrders.length > 0 ? (
-                    historyOrders.map((order) => (
-                        <OrderCard
-                            key={order.id}
-                            order={order}
-                            menuItemLookup={menuItemLookup}
-                            onOpen={() => setSelectedOrder(order)}
-                        />
-                    ))
+                    historyOrders.map((order) => {
+                        const orderNotifications = unreadNotificationsByOrderId.get(order.id) ?? [];
+
+                        return (
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                menuItemLookup={menuItemLookup}
+                                unreadNotifications={orderNotifications}
+                                onOpen={() => {
+                                    setSelectedOrder(order);
+                                    void onOpenOrder(order);
+                                }}
+                            />
+                        );
+                    })
                 ) : null}
             </OrderBlock>
 
@@ -1090,9 +1330,69 @@ function EmptyOrdersState() {
     );
 }
 
+type OrderNotificationsPanelProps = {
+    unreadNotificationsCount: number;
+    notificationPermission: NotificationPermission | "unsupported";
+    onRequestNotificationPermission: () => void;
+};
+
+function OrderNotificationsPanel({
+                                     unreadNotificationsCount,
+                                     notificationPermission,
+                                     onRequestNotificationPermission,
+                                 }: OrderNotificationsPanelProps) {
+    const canRequestNotifications = notificationPermission === "default";
+    const isNotificationsEnabled = notificationPermission === "granted";
+
+    return (
+        <section className="rounded-[8px] border border-border/70 px-5 py-4 text-text sm:px-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] border border-primary/45 bg-primary/10 text-primary">
+                        <Bell className="h-5 w-5" strokeWidth={1.8}/>
+                    </span>
+                    <div className="min-w-0">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">
+                            Уведомления
+                        </p>
+                        <p className="mt-1 wrap-break-word text-[14px] font-semibold leading-5 text-text">
+                            {unreadNotificationsCount > 0
+                                ? `${unreadNotificationsCount.toLocaleString("ru-RU")} новых по заказам`
+                                : "Новых уведомлений нет"}
+                        </p>
+                    </div>
+                </div>
+
+                {canRequestNotifications ? (
+                    <button
+                        type="button"
+                        onClick={onRequestNotificationPermission}
+                        className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px] font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                    >
+                        <Bell className="h-4 w-4" strokeWidth={1.8}/>
+                        Включить в браузере
+                    </button>
+                ) : (
+                    <span
+                        className={[
+                            "inline-flex min-h-8 shrink-0 items-center rounded-[6px] border px-3 py-1 text-[12px] font-semibold",
+                            isNotificationsEnabled
+                                ? "border-emerald-400/35 bg-emerald-500/12 text-emerald-100"
+                                : "border-border/70 bg-white/[0.04] text-text/64",
+                        ].join(" ")}
+                    >
+                        {isNotificationsEnabled ? "Браузер включен" : "Только в профиле"}
+                    </span>
+                )}
+            </div>
+        </section>
+    );
+}
+
 type OrderCardProps = {
     order: CustomerOrder;
     menuItemLookup: Map<string, MenuItem>;
+    unreadNotifications?: CustomerOrderNotification[];
     isRefreshing?: boolean;
     onOpen: () => void;
     onRefreshStatus?: () => void;
@@ -1102,20 +1402,26 @@ type OrderCardProps = {
 function OrderCard({
                        order,
                        menuItemLookup,
+                       unreadNotifications = [],
                        isRefreshing = false,
                        onOpen,
                        onRefreshStatus,
                        onContinuePayment,
                    }: OrderCardProps) {
-    const items = order.items ?? [];
     const status = getCustomerOrderStatusDescriptor(order);
     const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
     const canContinuePayment = canContinueOrderPayment(order);
     const itemsCount = getOrderItemsCount(order);
     const deliveryPrice = getDeliveryPrice(order);
+    const hasUnreadNotifications = unreadNotifications.length > 0;
 
     return (
-        <article className="px-5 py-5 transition duration-300 hover:bg-white/[0.025] sm:px-6">
+        <article
+            className={[
+                "px-5 py-5 transition duration-300 hover:bg-white/[0.025] sm:px-6",
+                hasUnreadNotifications ? "bg-primary/[0.055] shadow-[inset_4px_0_0_rgba(236,172,24,0.95)]" : "",
+            ].join(" ")}
+        >
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                 <button
                     type="button"
@@ -1132,11 +1438,7 @@ function OrderCard({
                         )}
                     </div>
 
-                    <div className="mt-4 flex min-w-0 gap-4">
-                        <OrderPreviewImages
-                            items={items}
-                            menuItemLookup={menuItemLookup}
-                        />
+                    <div className="mt-4 min-w-0">
                         <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-start gap-3">
                                 <div className="min-w-0 flex-1">
@@ -1205,65 +1507,6 @@ function OrderCard({
                 )}
             </div>
         </article>
-    );
-}
-
-type OrderPreviewImagesProps = {
-    items: CustomerOrderItem[];
-    menuItemLookup: Map<string, MenuItem>;
-};
-
-function OrderPreviewImages({items, menuItemLookup}: OrderPreviewImagesProps) {
-    const previewItems = items.slice(0, 3);
-    const hiddenCount = Math.max(items.length - previewItems.length, 0);
-
-    if (previewItems.length === 0) {
-        return (
-            <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[6px] border border-border/55 bg-black/20 text-primary/70 sm:h-20 sm:w-20">
-                <ImageIcon className="h-7 w-7" strokeWidth={1.5}/>
-            </div>
-        );
-    }
-
-    return (
-        <div className="grid h-18 w-18 shrink-0 grid-cols-2 gap-1 sm:h-20 sm:w-20">
-            {previewItems.map((item, index) => {
-                const menuItem = getMenuItemForOrderItem(item, menuItemLookup);
-                const itemName = getOrderItemName(item, menuItem);
-                const image = getOrderItemImage(item, menuItem);
-                const isLastWithHidden = index === previewItems.length - 1 && hiddenCount > 0;
-
-                return (
-                    <div
-                        key={`${item.productId ?? item.id ?? itemName}-${index}`}
-                        className={[
-                            "relative overflow-hidden rounded-[6px] border border-border/55 bg-black/25",
-                            previewItems.length === 1 ? "col-span-2 row-span-2" : "",
-                            previewItems.length === 2 && index === 0 ? "row-span-2" : "",
-                        ].join(" ")}
-                    >
-                        {image ? (
-                            <Image
-                                src={image}
-                                alt={itemName}
-                                fill
-                                sizes="80px"
-                                className="object-cover"
-                            />
-                        ) : (
-                            <div className="flex h-full w-full items-center justify-center text-primary/70">
-                                <ImageIcon className="h-5 w-5" strokeWidth={1.5}/>
-                            </div>
-                        )}
-                        {isLastWithHidden && (
-                            <span className="absolute inset-0 flex items-center justify-center bg-black/62 text-[12px] font-semibold text-white">
-                                +{hiddenCount}
-                            </span>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
     );
 }
 

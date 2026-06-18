@@ -12,7 +12,7 @@ import {
 } from "@/utils/organizations";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
-import {getBookingGalleryImages, loadBooking} from "@/utils/bookings";
+import {getBookingResponsiveImages, loadBooking} from "@/utils/bookings";
 import type {Booking} from "@/types/booking";
 import type {Organization} from "@/types/organization";
 
@@ -34,8 +34,11 @@ export function BookingSelectedScreen() {
     const [errorMessage, setErrorMessage] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const galleryImages = useMemo(() => getBookingGalleryImages(booking), [booking]);
-    const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
+    const isDesktopGallery = useMediaQuery("(min-width: 1024px)");
+    const responsiveImages = useMemo(() => getBookingResponsiveImages(booking), [booking]);
+    const galleryImages = isDesktopGallery ? responsiveImages.desktopImages : responsiveImages.mobileImages;
+    const normalizedSelectedImageIndex = Math.min(selectedImageIndex, Math.max(galleryImages.length - 1, 0));
+    const selectedImage = galleryImages[normalizedSelectedImageIndex] ?? galleryImages[0];
     const imageLightbox = useImageLightbox({
         images: galleryImages,
         alt: booking?.title ?? "Зона бронирования",
@@ -167,7 +170,7 @@ export function BookingSelectedScreen() {
                         {selectedImage && (
                             <button
                                 type="button"
-                                onClick={() => imageLightbox.open(selectedImageIndex)}
+                                onClick={() => imageLightbox.open(normalizedSelectedImageIndex)}
                                 className="relative mt-10 block aspect-[16/10] w-full overflow-hidden rounded-[8px] border border-border/70 bg-black text-left"
                                 aria-label="Открыть фото на весь экран"
                             >
@@ -185,7 +188,7 @@ export function BookingSelectedScreen() {
                         {galleryImages.length > 1 && (
                             <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
                                 {galleryImages.map((image, index) => {
-                                    const isSelected = selectedImageIndex === index;
+                                    const isSelected = normalizedSelectedImageIndex === index;
 
                                     return (
                                         <button
@@ -392,4 +395,22 @@ function getBookingOrganizationInfo(booking: Booking, organizations: Organizatio
         phone,
         address: organization ? formatOrganizationAddress(organization) : undefined,
     };
+}
+
+function useMediaQuery(query: string) {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const mediaQueryList = window.matchMedia(query);
+        const handleChange = () => setMatches(mediaQueryList.matches);
+
+        handleChange();
+        mediaQueryList.addEventListener("change", handleChange);
+
+        return () => {
+            mediaQueryList.removeEventListener("change", handleChange);
+        };
+    }, [query]);
+
+    return matches;
 }

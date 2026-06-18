@@ -55,6 +55,7 @@ export function RestaurantTypeModal() {
             isOpen={isOpen}
             onClose={handleClose}
             organization={activeOrganization}
+            size="delivery"
             action={(
                 <div className="flex min-h-0 flex-1 flex-col">
                     <div

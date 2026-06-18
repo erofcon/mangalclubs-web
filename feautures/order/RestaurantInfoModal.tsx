@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import {ReactNode} from "react";
+import clsx from "clsx";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import type {Organization} from "@/types/organization";
 
@@ -10,6 +11,7 @@ type RestaurantInfoModalProps = {
     onClose: () => void;
     organization: Organization;
     action?: ReactNode;
+    size?: "default" | "delivery";
 };
 
 export function RestaurantInfoModal({
@@ -17,6 +19,7 @@ export function RestaurantInfoModal({
                                         onClose,
                                         organization,
                                         action,
+                                        size = "default",
                                     }: RestaurantInfoModalProps) {
     if (!isOpen) return null;
 
@@ -25,11 +28,29 @@ export function RestaurantInfoModal({
     return (
         <ModalSkeleton
             onClose={onClose}
-            className="h-dvh w-full max-w-4xl p-0 sm:h-120 sm:w-[calc(100vw-32px)]"
+            className={clsx(
+                "h-dvh w-full p-0 sm:w-[calc(100vw-32px)]",
+                size === "delivery"
+                    ? "sm:h-140 sm:max-w-225"
+                    : "sm:h-120 sm:max-w-4xl",
+            )}
         >
             <div
-                className="flex h-full flex-col overflow-hidden border-border bg-background sm:flex-row sm:rounded-[8px] sm:border">
-                <div className="order-2 flex min-h-0 flex-1 flex-col p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8">
+                className={clsx(
+                    "flex h-full flex-col w-full overflow-hidden border-border bg-background",
+                    size === "delivery"
+                        ? "sm:rounded-lg sm:border md:flex-row"
+                        : "sm:flex-row sm:rounded-[8px] sm:border",
+                )}
+            >
+                <div
+                    className={clsx(
+                        "order-2 flex min-h-0 flex-1 flex-col",
+                        size === "delivery"
+                            ? "border-t border-border px-4 py-5 sm:px-6 sm:py-6 md:order-1 md:w-[50%] md:flex-none md:border-t-0 md:border-r md:px-8 md:py-8 lg:px-10 lg:py-10"
+                            : "p-5 sm:order-1 sm:w-[42%] sm:flex-none sm:p-8",
+                    )}
+                >
                     <div className="space-y-5 text-text">
                         <div>
                             <div className="flex items-end gap-2">
@@ -60,7 +81,14 @@ export function RestaurantInfoModal({
                     ) : null}
                 </div>
 
-                <div className="order-1 h-[60dvh] min-h-80 w-full shrink-0 sm:order-2 sm:h-full sm:min-h-0 sm:flex-1">
+                <div
+                    className={clsx(
+                        "order-1 w-full shrink-0",
+                        size === "delivery"
+                            ? "h-[40dvh] min-h-80 md:order-2 md:h-full md:flex-1"
+                            : "h-[60dvh] min-h-80 sm:order-2 sm:h-full sm:min-h-0 sm:flex-1",
+                    )}
+                >
                     <iframe
                         key={organization.id}
                         title={`Карта ${organization.name}`}

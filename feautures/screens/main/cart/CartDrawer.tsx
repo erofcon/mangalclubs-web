@@ -565,7 +565,7 @@ export function CartDrawer() {
             />
 
             <div
-                className={`fixed top-0 right-0 z-100 flex h-full w-full flex-col border-border bg-background transition-transform duration-300 md:w-112.5 md:border-l ${
+                className={`fixed inset-y-0 right-0 z-100 flex h-dvh w-full flex-col overflow-hidden border-border bg-background transition-transform duration-300 md:w-112.5 md:border-l ${
                     isOpen ? "translate-x-0" : "translate-x-full"
                 }`}
             >
@@ -595,9 +595,9 @@ export function CartDrawer() {
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-5 md:px-8">
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 md:px-8">
                     {checkoutSuccess ? (
-                        <div className="flex h-full flex-col items-center justify-center text-center text-text">
+                        <div className="flex min-h-full flex-col items-center justify-center text-center text-text">
                             <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-[8px] border border-primary/55 bg-primary/10">
                                 <CheckCircle2 size={48} className="text-primary" strokeWidth={1.5}/>
                             </div>
@@ -610,7 +610,7 @@ export function CartDrawer() {
                             </p>
                         </div>
                     ) : items.length === 0 ? (
-                        <div className="flex h-full flex-col items-center justify-center text-center text-text">
+                        <div className="flex min-h-full flex-col items-center justify-center text-center text-text">
                             <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-[8px] border border-border">
                                 <ShoppingBag size={48} className="text-primary" strokeWidth={1.5}/>
                             </div>
@@ -621,10 +621,11 @@ export function CartDrawer() {
                             </p>
                         </div>
                     ) : (
-                        <div className="flex flex-col py-2">
+                        <>
+                            <div className="flex flex-col border-t border-border/45">
                             {items.map((item) => (
-                                <div key={item.id} className="flex gap-4 border-b border-border/50 py-6 last:border-0">
-                                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[8px] border border-border/60">
+                                <div key={item.id} className="flex min-w-0 gap-3 border-b border-border/45 py-4 last:border-0 md:gap-4 md:py-5">
+                                    <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[8px] border border-border/60 md:h-20 md:w-20">
                                         {item.image ? (
                                             <Image
                                                 src={item.image}
@@ -633,15 +634,15 @@ export function CartDrawer() {
                                                 className="object-contain"
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center text-xs text-text">
+                                            <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] leading-tight text-text">
                                                 Нет фото
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex flex-1 flex-col justify-between text-text">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <h3 className="line-clamp-2 text-base font-bold leading-tight md:text-lg">
+                                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 text-text">
+                                        <div className="flex min-w-0 items-start justify-between gap-2">
+                                            <h3 className="line-clamp-2 min-w-0 pt-0.5 text-sm font-bold leading-tight md:text-base">
                                                 {item.name}
                                             </h3>
 
@@ -649,50 +650,47 @@ export function CartDrawer() {
                                                 type="button"
                                                 onClick={() => removeItem(item.id)}
                                                 aria-label={`Удалить ${item.name} из корзины`}
-                                                className="cursor-pointer rounded-[6px] border border-border p-2 transition duration-300 hover:border-primary hover:text-primary"
+                                                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-border transition duration-300 hover:border-primary hover:text-primary"
                                             >
-                                                <X size={18}/>
+                                                <X size={16}/>
                                             </button>
                                         </div>
 
-                                        <div className="flex items-start justify-between">
+                                        <div className="flex items-center justify-between gap-3">
                                             <span>{(item.price * item.quantity).toLocaleString("ru-RU")}&nbsp;₽</span>
 
-                                            <div className="flex h-10 w-28 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
+                                            <div className="flex h-9 w-25 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => decrementItem(item.id)}
                                                     aria-label={`Уменьшить количество ${item.name}`}
-                                                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary disabled:opacity-50"
+                                                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary disabled:opacity-50"
                                                 >
-                                                    <Minus size={14} strokeWidth={2.5}/>
+                                                    <Minus size={13} strokeWidth={2.5}/>
                                                 </button>
 
-                                                <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
+                                                <span className="w-5 text-center text-sm font-bold">{item.quantity}</span>
 
                                                 <button
                                                     type="button"
                                                     onClick={() => incrementItem(item.id)}
                                                     aria-label={`Увеличить количество ${item.name}`}
-                                                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary"
+                                                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary"
                                                 >
-                                                    <Plus size={14} strokeWidth={2.5}/>
+                                                    <Plus size={13} strokeWidth={2.5}/>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    )}
-                </div>
+                            </div>
 
-                {items.length > 0 && (
-                    <form
-                        onSubmit={handleSubmit}
-                        className="shrink-0 border-t border-border px-5 pt-5 pb-6 text-text md:px-8"
-                    >
-                        <div className="mb-4 flex items-end justify-between font-semibold md:text-lg">
+                            <form
+                                onSubmit={handleSubmit}
+                                className="border-t border-border pt-4 pb-2 text-text md:pt-5"
+                            >
+                        <div className="mb-3 flex items-end justify-between gap-4 font-semibold md:mb-4 md:text-lg">
                             <span>
                                 {totalQuantity} {getProductPlural(totalQuantity)} на сумму
                             </span>
@@ -700,7 +698,7 @@ export function CartDrawer() {
                         </div>
 
                         {orderType === "delivery" && delivery && (
-                            <div className="mb-4 rounded-[6px] border border-border/60 bg-black/20 px-4 py-3 text-sm leading-6 text-text/78">
+                            <div className="mb-3 rounded-[6px] border border-border/60 bg-black/20 px-3 py-2.5 text-sm leading-5 text-text/78 md:mb-4 md:px-4 md:py-3 md:leading-6">
                                 {deliveryCheck?.available && deliveryCheck.price !== null
                                     ? `Доставка ориентировочно ${formatDeliveryPrice(deliveryCheck.price)}. Точную сумму уточним перед оплатой.`
                                     : "Стоимость доставки уточним перед оплатой."}
@@ -708,18 +706,18 @@ export function CartDrawer() {
                         )}
 
                         {orderType === "delivery" && deliveryPrice !== null && (
-                            <div className="mb-4 flex items-end justify-between border-t border-border/50 pt-4 font-semibold md:text-lg">
+                            <div className="mb-3 flex items-end justify-between gap-4 border-t border-border/50 pt-3 font-semibold md:mb-4 md:pt-4 md:text-lg">
                                 <span>Итого с доставкой</span>
                                 <span className="font-bold">{checkoutTotal.toLocaleString("ru-RU")}&nbsp;₽</span>
                             </div>
                         )}
 
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                             <textarea
                                 value={comment}
                                 onChange={(event) => setComment(event.target.value)}
                                 placeholder="Комментарий к заказу"
-                                className="min-h-20 w-full resize-none rounded-[6px] border border-border bg-background px-4 py-3 text-sm leading-5 text-text outline-none transition placeholder:text-text/45 focus:border-primary"
+                                className="min-h-16 w-full resize-none rounded-[6px] border border-border bg-background px-3 py-2.5 text-sm leading-5 text-text outline-none transition placeholder:text-text/45 focus:border-primary md:min-h-20 md:px-4 md:py-3"
                             />
 
                             <div>
@@ -731,7 +729,7 @@ export function CartDrawer() {
                                             type="button"
                                             onClick={() => setDateMode(option.mode)}
                                             disabled={option.disabled}
-                                            className={`h-10 rounded-[6px] border px-2 text-xs font-semibold transition ${
+                                            className={`h-9 rounded-[6px] border px-2 text-xs font-semibold transition md:h-10 ${
                                                 activeDateMode === option.mode
                                                     ? "border-primary bg-primary text-on-primary"
                                                     : "border-border text-text hover:border-primary hover:text-primary"
@@ -759,22 +757,26 @@ export function CartDrawer() {
                         </div>
 
                         {(orderAvailability.isUnavailable || checkoutError) && (
-                            <div className="mt-4 flex gap-3 rounded-[6px] border border-primary/45 bg-primary/10 px-4 py-3 text-sm font-medium leading-6 text-text">
+                            <div className="mt-3 flex gap-3 rounded-[6px] border border-primary/45 bg-primary/10 px-3 py-2.5 text-sm font-medium leading-5 text-text md:mt-4 md:px-4 md:py-3 md:leading-6">
                                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary"/>
                                 <span>{checkoutError || orderAvailability.message}</span>
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={isCheckoutDisabled}
-                            className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-                        >
-                            {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin"/>}
-                            {checkoutButtonText}
-                        </button>
-                    </form>
-                )}
+                                <div className="sticky bottom-0 -mx-5 mt-3 bg-background/95 px-5 py-3 backdrop-blur md:-mx-8 md:mt-4 md:px-8">
+                                    <button
+                                        type="submit"
+                                        disabled={isCheckoutDisabled}
+                                        className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 md:h-12"
+                                    >
+                                        {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin"/>}
+                                        {checkoutButtonText}
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    )}
+                </div>
             </div>
         </>
     );

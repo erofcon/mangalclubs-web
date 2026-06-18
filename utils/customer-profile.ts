@@ -155,6 +155,16 @@ export const deleteCustomerAvatar = (accessToken: string) => (
     )
 );
 
+export const deleteCustomerProfile = (accessToken: string) => (
+    runWithAuthRefresh(
+        (token) => apiFetch<void>("/api/v1/customers/me", {
+            method: "DELETE",
+            headers: getAuthHeaders(token),
+        }),
+        accessToken,
+    )
+);
+
 export const getCurrentCustomerOrders = (accessToken: string) => (
     runWithAuthRefresh(
         (token) => apiFetch<CustomerOrder[]>("/api/v1/orders/me/current", {

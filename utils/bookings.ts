@@ -22,7 +22,7 @@ type ApiBookingCategory = {
 type ApiBookingImage = {
     id: string;
     url: string;
-    orientation?: string | null;
+    orientation?: "horizontal" | "vertical" | null;
     alt_text?: string | null;
     sort_order?: number | null;
 };
@@ -36,6 +36,8 @@ type ApiBooking = {
     long_description?: string | null;
     preview_url?: string | null;
     images?: ApiBookingImage[] | null;
+    horizontal_images?: ApiBookingImage[] | null;
+    vertical_images?: ApiBookingImage[] | null;
     sort_order?: number | null;
     is_active?: boolean | null;
     organization?: ApiBookingOrganization | null;
@@ -97,6 +99,13 @@ const normalizeBookingImage = (image: ApiBookingImage): BookingImage | null => {
     };
 };
 
+const normalizeBookingImages = (images?: ApiBookingImage[] | null) => (
+    (images ?? [])
+        .map(normalizeBookingImage)
+        .filter((image): image is BookingImage => Boolean(image))
+        .sort((first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0))
+);
+
 export const normalizeBooking = (booking: ApiBooking): Booking => ({
     id: booking.id,
     organizationId: booking.organization_id,
@@ -105,10 +114,9 @@ export const normalizeBooking = (booking: ApiBooking): Booking => ({
     description: booking.description ?? "",
     longDescription: booking.long_description ?? "",
     image: normalizeImageUrl(booking.preview_url),
-    images: (booking.images ?? [])
-        .map(normalizeBookingImage)
-        .filter((image): image is BookingImage => Boolean(image))
-        .sort((first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0)),
+    images: normalizeBookingImages(booking.images),
+    horizontalImages: normalizeBookingImages(booking.horizontal_images),
+    verticalImages: normalizeBookingImages(booking.vertical_images),
     sortOrder: booking.sort_order ?? 0,
     isActive: booking.is_active ?? true,
     organization: normalizeOrganization(booking.organization),
@@ -164,4 +172,31 @@ export const getBookingGalleryImages = (booking?: Booking | null) => {
             ...galleryImages,
         ].filter((image): image is string => Boolean(image)))
     );
+};
+
+export const getBookingResponsiveImages = (booking?: Booking | null) => {
+    const legacyImages = getBookingGalleryImages(booking);
+
+    if (!booking) {
+        return {
+            mobileImages: legacyImages,
+            desktopImages: legacyImages,
+        };
+    }
+
+    const getImages = (images?: string[] | BookingImage[]) => (
+        (images ?? []).map((image) => (
+            typeof image === "string" ? image : image.url
+        ))
+    );
+    const uniqueImages = (images: (string | undefined)[]) => (
+        Array.from(new Set(images.filter((image): image is string => Boolean(image))))
+    );
+    const horizontalImages = uniqueImages(getImages(booking.horizontalImages));
+    const verticalImages = uniqueImages(getImages(booking.verticalImages));
+
+    return {
+        mobileImages: horizontalImages.length > 0 ? horizontalImages : legacyImages,
+        desktopImages: verticalImages.length > 0 ? verticalImages : legacyImages,
+    };
 };

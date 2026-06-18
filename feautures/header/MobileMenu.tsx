@@ -7,6 +7,7 @@ import {X} from "lucide-react";
 import {topLinks} from "@/utils/constants";
 import {useUIStore} from "@/store/ui-store";
 import {useAuthStore} from "@/store/auth-store";
+import {useNotificationStore} from "@/store/notification-store";
 
 type MobileMenuProps = {
     isOpen: boolean;
@@ -16,6 +17,7 @@ type MobileMenuProps = {
 export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
     const openAuthModal = useUIStore((state) => state.openAuthModal);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const unreadNotificationsCount = useNotificationStore((state) => state.unreadNotifications.length);
     const router = useRouter();
 
     const handleProfileClick = () => {
@@ -77,9 +79,17 @@ export function MobileMenu({isOpen, onClose}: MobileMenuProps) {
                 <button
                     type="button"
                     onClick={handleProfileClick}
-                    className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left text-[15px]"
+                    className={[
+                        "flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-2 text-left text-[15px]",
+                        isAuthenticated && unreadNotificationsCount > 0 ? "text-primary" : "",
+                    ].join(" ")}
                 >
-                    {isAuthenticated ? "Профиль" : "Войти"}
+                    <span>{isAuthenticated ? "Профиль" : "Войти"}</span>
+                    {isAuthenticated && unreadNotificationsCount > 0 && (
+                        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-2 text-[11px] font-bold leading-none text-on-primary">
+                            {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
+                        </span>
+                    )}
                 </button>
 
                 {topLinks.map((link) => (

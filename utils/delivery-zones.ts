@@ -32,12 +32,24 @@ export type DeliveryCheckReason =
     | "delivery_tariff_not_configured"
     | string;
 
+export type DeliveryCheckAddress = {
+    formatted: string;
+    countryCode?: string | null;
+    city?: string | null;
+    street?: string | null;
+    house?: string | null;
+    postcode?: string | null;
+    placeId?: string | null;
+    source?: string | null;
+};
+
 export type DeliveryCheckResult = {
     available: boolean;
     reason: DeliveryCheckReason | null;
     distanceKm: number;
     price: number | null;
     zone: DeliveryZone | null;
+    address: DeliveryCheckAddress | null;
 };
 
 export const getDeliveryZones = (signal?: AbortSignal) => (

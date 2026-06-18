@@ -51,9 +51,12 @@ type ResolvedAddress = {
     city: string;
     street: string;
     house: string;
+    hasHouseNumber: boolean;
+};
+
+type GeocodedAddress = ResolvedAddress & {
     latitude: number;
     longitude: number;
-    hasHouseNumber: boolean;
 };
 
 const formatDeliveryPrice = (price: number) => (
@@ -78,6 +81,32 @@ const getDeliveryCheckMessage = (deliveryCheck: DeliveryCheckResult | null) => {
     }
 
     return "Не удалось подтвердить доставку по этому адресу.";
+};
+
+const normalizeDeliveryCheckAddress = (
+    address: DeliveryCheckResult["address"]
+): ResolvedAddress | null => {
+    if (!address) {
+        return null;
+    }
+
+    const city = address.city?.trim() ?? "";
+    const street = address.street?.trim() ?? "";
+    const house = address.house?.trim() ?? "";
+    const formatted = address.formatted?.trim() ?? "";
+    const normalizedAddress = formatted || [city, street, house].filter(Boolean).join(", ");
+
+    if (!normalizedAddress || !city || !street) {
+        return null;
+    }
+
+    return {
+        address: normalizedAddress,
+        city,
+        street,
+        house,
+        hasHouseNumber: Boolean(house),
+    };
 };
 
 const initialForm: DeliveryFormState = {
@@ -222,7 +251,7 @@ export function DeliveryTypeModal() {
     const [addressError, setAddressError] = useState<string | null>(null);
     const [isAddressResolving, setIsAddressResolving] = useState(false);
     const [resolvedAddress, setResolvedAddress] = useState("");
-    const [isAddressLockedToCoordinates, setIsAddressLockedToCoordinates] = useState(false);
+    const [isAddressFromCoordinates, setIsAddressFromCoordinates] = useState(false);
     const [deliverySettings, setDeliverySettings] = useState<DeliverySettings | null>(null);
     const [deliverySettingsError, setDeliverySettingsError] = useState("");
     const [deliveryCheck, setDeliveryCheck] = useState<DeliveryCheckResult | null>(null);
@@ -232,7 +261,6 @@ export function DeliveryTypeModal() {
 
     const lastResolvedAddressRef = useRef("");
     const addressAbortRef = useRef<AbortController | null>(null);
-    const reverseAddressAbortRef = useRef<AbortController | null>(null);
     const deliverySettingsAbortRef = useRef<AbortController | null>(null);
     const deliveryCheckAbortRef = useRef<AbortController | null>(null);
 
@@ -241,7 +269,6 @@ export function DeliveryTypeModal() {
     useEffect(() => {
         return () => {
             addressAbortRef.current?.abort();
-            reverseAddressAbortRef.current?.abort();
             deliverySettingsAbortRef.current?.abort();
             deliveryCheckAbortRef.current?.abort();
         };
@@ -280,7 +307,7 @@ export function DeliveryTypeModal() {
         if (!selectedDelivery) {
             lastResolvedAddressRef.current = "";
             setResolvedAddress("");
-            setIsAddressLockedToCoordinates(false);
+            setIsAddressFromCoordinates(false);
             setAddressError(null);
             setDeliveryCheck(null);
             setDeliveryCheckError("");
@@ -295,7 +322,7 @@ export function DeliveryTypeModal() {
 
         lastResolvedAddressRef.current = selectedDelivery.address;
         setResolvedAddress(selectedDelivery.address);
-        setIsAddressLockedToCoordinates(false);
+        setIsAddressFromCoordinates(false);
         setAddressError(null);
         setDeliveryCheck(null);
         setDeliveryCheckError("");
@@ -317,9 +344,10 @@ export function DeliveryTypeModal() {
     }, [defaultDeliveryOrganization, isOpen, selectedDelivery]);
     /* eslint-enable react-hooks/set-state-in-effect */
 
-    const applyResolvedAddress = useCallback((resolved: ResolvedAddress, coordinates?: CoordinatesState) => {
+    const applyResolvedAddress = useCallback((resolved: GeocodedAddress) => {
         lastResolvedAddressRef.current = resolved.address;
         setResolvedAddress(resolved.address);
+        setIsAddressFromCoordinates(false);
         setDeliveryCheck(null);
         setDeliveryCheckError("");
         setShouldCheckDelivery(resolved.hasHouseNumber);
@@ -333,8 +361,8 @@ export function DeliveryTypeModal() {
         }));
 
         setMapCoordinates({
-            latitude: coordinates?.latitude ?? resolved.latitude,
-            longitude: coordinates?.longitude ?? resolved.longitude,
+            latitude: resolved.latitude,
+            longitude: resolved.longitude,
         });
 
         setAddressError(
@@ -342,68 +370,18 @@ export function DeliveryTypeModal() {
         );
     }, []);
 
-    const reverseGeocodeCoordinates = useCallback(
-        async (coordinates: CoordinatesState, signal: AbortSignal) => {
-            setAddressError(null);
-            setIsAddressResolving(true);
-
-            try {
-                const params = new URLSearchParams({
-                    lat: String(coordinates.latitude),
-                    lon: String(coordinates.longitude),
-                });
-
-                const response = await fetch(`/api/geocode/reverse?${params}`, {
-                    signal,
-                });
-
-                if (signal.aborted) return;
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => null);
-                    throw new Error(
-                        error?.message || "Не удалось определить адрес. Если включен VPN, необходимо выключить."
-                    );
-                }
-
-                const resolved = (await response.json()) as ResolvedAddress;
-
-                if (signal.aborted) return;
-
-                applyResolvedAddress(resolved, coordinates);
-            } catch (error) {
-                if (signal.aborted) return;
-
-                setAddressError(
-                    error instanceof Error
-                        ? error.message
-                        : "Не удалось определить адрес. Если включен VPN, необходимо выключить."
-                );
-            } finally {
-                if (!signal.aborted) {
-                    setIsAddressResolving(false);
-                }
-            }
-        },
-        [applyResolvedAddress]
-    );
-
     const resolveCoordinates = useCallback(
         (coordinates: CoordinatesState) => {
             addressAbortRef.current?.abort();
-            reverseAddressAbortRef.current?.abort();
             deliveryCheckAbortRef.current?.abort();
-
-            const controller = new AbortController();
-            reverseAddressAbortRef.current = controller;
 
             lastResolvedAddressRef.current = "";
             setResolvedAddress("");
-            setIsAddressLockedToCoordinates(true);
+            setIsAddressFromCoordinates(true);
             setAddressError(null);
             setDeliveryCheck(null);
             setDeliveryCheckError("");
-            setShouldCheckDelivery(false);
+            setShouldCheckDelivery(true);
             setForm((prev) => ({
                 ...prev,
                 address: "",
@@ -412,10 +390,8 @@ export function DeliveryTypeModal() {
                 house: "",
             }));
             setMapCoordinates(coordinates);
-
-            void reverseGeocodeCoordinates(coordinates, controller.signal);
         },
-        [reverseGeocodeCoordinates]
+        []
     );
 
     const geocodeAddress = useCallback(
@@ -439,7 +415,7 @@ export function DeliveryTypeModal() {
                     throw new Error(error?.message || "Не удалось найти адрес. Если включен VPN, необходимо выключить.");
                 }
 
-                const resolved = (await response.json()) as ResolvedAddress;
+                const resolved = (await response.json()) as GeocodedAddress;
 
                 if (signal.aborted) return;
 
@@ -467,7 +443,7 @@ export function DeliveryTypeModal() {
 
     useEffect(() => {
         if (!isOpen) return;
-        if (isAddressLockedToCoordinates) return;
+        if (isAddressFromCoordinates) return;
 
         const address = form.address.trim();
 
@@ -493,7 +469,7 @@ export function DeliveryTypeModal() {
             window.clearTimeout(timeoutId);
             controller.abort();
         };
-    }, [form.address, geocodeAddress, isAddressLockedToCoordinates, isOpen]);
+    }, [form.address, geocodeAddress, isAddressFromCoordinates, isOpen]);
 
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
@@ -513,7 +489,38 @@ export function DeliveryTypeModal() {
             controller.signal,
         )
             .then((result) => {
+                if (controller.signal.aborted) return;
+
                 setDeliveryCheck(result);
+
+                if (!isAddressFromCoordinates) {
+                    return;
+                }
+
+                const resolved = normalizeDeliveryCheckAddress(result.address);
+
+                if (!resolved) {
+                    setAddressError(
+                        "Не удалось определить адрес по точке. Введите адрес вручную."
+                    );
+                    setShouldCheckDelivery(false);
+                    return;
+                }
+
+                lastResolvedAddressRef.current = resolved.address;
+                setResolvedAddress(resolved.address);
+                setIsAddressFromCoordinates(false);
+                setShouldCheckDelivery(false);
+                setForm((prev) => ({
+                    ...prev,
+                    address: resolved.address,
+                    city: resolved.city,
+                    street: resolved.street,
+                    house: resolved.house,
+                }));
+                setAddressError(
+                    resolved.hasHouseNumber ? null : "Укажите номер дома"
+                );
             })
             .catch((error) => {
                 if (controller.signal.aborted) return;
@@ -535,6 +542,7 @@ export function DeliveryTypeModal() {
     }, [
         addressError,
         defaultDeliveryOrganization.slug,
+        isAddressFromCoordinates,
         isOpen,
         mapCoordinates,
         shouldCheckDelivery,
@@ -548,10 +556,10 @@ export function DeliveryTypeModal() {
             (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
                 if (field === "address") {
                     addressAbortRef.current?.abort();
-                    reverseAddressAbortRef.current?.abort();
                     deliveryCheckAbortRef.current?.abort();
                     setAddressError(null);
                     setIsAddressResolving(false);
+                    setIsAddressFromCoordinates(false);
                     setDeliveryCheck(null);
                     setDeliveryCheckError("");
                     setShouldCheckDelivery(false);
@@ -612,10 +620,7 @@ export function DeliveryTypeModal() {
         Boolean(trimmedAddress) &&
         !isAddressResolving &&
         !isDeliveryChecking &&
-        (
-            isAddressLockedToCoordinates ||
-            (trimmedAddress === resolvedAddress && !addressError)
-        ) &&
+        trimmedAddress === resolvedAddress &&
         !addressError &&
         deliveryCheck?.available === true &&
         !isDeliveryUnavailable;
