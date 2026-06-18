@@ -137,7 +137,7 @@ export function AuthModal() {
                     </h1>
 
                     <p className="mt-3 px-4 text-center text-sm leading-6 text-text/68">
-                        Необходимо авторизоваться, чтобы сделать заказ
+                        Укажите телефон, и мы позвоним для подтверждения входа
                     </p>
 
                     <input
@@ -205,11 +205,7 @@ export function AuthModal() {
                     disabled={!canSubmit}
                     className="mt-auto h-12 w-full cursor-pointer rounded-[6px] bg-primary px-5 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    {isRequestingCode ? "Отправляем код..." : (
-                        <>
-                            Отправить код в Telegram <br/> или СМС
-                        </>
-                    )}
+                    {isRequestingCode ? "Запрашиваем звонок..." : "Получить звонок"}
                 </button>
             </form>
         </ModalSkeleton>

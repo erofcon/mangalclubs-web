@@ -173,7 +173,7 @@ export function AuthCodeConfirm() {
                     </h1>
 
                     <p className="mt-4 max-w-80 text-center text-sm leading-6 text-text/68">
-                        Код уже в пути! Проверьте Telegram или СМС на {pendingPhone}
+                        Дождитесь звонка на {pendingPhone} и введите последние 4 цифры номера
                     </p>
 
                     <div key={codeInputKey} className="mt-9 flex w-full justify-center gap-2.5 sm:gap-3">
@@ -218,12 +218,12 @@ export function AuthCodeConfirm() {
                                 disabled={isRequestingCode}
                                 className="cursor-pointer text-sm font-semibold text-primary underline disabled:pointer-events-none disabled:opacity-50"
                             >
-                                {isRequestingCode ? "Отправляем код..." : "Отправить код повторно"}
+                                {isRequestingCode ? "Запрашиваем звонок..." : "Позвонить еще раз"}
                             </button>
                         </div>
                     ) : (
                         <div className="mt-8 text-center text-sm font-semibold text-text/60">
-                            Для повторной отправки ожидайте {timeLeft} секунд
+                            Повторный звонок будет доступен через {timeLeft} секунд
                         </div>
                     )}
                 </div>
@@ -234,7 +234,7 @@ export function AuthCodeConfirm() {
                     disabled={!canConfirm}
                     className="mt-4 h-12 w-full cursor-pointer rounded-[6px] bg-primary px-6 text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
-                    {isConfirmingCode ? "Проверяем код..." : isRequestingCode ? "Отправляем код..." : "Подтвердить"}
+                    {isConfirmingCode ? "Проверяем код..." : isRequestingCode ? "Запрашиваем звонок..." : "Подтвердить"}
                 </button>
             </div>
         </ModalSkeleton>

@@ -127,6 +127,18 @@ const getAuthErrorMessage = (error: unknown, fallback: string) => {
     return error.message;
 };
 
+const getCurrentRetryAfterSeconds = () => {
+    const {otpRetryAfterSeconds, otpRetryStartedAt} = useAuthStore.getState();
+
+    if (!otpRetryStartedAt || otpRetryAfterSeconds <= 0) {
+        return 0;
+    }
+
+    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - otpRetryStartedAt) / 1000));
+
+    return Math.max(0, otpRetryAfterSeconds - elapsedSeconds);
+};
+
 const applyTokenPair = (tokens: TokenPair) => ({
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
@@ -163,6 +175,16 @@ export const useAuthStore = create<AuthStore>()(
             otpResendAvailableAt: null,
 
             requestCode: async (phone) => {
+                const retryAfterSeconds = getCurrentRetryAfterSeconds();
+
+                if (retryAfterSeconds > 0) {
+                    set({
+                        errorMessage: `Повторный звонок можно запросить через ${retryAfterSeconds} секунд`,
+                    });
+
+                    return false;
+                }
+
                 const phoneForApi = normalizePhoneForApi(phone);
 
                 set({
