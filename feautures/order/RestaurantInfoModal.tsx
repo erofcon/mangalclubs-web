@@ -6,6 +6,8 @@ import clsx from "clsx";
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
 import type {Organization} from "@/types/organization";
 
+const YANDEX_MAPS_TERMS_URL = "https://yandex.ru/legal/maps_api/ru/";
+
 type RestaurantInfoModalProps = {
     isOpen: boolean;
     onClose: () => void;
@@ -83,7 +85,7 @@ export function RestaurantInfoModal({
 
                 <div
                     className={clsx(
-                        "order-1 w-full shrink-0",
+                        "relative order-1 w-full shrink-0",
                         size === "delivery"
                             ? "h-[40dvh] min-h-80 md:order-2 md:h-full md:flex-1"
                             : "h-[60dvh] min-h-80 sm:order-2 sm:h-full sm:min-h-0 sm:flex-1",
@@ -96,6 +98,14 @@ export function RestaurantInfoModal({
                         className="h-full w-full border-0"
                         loading="lazy"
                     />
+                    <a
+                        href={YANDEX_MAPS_TERMS_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute bottom-2 left-2 rounded-[4px] bg-background/90 px-2 py-1 text-[11px] font-semibold leading-none text-text/72 shadow-sm transition duration-300 hover:text-primary"
+                    >
+                        Условия использования Яндекс Карт
+                    </a>
                 </div>
             </div>
         </ModalSkeleton>

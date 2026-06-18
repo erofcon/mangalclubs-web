@@ -4,13 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {ArrowUpRight} from "lucide-react";
 import {topLinks} from "@/utils/constants";
-import {getOrganizationHref, getWhatsappHref} from "@/utils/organizations";
+import {getOrganizationHref, getOrganizationWhatsappHref} from "@/utils/organizations";
 import {useAppDataStore} from "@/store/app-data-store";
 
 export function Footer() {
     const organizations = useAppDataStore((state) => state.organizations);
     const primaryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization) ?? organizations[0];
-    const whatsappHref = primaryOrganization ? getWhatsappHref(primaryOrganization.phone) : "#";
+    const whatsappHref = primaryOrganization ? getOrganizationWhatsappHref(primaryOrganization) : "#";
 
     return (
         <footer className="border-t border-border/70 bg-background text-text">
@@ -112,6 +112,16 @@ export function Footer() {
                                         </Link>
                                     </li>
                                 ))}
+                                <li>
+                                    <Link
+                                        href="/legal"
+                                        className="group inline-flex items-center gap-2 text-[14px] font-semibold text-text/78 transition duration-300 hover:text-primary"
+                                    >
+                                        Правовая информация
+                                        <ArrowUpRight
+                                            className="h-3.5 w-3.5 opacity-0 transition duration-300 group-hover:opacity-100"/>
+                                    </Link>
+                                </li>
                             </ul>
                         </nav>
 

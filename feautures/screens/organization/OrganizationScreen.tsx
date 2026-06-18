@@ -4,72 +4,25 @@ import Image from "next/image";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useState} from "react";
-import {ArrowLeft, Check, Clock, type LucideIcon, MapPin, MessageCircle, Phone, Utensils} from "lucide-react";
+import {ArrowLeft, Check, Clock, type LucideIcon, MapPin, MessageCircle, Phone} from "lucide-react";
 import {BookingMocks} from "@/mocks/mocks-data";
-import {formatOrganizationAddress, getOrganizationByIdOrSlug, getPhoneHref, getWhatsappHref, isBookingInOrganization} from "@/utils/organizations";
+import {formatOrganizationAddress, getOrganizationByIdOrSlug, getOrganizationWhatsappHref, getPhoneHref, isBookingInOrganization} from "@/utils/organizations";
 import type {Organization} from "@/types/organization";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
 import {getBookingGalleryImages} from "@/utils/bookings";
 
+const YANDEX_MAPS_TERMS_URL = "https://yandex.ru/legal/maps_api/ru/";
+
 type OrganizationPageContent = {
     eyebrow: string;
-    title: string;
-    lead: string;
     description: string;
-    quote: string;
     highlights: string[];
     details: {
         title: string;
         text: string;
+        icon: LucideIcon;
     }[];
-};
-
-const organizationContent: Record<Organization["id"], OrganizationPageContent> = {
-    "fazenda": {
-        eyebrow: "Ресторан Fazenda",
-        title: "Спокойный ресторан для теплых встреч и приватных ужинов.",
-        lead: "Fazenda создана для вечеров без спешки: уютные кабинеты, мягкий свет, блюда с мангала и внимательный сервис рядом, когда он нужен.",
-        description: "Здесь удобно собраться семьей, отметить небольшой праздник или провести ужин в своем кругу. Атмосфера камерная и собранная, а кухня держится на понятном вкусе: мясо с огня, свежие салаты, горячие блюда и формат, в котором гостям легко расслабиться.",
-        quote: "Лучше всего Fazenda раскрывается в небольших компаниях, когда хочется тишины, красивой подачи и личного пространства.",
-        highlights: ["VIP-кабинки", "Семейные ужины", "Мясо с мангала", "Спокойная атмосфера"],
-        details: [
-            {
-                title: "Приватность",
-                text: "Кабинки помогают провести вечер отдельно от общего зала и сохранить настроение своей компании.",
-            },
-            {
-                title: "Кухня",
-                text: "В меню легко собрать полноценный ужин: закуски, салаты, горячее и блюда с открытого огня.",
-            },
-            {
-                title: "Повод",
-                text: "Подойдет для семейной встречи, даты, небольшого дня рождения или спокойного делового ужина.",
-            },
-        ],
-    },
-    "mangal-club": {
-        eyebrow: "Ресторан Mangal Club",
-        title: "Живой ресторан для компаний, брони и вечеров с характером.",
-        lead: "Mangal Club сочетает ресторанную кухню, зоны для бронирования, сауну и бассейн. Это адрес для тех, кому нужен насыщенный вечер в одном месте.",
-        description: "Сюда удобно приехать на ужин с друзьями, заранее выбрать зону отдыха или забронировать формат под компанию. В центре остается то, за что любят Mangal Clubs: мясо с огня, щедрый стол, понятный сервис и теплая атмосфера.",
-        quote: "Mangal Club особенно хорош, когда хочется больше пространства, движения и возможности собрать весь вечер в одном адресе.",
-        highlights: ["Большие компании", "VIP-зоны", "Сауна и бассейн", "Бронь столов"],
-        details: [
-            {
-                title: "Форматы",
-                text: "Можно выбрать стол в зале, приватную зону, сауну или бассейн и заранее уточнить свободное время.",
-            },
-            {
-                title: "Для компаний",
-                text: "Пространство подходит для встреч с друзьями, праздников, отдыха после рабочего дня и длинных ужинов.",
-            },
-            {
-                title: "Сервис",
-                text: "Команда поможет с посадкой, заказом и деталями бронирования, чтобы вечер прошел спокойно.",
-            },
-        ],
-    },
 };
 
 const getOrganizationImages = (organization: Organization) => {
@@ -77,7 +30,7 @@ const getOrganizationImages = (organization: Organization) => {
         .filter((booking) => isBookingInOrganization(booking, organization))
         .flatMap((booking) => getBookingGalleryImages(booking));
 
-    return Array.from(new Set(images)).slice(0, 5);
+    return Array.from(new Set([organization.photo_url, ...images].filter(Boolean) as string[])).slice(0, 5);
 };
 
 export function OrganizationScreen() {
@@ -123,7 +76,7 @@ export function OrganizationScreen() {
     const selectedImage = galleryImages[selectedImageIndex] ?? galleryImages[0] ?? "/hero/hero-v2.png";
     const mapSrc = getOrganizationMapSrc(organization);
     const phoneHref = getPhoneHref(organization.phone);
-    const whatsappHref = getWhatsappHref(organization.phone);
+    const whatsappHref = getOrganizationWhatsappHref(organization);
 
     return (
         <main className="min-h-screen bg-background text-text">
@@ -148,9 +101,6 @@ export function OrganizationScreen() {
                         >
                             {organization.name}
                         </h1>
-                        <p className="mt-6 max-w-[720px] text-[20px] font-semibold leading-8 text-text sm:text-[24px] sm:leading-9">
-                            {content.title}
-                        </p>
                         <div className="organization-hero-surface mt-10 overflow-hidden rounded-[8px] border border-border/70 p-3">
                             <button
                                 type="button"
@@ -203,16 +153,8 @@ export function OrganizationScreen() {
                             <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
                                 О ресторане
                             </p>
-                            <h2
-                                className="mt-3 max-w-[700px] text-[34px] font-normal leading-tight text-text sm:text-[44px]"
-                            >
-                                {content.lead}
-                            </h2>
-                            <p className="mt-6 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
+                            <p className="mt-4 max-w-[780px] text-[14px] leading-6 text-text/72 sm:text-[15px]">
                                 {content.description}
-                            </p>
-                            <p className="mt-6 max-w-[720px] border-l-2 border-primary pl-5 text-[15px] font-semibold leading-7 text-text">
-                                {content.quote}
                             </p>
                         </section>
 
@@ -231,7 +173,7 @@ export function OrganizationScreen() {
                         <div className="mt-10 grid gap-4 md:grid-cols-3">
                             {content.details.map((detail) => (
                                 <article key={detail.title} className="organization-page-card p-5">
-                                    <Utensils className="h-5 w-5 text-primary" strokeWidth={1.8}/>
+                                    <detail.icon className="h-5 w-5 text-primary" strokeWidth={1.8}/>
                                     <h3 className="mt-5 text-[18px] font-semibold leading-6 text-text">
                                         {detail.title}
                                     </h3>
@@ -278,7 +220,7 @@ export function OrganizationScreen() {
                     <div className="mt-7 space-y-4 border-t border-border/55 pt-6">
                         <InfoLine icon={Phone} label="Телефон" value={organization.phone} href={phoneHref}/>
                         <InfoLine icon={MapPin} label="Адрес" value={formatOrganizationAddress(organization)}/>
-                        <InfoLine icon={Clock} label="График" value={organization.schedule}/>
+                        <InfoLine icon={Clock} label="График" value={organization.scheduleLines?.length ? organization.scheduleLines : organization.schedule}/>
                     </div>
                     </aside>
                 </div>
@@ -310,10 +252,18 @@ export function OrganizationScreen() {
                         <iframe
                             title={`Карта ${organization.name}`}
                             src={mapSrc}
-                            className="h-[360px] w-full border-0 grayscale md:h-[470px]"
+                            className="h-[360px] w-full border-0 md:h-[470px]"
                             loading="lazy"
                         />
                     </div>
+                    <a
+                        href={YANDEX_MAPS_TERMS_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12px] font-semibold text-text/52 transition duration-300 hover:text-primary lg:col-start-2"
+                    >
+                        Условия использования Яндекс Карт
+                    </a>
                 </div>
             </section>
 
@@ -325,7 +275,7 @@ export function OrganizationScreen() {
 type InfoLineProps = {
     icon: LucideIcon;
     label: string;
-    value: string;
+    value: string | string[];
     href?: string;
 };
 
@@ -337,9 +287,19 @@ function InfoLine({icon: Icon, label, value, href}: InfoLineProps) {
                 <span className="block text-[12px] leading-none text-text/55">
                     {label}
                 </span>
-                <span className="mt-2 block wrap-break-word text-[14px] font-semibold leading-5 text-text">
-                    {value}
-                </span>
+                {Array.isArray(value) ? (
+                    <span className="mt-2 block space-y-1 text-[14px] font-semibold leading-5 text-text">
+                        {value.map((line) => (
+                            <span key={line} className="block wrap-break-word">
+                                {line}
+                            </span>
+                        ))}
+                    </span>
+                ) : (
+                    <span className="mt-2 block wrap-break-word text-[14px] font-semibold leading-5 text-text">
+                        {value}
+                    </span>
+                )}
             </span>
         </>
     );
@@ -367,36 +327,31 @@ function getOrganizationMapSrc(organization: Organization) {
     return `https://yandex.com/map-widget/v1/?ll=${longitude}%2C${latitude}&z=16&pt=${longitude}%2C${latitude}%2Cpm2rdm`;
 }
 
-function getOrganizationContent(organization: Organization) {
-    return (
-        organizationContent[organization.id] ??
-        (organization.slug ? organizationContent[organization.slug] : undefined) ??
-        {
-            eyebrow: `Ресторан ${organization.name}`,
-            title: "Место для теплых встреч, самовывоза и вечеров с хорошей кухней.",
-            lead: organization.intro || `${organization.name} принимает гостей и помогает собрать удобный формат вечера.`,
-            description: organization.intro || "Команда подскажет по меню, бронированию, самовывозу и актуальному режиму работы ресторана.",
-            quote: "Выберите удобный адрес, а команда Mangal Clubs поможет с деталями заказа или визита.",
-            highlights: [
-                organization.accepts_pickup === false ? "Ресторан" : "Самовывоз",
-                organization.accepts_delivery === false ? "В зале" : "Доставка",
-                "Мясо с мангала",
-                "Бронирование",
-            ],
-            details: [
-                {
-                    title: "Адрес",
-                    text: formatOrganizationAddress(organization),
-                },
-                {
-                    title: "График",
-                    text: organization.schedule,
-                },
-                {
-                    title: "Связь",
-                    text: organization.phone,
-                },
-            ],
-        }
-    );
+function getOrganizationContent(organization: Organization): OrganizationPageContent {
+    return {
+        eyebrow: `Ресторан ${organization.name}`,
+        description: organization.intro,
+        highlights: [
+            organization.accepts_pickup === false ? null : "Самовывоз",
+            organization.accepts_delivery === false ? null : "Доставка",
+            "Бронирование",
+        ].filter(Boolean) as string[],
+        details: [
+            {
+                title: "Адрес",
+                text: formatOrganizationAddress(organization),
+                icon: MapPin,
+            },
+            {
+                title: "График",
+                text: organization.schedule,
+                icon: Clock,
+            },
+            {
+                title: "Связь",
+                text: organization.phone,
+                icon: Phone,
+            },
+        ],
+    };
 }

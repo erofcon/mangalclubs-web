@@ -1,6 +1,6 @@
 import type {Organization} from "@/types/organization";
 
-export type BookingOrganization = Pick<Organization, "id" | "slug" | "name" | "phone">;
+export type BookingOrganization = Pick<Organization, "id" | "slug" | "name" | "phone" | "whatsapp_phone">;
 
 export type BookingImage = {
     id: string;

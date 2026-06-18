@@ -7,8 +7,8 @@ import {useEffect, useMemo, useState} from "react";
 import {ArrowLeft, LoaderCircle, type LucideIcon, MapPin, MessageCircle, Phone, RefreshCcw} from "lucide-react";
 import {
     formatOrganizationAddress,
+    getOrganizationWhatsappHref,
     getPhoneHref,
-    getWhatsappHref,
 } from "@/utils/organizations";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
@@ -131,7 +131,7 @@ export function BookingSelectedScreen() {
     const organization = getBookingOrganizationInfo(booking, organizations);
     const categoryTitle = booking.category?.title ?? "Зона";
     const phoneHref = getPhoneHref(organization.phone);
-    const whatsappHref = getWhatsappHref(organization.phone);
+    const whatsappHref = getOrganizationWhatsappHref(organization);
     const bookingFacts = [
         {icon: MapPin, label: "Ресторан", value: organization.name},
     ].filter((fact): fact is BookingFact => Boolean(fact.value));
@@ -389,10 +389,12 @@ function getBookingOrganizationInfo(booking: Booking, organizations: Organizatio
         item.slug === apiOrganization?.slug
     ));
     const phone = apiOrganization?.phone ?? organization?.phone ?? "";
+    const whatsappPhone = apiOrganization?.whatsapp_phone ?? organization?.whatsapp_phone ?? null;
 
     return {
         name: apiOrganization?.name ?? organization?.name ?? "Mangal Club",
         phone,
+        whatsapp_phone: whatsappPhone,
         address: organization ? formatOrganizationAddress(organization) : undefined,
     };
 }

@@ -10,6 +10,16 @@ type ApiOrganization = Omit<Organization, "schedule" | "working_hours"> & {
     working_hours?: WorkingHour[] | null;
 };
 
+type OpenWorkingHour = WorkingHour & {
+    opens_at: string;
+    closes_at: string;
+};
+
+type FormattedWorkingHours = {
+    summary: string;
+    lines: string[];
+};
+
 type MenuResponse = {
     orderType: "delivery" | "pickup";
     organizationId: string;
@@ -44,13 +54,29 @@ const normalizeTime = (value: string) => {
     return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
 };
 
+const isOpenWorkingHour = (item: WorkingHour): item is OpenWorkingHour => (
+    !item.is_closed && Boolean(item.opens_at && item.closes_at)
+);
+
+const getScheduleKey = (item: OpenWorkingHour) => (
+    [
+        normalizeTime(item.opens_at),
+        normalizeTime(item.closes_at),
+        item.closes_next_day ? "next" : "same",
+    ].join("-")
+);
+
+const getScheduleRange = (item: OpenWorkingHour) => (
+    `${normalizeTime(item.opens_at)}-${normalizeTime(item.closes_at)}`
+);
+
 const formatWorkingHours = (workingHours?: WorkingHour[] | null) => {
     if (!workingHours?.length) {
         return "График уточняйте по телефону";
     }
 
     const openDays = workingHours
-        .filter((item) => !item.is_closed)
+        .filter(isOpenWorkingHour)
         .sort((first, second) => first.weekday - second.weekday);
 
     if (openDays.length === 0) {
@@ -85,12 +111,99 @@ const getWeekdayName = (weekday: number) => {
     return String(weekday);
 };
 
-const normalizeOrganization = (organization: ApiOrganization): Organization => ({
-    ...organization,
-    schedule: formatWorkingHours(organization.working_hours),
-    intro: organization.intro ?? "",
-    working_hours: organization.working_hours ?? [],
-});
+const formatWeekdayRange = (items: OpenWorkingHour[]) => {
+    const first = items[0];
+    const last = items[items.length - 1];
+
+    if (!first || !last) {
+        return "";
+    }
+
+    if (items.length === 1) {
+        return getWeekdayName(first.weekday);
+    }
+
+    return `${getWeekdayName(first.weekday)}-${getWeekdayName(last.weekday)}`;
+};
+
+const groupWorkingHours = (openDays: OpenWorkingHour[]) => {
+    const groups: OpenWorkingHour[][] = [];
+
+    openDays.forEach((day) => {
+        const previousGroup = groups[groups.length - 1];
+        const previousDay = previousGroup?.[previousGroup.length - 1];
+
+        if (
+            previousGroup &&
+            previousDay &&
+            getScheduleKey(previousDay) === getScheduleKey(day) &&
+            day.weekday === previousDay.weekday + 1
+        ) {
+            previousGroup.push(day);
+            return;
+        }
+
+        groups.push([day]);
+    });
+
+    return groups;
+};
+
+const formatCompactWorkingHours = (workingHours?: WorkingHour[] | null): FormattedWorkingHours => {
+    if (!workingHours?.length) {
+        const summary = formatWorkingHours(workingHours);
+
+        return {summary, lines: [summary]};
+    }
+
+    const openDays = workingHours
+        .filter(isOpenWorkingHour)
+        .sort((first, second) => first.weekday - second.weekday);
+
+    if (openDays.length === 0) {
+        const summary = formatWorkingHours(workingHours);
+
+        return {summary, lines: [summary]};
+    }
+
+    const first = openDays[0];
+    const sameSchedule = openDays.every((item) => (
+        getScheduleKey(item) === getScheduleKey(first)
+    ));
+
+    if (openDays.length === 7 && sameSchedule) {
+        const summary = `Ежедневно ${getScheduleRange(first)}`;
+
+        return {summary, lines: [summary]};
+    }
+
+    const lines = groupWorkingHours(openDays)
+        .map((items) => {
+            const groupFirst = items[0];
+
+            return groupFirst
+                ? `${formatWeekdayRange(items)} ${getScheduleRange(groupFirst)}`
+                : "";
+        })
+        .filter(Boolean);
+
+    return {
+        summary: lines.join(" · "),
+        lines,
+    };
+};
+
+const normalizeOrganization = (organization: ApiOrganization): Organization => {
+    const schedule = formatCompactWorkingHours(organization.working_hours);
+
+    return {
+        ...organization,
+        schedule: schedule.summary,
+        scheduleLines: schedule.lines,
+        intro: organization.intro ?? "",
+        working_hours: organization.working_hours ?? [],
+    };
+};
 
 const getDefaultDeliveryOrganization = (organizations: Organization[]) => {
     return (

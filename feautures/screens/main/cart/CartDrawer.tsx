@@ -197,7 +197,7 @@ const createTimeSlots = (
     intervalBaseDates.forEach((baseDate) => {
         const workingHour = getWorkingHourForDate(workingHours, baseDate);
 
-        if (!workingHour || workingHour.is_closed) {
+        if (!workingHour || workingHour.is_closed || !workingHour.opens_at || !workingHour.closes_at) {
             return;
         }
 

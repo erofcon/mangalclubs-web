@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import {FormEvent, KeyboardEvent, useState} from "react";
 
 import {ModalSkeleton} from "@/components/ui/ModalSkeleton";
@@ -160,14 +161,41 @@ export function AuthModal() {
                             checked={isAgreementAccepted}
                             onChange={(event) => setIsAgreementAccepted(event.target.checked)}
                             type="checkbox"
-                            className="mt-1 h-4 w-4 cursor-pointer rounded-[3px] border border-border accent-primary"
+                            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded-[4px] border border-border accent-primary"
                         />
                         <span className="cursor-pointer">
-                            Соглашаюсь с{" "}
-                            <span className="underline">обработкой персональных данных</span>,{" "}
-                            <span className="underline">политикой обработки персональных данных</span>,{" "}
-                            <span className="underline">политикой обработки файлов cookie</span>,{" "}
-                            и <span className="underline">условиями сервиса</span>
+                            Даю{" "}
+                            <Link
+                                href="/legal#personal-consent"
+                                target="_blank"
+                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
+                            >
+                                согласие на обработку персональных данных
+                            </Link>
+                            {" "}и принимаю{" "}
+                            <Link
+                                href="/legal#personal-policy"
+                                target="_blank"
+                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
+                            >
+                                политику обработки персональных данных
+                            </Link>
+                            ,{" "}
+                            <Link
+                                href="/legal#cookie-policy"
+                                target="_blank"
+                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
+                            >
+                                политику cookie
+                            </Link>
+                            {" "}и{" "}
+                            <Link
+                                href="/legal#terms"
+                                target="_blank"
+                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
+                            >
+                                условия сервиса
+                            </Link>
                         </span>
                     </label>
                 </div>

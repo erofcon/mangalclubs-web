@@ -54,3 +54,7 @@ export const getPhoneHref = (phone: string) => (
 export const getWhatsappHref = (phone: string) => (
     `https://wa.me/${phone.replace(/\D/g, "")}`
 );
+
+export const getOrganizationWhatsappHref = (organization: Pick<Organization, "phone" | "whatsapp_phone">) => (
+    getWhatsappHref(organization.whatsapp_phone || organization.phone)
+);

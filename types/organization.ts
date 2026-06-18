@@ -7,8 +7,8 @@ export type Coordinates = {
 export type WorkingHour = {
     weekday: number;
     is_closed: boolean;
-    opens_at: string;
-    closes_at: string;
+    opens_at: string | null;
+    closes_at: string | null;
     closes_next_day: boolean;
 };
 
@@ -19,7 +19,9 @@ export type Organization = {
     city: string;
     address: string;
     schedule: string;
+    scheduleLines?: string[];
     phone: string;
+    whatsapp_phone?: string | null;
     intro: string;
     coordinates: Coordinates;
     photo_url?: string | null;

@@ -173,7 +173,13 @@ export function AboutScreen() {
                                 </p>
                                 <p className="flex gap-3 text-text-secondary">
                                     <Clock className="mt-1 h-4 w-4 shrink-0 text-primary" strokeWidth={1.8}/>
-                                    <span>{organization.schedule}</span>
+                                    <span className="space-y-1">
+                                        {(organization.scheduleLines?.length ? organization.scheduleLines : [organization.schedule]).map((line) => (
+                                            <span key={line} className="block">
+                                                {line}
+                                            </span>
+                                        ))}
+                                    </span>
                                 </p>
                                 <span
                                     onClick={(e) => {

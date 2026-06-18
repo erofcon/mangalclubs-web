@@ -25,6 +25,8 @@ const restaurantIcon = new L.Icon({
     popupAnchor: [0, -38],
 });
 
+const YANDEX_MAPS_TERMS_URL = "https://yandex.ru/legal/maps_api/ru/";
+
 function MapCenterSync({coordinates}: { coordinates: Coordinates }) {
     const map = useMap();
 
@@ -147,7 +149,7 @@ export function RestaurantMap({
 
     return (
         <div
-            className={`h-full w-full overflow-hidden ${onSelectCoordinates ? "cursor-crosshair" : ""}`}
+            className={`relative h-full w-full overflow-hidden ${onSelectCoordinates ? "cursor-crosshair" : ""}`}
             title={onSelectCoordinates ? "Выберите точку доставки на карте" : undefined}
         >
             <MapContainer
@@ -192,6 +194,14 @@ export function RestaurantMap({
                     </Popup>
                 </Marker>
             </MapContainer>
+            <a
+                href={YANDEX_MAPS_TERMS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-2 left-2 z-[1000] rounded-[4px] bg-background/90 px-2 py-1 text-[11px] font-semibold leading-none text-text/72 shadow-sm transition duration-300 hover:text-primary"
+            >
+                Условия использования Яндекс Карт
+            </a>
         </div>
     );
 }
