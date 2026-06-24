@@ -76,6 +76,7 @@ const initialForm: ProfileFormState = {
 };
 
 const ORDER_NOTIFICATIONS_POLL_INTERVAL_MS = 30_000;
+const ORDERS_PAGE_SIZE = 5;
 
 const supportedAvatarTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -380,12 +381,26 @@ const getOrderPreviewText = (
     return hiddenCount > 0 ? `${names.join(", ")} и еще ${hiddenCount}` : names.join(", ");
 };
 
+const mergeOrdersById = (currentOrders: CustomerOrder[], nextOrders: CustomerOrder[]) => {
+    const ordersById = new Map(currentOrders.map((order) => [order.id, order]));
+
+    nextOrders.forEach((order) => {
+        ordersById.set(order.id, order);
+    });
+
+    return Array.from(ordersById.values());
+};
+
 export function PersonalScreen() {
     const [activeTab, setActiveTab] = useState<ActiveTab>("info");
     const [profile, setProfile] = useState<CustomerProfile | null>(null);
     const [form, setForm] = useState<ProfileFormState>(initialForm);
     const [currentOrders, setCurrentOrders] = useState<CustomerOrder[]>([]);
     const [historyOrders, setHistoryOrders] = useState<CustomerOrder[]>([]);
+    const [hasMoreCurrentOrders, setHasMoreCurrentOrders] = useState(false);
+    const [hasMoreHistoryOrders, setHasMoreHistoryOrders] = useState(false);
+    const [isLoadingMoreCurrentOrders, setIsLoadingMoreCurrentOrders] = useState(false);
+    const [isLoadingMoreHistoryOrders, setIsLoadingMoreHistoryOrders] = useState(false);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -475,16 +490,21 @@ export function PersonalScreen() {
     const loadPersonalUpdates = useCallback(async () => {
         if (!accessToken || !isAuthenticated) return;
 
+        const currentOrdersLimit = Math.max(currentOrders.length, ORDERS_PAGE_SIZE);
+        const historyOrdersLimit = Math.max(historyOrders.length, ORDERS_PAGE_SIZE);
+
         const [nextCurrentOrders, nextHistoryOrders, nextUnreadNotifications] = await Promise.all([
-            getCurrentCustomerOrders(accessToken),
-            getHistoryCustomerOrders(accessToken),
+            getCurrentCustomerOrders(accessToken, {limit: currentOrdersLimit, offset: 0}),
+            getHistoryCustomerOrders(accessToken, {limit: historyOrdersLimit, offset: 0}),
             getCustomerUnreadNotifications(accessToken),
         ]);
 
         setCurrentOrders(nextCurrentOrders);
         setHistoryOrders(nextHistoryOrders);
+        setHasMoreCurrentOrders(nextCurrentOrders.length >= currentOrdersLimit);
+        setHasMoreHistoryOrders(nextHistoryOrders.length >= historyOrdersLimit);
         syncUnreadNotifications(nextUnreadNotifications.notifications);
-    }, [accessToken, isAuthenticated, syncUnreadNotifications]);
+    }, [accessToken, currentOrders.length, historyOrders.length, isAuthenticated, syncUnreadNotifications]);
 
     const loadPersonalData = useCallback(async () => {
         if (!accessToken || !isAuthenticated) {
@@ -492,6 +512,10 @@ export function PersonalScreen() {
             setProfile(null);
             setCurrentOrders([]);
             setHistoryOrders([]);
+            setHasMoreCurrentOrders(false);
+            setHasMoreHistoryOrders(false);
+            setIsLoadingMoreCurrentOrders(false);
+            setIsLoadingMoreHistoryOrders(false);
             clearUnreadNotifications();
             seenNotificationIdsRef.current = new Set();
             hasLoadedNotificationsRef.current = false;
@@ -505,14 +529,16 @@ export function PersonalScreen() {
         try {
             const [nextProfile, nextCurrentOrders, nextHistoryOrders, nextUnreadNotifications] = await Promise.all([
                 getCustomerProfile(accessToken),
-                getCurrentCustomerOrders(accessToken),
-                getHistoryCustomerOrders(accessToken),
+                getCurrentCustomerOrders(accessToken, {limit: ORDERS_PAGE_SIZE, offset: 0}),
+                getHistoryCustomerOrders(accessToken, {limit: ORDERS_PAGE_SIZE, offset: 0}),
                 getCustomerUnreadNotifications(accessToken),
             ]);
 
             syncProfile(nextProfile);
             setCurrentOrders(nextCurrentOrders);
             setHistoryOrders(nextHistoryOrders);
+            setHasMoreCurrentOrders(nextCurrentOrders.length === ORDERS_PAGE_SIZE);
+            setHasMoreHistoryOrders(nextHistoryOrders.length === ORDERS_PAGE_SIZE);
             syncUnreadNotifications(nextUnreadNotifications.notifications);
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : "Не удалось загрузить личный кабинет.");
@@ -520,6 +546,48 @@ export function PersonalScreen() {
             setIsLoading(false);
         }
     }, [accessToken, clearUnreadNotifications, isAuthenticated, syncProfile, syncUnreadNotifications]);
+
+    const handleLoadMoreCurrentOrders = useCallback(async () => {
+        if (!accessToken || isLoadingMoreCurrentOrders || !hasMoreCurrentOrders) return;
+
+        setIsLoadingMoreCurrentOrders(true);
+        setErrorMessage("");
+
+        try {
+            const nextOrders = await getCurrentCustomerOrders(accessToken, {
+                limit: ORDERS_PAGE_SIZE,
+                offset: currentOrders.length,
+            });
+
+            setCurrentOrders((prev) => mergeOrdersById(prev, nextOrders));
+            setHasMoreCurrentOrders(nextOrders.length === ORDERS_PAGE_SIZE);
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : "Не удалось загрузить еще заказы.");
+        } finally {
+            setIsLoadingMoreCurrentOrders(false);
+        }
+    }, [accessToken, currentOrders.length, hasMoreCurrentOrders, isLoadingMoreCurrentOrders]);
+
+    const handleLoadMoreHistoryOrders = useCallback(async () => {
+        if (!accessToken || isLoadingMoreHistoryOrders || !hasMoreHistoryOrders) return;
+
+        setIsLoadingMoreHistoryOrders(true);
+        setErrorMessage("");
+
+        try {
+            const nextOrders = await getHistoryCustomerOrders(accessToken, {
+                limit: ORDERS_PAGE_SIZE,
+                offset: historyOrders.length,
+            });
+
+            setHistoryOrders((prev) => mergeOrdersById(prev, nextOrders));
+            setHasMoreHistoryOrders(nextOrders.length === ORDERS_PAGE_SIZE);
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : "Не удалось загрузить еще заказы.");
+        } finally {
+            setIsLoadingMoreHistoryOrders(false);
+        }
+    }, [accessToken, hasMoreHistoryOrders, historyOrders.length, isLoadingMoreHistoryOrders]);
 
     /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
@@ -897,6 +965,10 @@ export function PersonalScreen() {
                             <OrdersSection
                                 currentOrders={displayedCurrentOrders}
                                 historyOrders={displayedHistoryOrders}
+                                hasMoreCurrentOrders={hasMoreCurrentOrders}
+                                hasMoreHistoryOrders={hasMoreHistoryOrders}
+                                isLoadingMoreCurrentOrders={isLoadingMoreCurrentOrders}
+                                isLoadingMoreHistoryOrders={isLoadingMoreHistoryOrders}
                                 unreadNotificationsByOrderId={unreadNotificationsByOrderId}
                                 unreadNotificationsCount={unreadNotificationsCount}
                                 notificationPermission={notificationPermission}
@@ -905,6 +977,8 @@ export function PersonalScreen() {
                                 onOpenOrder={handleOpenOrder}
                                 onRefreshOrderStatus={handleRefreshOrderStatus}
                                 onContinuePayment={handleContinuePayment}
+                                onLoadMoreCurrentOrders={handleLoadMoreCurrentOrders}
+                                onLoadMoreHistoryOrders={handleLoadMoreHistoryOrders}
                             />
                         )}
                     </div>
@@ -1179,6 +1253,10 @@ function ProfileValue({icon, label, value}: ProfileValueProps) {
 type OrdersSectionProps = {
     currentOrders: CustomerOrder[];
     historyOrders: CustomerOrder[];
+    hasMoreCurrentOrders: boolean;
+    hasMoreHistoryOrders: boolean;
+    isLoadingMoreCurrentOrders: boolean;
+    isLoadingMoreHistoryOrders: boolean;
     unreadNotificationsByOrderId: Map<string, CustomerOrderNotification[]>;
     unreadNotificationsCount: number;
     notificationPermission: NotificationPermission | "unsupported";
@@ -1187,11 +1265,17 @@ type OrdersSectionProps = {
     onOpenOrder: (order: CustomerOrder) => void;
     onRefreshOrderStatus: (orderId: string) => void;
     onContinuePayment: (order: CustomerOrder) => void;
+    onLoadMoreCurrentOrders: () => void;
+    onLoadMoreHistoryOrders: () => void;
 };
 
 function OrdersSection({
                            currentOrders,
                            historyOrders,
+                           hasMoreCurrentOrders,
+                           hasMoreHistoryOrders,
+                           isLoadingMoreCurrentOrders,
+                           isLoadingMoreHistoryOrders,
                            unreadNotificationsByOrderId,
                            unreadNotificationsCount,
                            notificationPermission,
@@ -1200,6 +1284,8 @@ function OrdersSection({
                            onOpenOrder,
                            onRefreshOrderStatus,
                            onContinuePayment,
+                           onLoadMoreCurrentOrders,
+                           onLoadMoreHistoryOrders,
                        }: OrdersSectionProps) {
     const menu = useAppDataStore((state) => state.menu);
     const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
@@ -1217,6 +1303,9 @@ function OrdersSection({
                 title="Текущие заказы"
                 eyebrow="Сейчас"
                 emptyText="Когда появится новый заказ, его статус можно будет отслеживать здесь."
+                hasMore={hasMoreCurrentOrders}
+                isLoadingMore={isLoadingMoreCurrentOrders}
+                onLoadMore={onLoadMoreCurrentOrders}
             >
                 {currentOrders.length > 0 ? (
                     currentOrders.map((order) => {
@@ -1247,6 +1336,9 @@ function OrdersSection({
                 title="История заказов"
                 eyebrow="История"
                 emptyText="Завершенные заказы будут храниться здесь."
+                hasMore={hasMoreHistoryOrders}
+                isLoadingMore={isLoadingMoreHistoryOrders}
+                onLoadMore={onLoadMoreHistoryOrders}
             >
                 {historyOrders.length > 0 ? (
                     historyOrders.map((order) => {
@@ -1284,10 +1376,21 @@ type OrderBlockProps = {
     title: string;
     eyebrow: string;
     emptyText: string;
+    hasMore?: boolean;
+    isLoadingMore?: boolean;
+    onLoadMore?: () => void;
     children: ReactNode;
 };
 
-function OrderBlock({title, eyebrow, emptyText, children}: OrderBlockProps) {
+function OrderBlock({
+                        title,
+                        eyebrow,
+                        emptyText,
+                        hasMore = false,
+                        isLoadingMore = false,
+                        onLoadMore,
+                        children,
+                    }: OrderBlockProps) {
     const hasContent = Boolean(children);
 
     return (
@@ -1308,6 +1411,19 @@ function OrderBlock({title, eyebrow, emptyText, children}: OrderBlockProps) {
 
             <div className="divide-y divide-border/45">
                 {hasContent ? children : null}
+                {hasMore && onLoadMore && (
+                    <div className="px-5 py-5 text-center sm:px-6">
+                        <button
+                            type="button"
+                            onClick={onLoadMore}
+                            disabled={isLoadingMore}
+                            className="inline-flex h-12 cursor-pointer items-center justify-center gap-3 rounded-[6px] border border-border/70 px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:border-border/70 disabled:hover:text-text"
+                        >
+                            {isLoadingMore && <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={1.8}/>}
+                            Загрузить еще
+                        </button>
+                    </div>
+                )}
             </div>
         </section>
     );

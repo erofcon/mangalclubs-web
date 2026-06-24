@@ -104,9 +104,30 @@ export type CustomerOrderStatus = Partial<CustomerOrder> & {
     totalSum?: number | null;
 };
 
+export type CustomerOrdersQuery = {
+    limit?: number;
+    offset?: number;
+};
+
 const getAuthHeaders = (accessToken: string) => ({
     Authorization: `Bearer ${accessToken}`,
 });
+
+const buildCustomerOrdersSearch = ({limit, offset}: CustomerOrdersQuery = {}) => {
+    const searchParams = new URLSearchParams();
+
+    if (typeof limit === "number") {
+        searchParams.set("limit", String(limit));
+    }
+
+    if (typeof offset === "number") {
+        searchParams.set("offset", String(offset));
+    }
+
+    const search = searchParams.toString();
+
+    return search ? `?${search}` : "";
+};
 
 export const getCustomerProfile = (accessToken: string) => (
     runWithAuthRefresh(
@@ -165,18 +186,18 @@ export const deleteCustomerProfile = (accessToken: string) => (
     )
 );
 
-export const getCurrentCustomerOrders = (accessToken: string) => (
+export const getCurrentCustomerOrders = (accessToken: string, query?: CustomerOrdersQuery) => (
     runWithAuthRefresh(
-        (token) => apiFetch<CustomerOrder[]>("/api/v1/orders/me/current", {
+        (token) => apiFetch<CustomerOrder[]>(`/api/v1/orders/me/current${buildCustomerOrdersSearch(query)}`, {
             headers: getAuthHeaders(token),
         }),
         accessToken,
     )
 );
 
-export const getHistoryCustomerOrders = (accessToken: string) => (
+export const getHistoryCustomerOrders = (accessToken: string, query?: CustomerOrdersQuery) => (
     runWithAuthRefresh(
-        (token) => apiFetch<CustomerOrder[]>("/api/v1/orders/me/history", {
+        (token) => apiFetch<CustomerOrder[]>(`/api/v1/orders/me/history${buildCustomerOrdersSearch(query)}`, {
             headers: getAuthHeaders(token),
         }),
         accessToken,

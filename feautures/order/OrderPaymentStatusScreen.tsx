@@ -172,11 +172,11 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
     }, [accessToken, loadStatus, orderId]);
 
     useEffect(() => {
-        if (isOrderSuccessful(status) && !hasClearedCart.current) {
+        if ((result === "success" || isPaid(status) || isOrderSuccessful(status)) && !hasClearedCart.current) {
             clearCart();
             hasClearedCart.current = true;
         }
-    }, [clearCart, status]);
+    }, [clearCart, result, status]);
 
     const copy = useMemo(() => getStatusCopy(status, result, error), [error, result, status]);
     const amount = formatAmount(status);
