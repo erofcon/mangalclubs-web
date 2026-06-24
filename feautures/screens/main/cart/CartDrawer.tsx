@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import {FormEvent, useEffect, useMemo, useState} from "react";
-import {AlertCircle, CheckCircle2, LoaderCircle, Minus, Plus, ShoppingBag, X} from "lucide-react";
+import {AlertCircle, CheckCircle2, ChevronLeft, LoaderCircle, Minus, Plus, ShoppingBag, X} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 import {useCartStore} from "@/store/cart-store";
@@ -41,6 +41,8 @@ type CheckoutSuccess = {
     publicNumber?: string;
     status?: string;
 };
+
+type CartStep = "items" | "checkout";
 
 const formatDeliveryPrice = (price: number) => (
     `${price.toLocaleString("ru-RU")} ₽`
@@ -339,6 +341,7 @@ export function CartDrawer() {
     const [comment, setComment] = useState("");
     const [dateMode, setDateMode] = useState<DateMode>("asap");
     const [timeSlot, setTimeSlot] = useState("");
+    const [cartStep, setCartStep] = useState<CartStep>("items");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [checkoutError, setCheckoutError] = useState("");
     const [checkoutSuccess, setCheckoutSuccess] = useState<CheckoutSuccess | null>(null);
@@ -555,10 +558,15 @@ export function CartDrawer() {
         return `Оформить за ${checkoutTotal.toLocaleString("ru-RU")}\u00a0₽`;
     })();
 
+    const handleCloseCart = () => {
+        setCartStep("items");
+        closeCart();
+    };
+
     return (
         <>
             <div
-                onClick={closeCart}
+                onClick={handleCloseCart}
                 className={`fixed inset-0 z-100 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
                     isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
                 }`}
@@ -571,7 +579,7 @@ export function CartDrawer() {
             >
                 <button
                     type="button"
-                    onClick={closeCart}
+                    onClick={handleCloseCart}
                     className={`absolute top-1/2 -left-16 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[6px] border border-border bg-background text-text transition duration-300 hover:border-primary hover:text-primary md:flex ${
                         isOpen ? "visible opacity-100 delay-100" : "invisible opacity-0"
                     }`}
@@ -587,7 +595,7 @@ export function CartDrawer() {
 
                     <button
                         type="button"
-                        onClick={closeCart}
+                        onClick={handleCloseCart}
                         className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-border bg-background text-text transition duration-300 hover:border-primary hover:text-primary md:hidden"
                         aria-label="Закрыть корзину"
                     >
@@ -622,158 +630,186 @@ export function CartDrawer() {
                         </div>
                     ) : (
                         <>
-                            <div className="flex flex-col border-t border-border/45">
-                            {items.map((item) => (
-                                <div key={item.id} className="flex min-w-0 gap-3 border-b border-border/45 py-4 last:border-0 md:gap-4 md:py-5">
-                                    <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[8px] border border-border/60 md:h-20 md:w-20">
-                                        {item.image ? (
-                                            <Image
-                                                src={item.image}
-                                                alt={item.name}
-                                                fill
-                                                className="object-contain"
+                            {cartStep === "items" ? (
+                                <div className="flex min-h-full flex-col">
+                                    <div className="flex flex-1 flex-col border-t border-border/45">
+                                        {items.map((item) => (
+                                            <div key={item.id} className="flex min-w-0 gap-3 border-b border-border/45 py-4 last:border-0 md:gap-4 md:py-5">
+                                                <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[8px] border border-border/60 md:h-20 md:w-20">
+                                                    {item.image ? (
+                                                        <Image
+                                                            src={item.image}
+                                                            alt={item.name}
+                                                            fill
+                                                            className="object-contain"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] leading-tight text-text">
+                                                            Нет фото
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 text-text">
+                                                    <div className="flex min-w-0 items-start justify-between gap-2">
+                                                        <h3 className="line-clamp-2 min-w-0 pt-0.5 text-sm font-bold leading-tight md:text-base">
+                                                            {item.name}
+                                                        </h3>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeItem(item.id)}
+                                                            aria-label={`Удалить ${item.name} из корзины`}
+                                                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-border transition duration-300 hover:border-primary hover:text-primary"
+                                                        >
+                                                            <X size={16}/>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span>{(item.price * item.quantity).toLocaleString("ru-RU")}&nbsp;₽</span>
+
+                                                        <div className="flex h-9 w-25 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => decrementItem(item.id)}
+                                                                aria-label={`Уменьшить количество ${item.name}`}
+                                                                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary disabled:opacity-50"
+                                                            >
+                                                                <Minus size={13} strokeWidth={2.5}/>
+                                                            </button>
+
+                                                            <span className="w-5 text-center text-sm font-bold">{item.quantity}</span>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => incrementItem(item.id)}
+                                                                aria-label={`Увеличить количество ${item.name}`}
+                                                                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary"
+                                                            >
+                                                                <Plus size={13} strokeWidth={2.5}/>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="sticky bottom-0 -mx-5 mt-3 bg-background/95 px-5 py-3 backdrop-blur md:-mx-8 md:mt-4 md:px-8">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCheckoutError("");
+                                                setCartStep("checkout");
+                                            }}
+                                            className="flex h-11 w-full cursor-pointer items-center justify-center rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 md:h-12"
+                                        >
+                                            Далее
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <form
+                                    onSubmit={handleSubmit}
+                                    className="flex min-h-full flex-col border-t border-border pt-4 text-text md:pt-5"
+                                >
+                                    <div className="flex-1 pb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCartStep("items")}
+                                            className="mb-4 flex h-9 cursor-pointer items-center gap-2 rounded-[6px] border border-border px-3 text-sm font-semibold text-text transition duration-300 hover:border-primary hover:text-primary"
+                                        >
+                                            <ChevronLeft size={16} strokeWidth={2.5}/>
+                                            К блюдам
+                                        </button>
+
+                                        <div className="mb-3 flex items-end justify-between gap-4 font-semibold md:mb-4 md:text-lg">
+                                            <span>
+                                                {totalQuantity} {getProductPlural(totalQuantity)} на сумму
+                                            </span>
+                                            <span className="font-bold">{totalPrice.toLocaleString("ru-RU")}&nbsp;₽</span>
+                                        </div>
+
+                                        {orderType === "delivery" && delivery && (
+                                            <div className="mb-3 rounded-[6px] border border-border/60 bg-black/20 px-3 py-2.5 text-sm leading-5 text-text/78 md:mb-4 md:px-4 md:py-3 md:leading-6">
+                                                {deliveryCheck?.available && deliveryCheck.price !== null
+                                                    ? `Доставка ориентировочно ${formatDeliveryPrice(deliveryCheck.price)}. Точную сумму уточним перед оплатой.`
+                                                    : "Стоимость доставки уточним перед оплатой."}
+                                            </div>
+                                        )}
+
+                                        {orderType === "delivery" && deliveryPrice !== null && (
+                                            <div className="mb-3 flex items-end justify-between gap-4 border-t border-border/50 pt-3 font-semibold md:mb-4 md:pt-4 md:text-lg">
+                                                <span>Итого с доставкой</span>
+                                                <span className="font-bold">{checkoutTotal.toLocaleString("ru-RU")}&nbsp;₽</span>
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-3 md:space-y-4">
+                                            <textarea
+                                                value={comment}
+                                                onChange={(event) => setComment(event.target.value)}
+                                                placeholder="Комментарий к заказу"
+                                                className="min-h-16 w-full resize-none rounded-[6px] border border-border bg-background px-3 py-2.5 text-sm leading-5 text-text outline-none transition placeholder:text-text/45 focus:border-primary md:min-h-20 md:px-4 md:py-3"
                                             />
-                                        ) : (
-                                            <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] leading-tight text-text">
-                                                Нет фото
+
+                                            <div>
+                                                <p className="mb-2 text-sm font-semibold text-text/82">Когда приготовить заказ</p>
+                                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                                    {dateOptions.map((option) => (
+                                                        <button
+                                                            key={option.mode}
+                                                            type="button"
+                                                            onClick={() => setDateMode(option.mode)}
+                                                            disabled={option.disabled}
+                                                            className={`h-9 rounded-[6px] border px-2 text-xs font-semibold transition md:h-10 ${
+                                                                activeDateMode === option.mode
+                                                                    ? "border-primary bg-primary text-on-primary"
+                                                                    : "border-border text-text hover:border-primary hover:text-primary"
+                                                            } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-border disabled:hover:text-text`}
+                                                        >
+                                                            {option.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {activeDateMode !== "asap" && (
+                                                <select
+                                                    value={selectedTimeSlot}
+                                                    onChange={(event) => setTimeSlot(event.target.value)}
+                                                    className="h-11 w-full rounded-[6px] border border-border bg-background px-4 text-sm font-semibold text-text outline-none transition focus:border-primary"
+                                                >
+                                                    {currentTimeSlots.map((slot) => (
+                                                        <option key={slot.value} value={slot.value}>
+                                                            {slot.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                        </div>
+
+                                        {(orderAvailability.isUnavailable || checkoutError) && (
+                                            <div className="mt-3 flex gap-3 rounded-[6px] border border-primary/45 bg-primary/10 px-3 py-2.5 text-sm font-medium leading-5 text-text md:mt-4 md:px-4 md:py-3 md:leading-6">
+                                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary"/>
+                                                <span>{checkoutError || orderAvailability.message}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 text-text">
-                                        <div className="flex min-w-0 items-start justify-between gap-2">
-                                            <h3 className="line-clamp-2 min-w-0 pt-0.5 text-sm font-bold leading-tight md:text-base">
-                                                {item.name}
-                                            </h3>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => removeItem(item.id)}
-                                                aria-label={`Удалить ${item.name} из корзины`}
-                                                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-border transition duration-300 hover:border-primary hover:text-primary"
-                                            >
-                                                <X size={16}/>
-                                            </button>
-                                        </div>
-
-                                        <div className="flex items-center justify-between gap-3">
-                                            <span>{(item.price * item.quantity).toLocaleString("ru-RU")}&nbsp;₽</span>
-
-                                            <div className="flex h-9 w-25 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => decrementItem(item.id)}
-                                                    aria-label={`Уменьшить количество ${item.name}`}
-                                                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary disabled:opacity-50"
-                                                >
-                                                    <Minus size={13} strokeWidth={2.5}/>
-                                                </button>
-
-                                                <span className="w-5 text-center text-sm font-bold">{item.quantity}</span>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => incrementItem(item.id)}
-                                                    aria-label={`Увеличить количество ${item.name}`}
-                                                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary"
-                                                >
-                                                    <Plus size={13} strokeWidth={2.5}/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            </div>
-
-                            <form
-                                onSubmit={handleSubmit}
-                                className="border-t border-border pt-4 pb-2 text-text md:pt-5"
-                            >
-                        <div className="mb-3 flex items-end justify-between gap-4 font-semibold md:mb-4 md:text-lg">
-                            <span>
-                                {totalQuantity} {getProductPlural(totalQuantity)} на сумму
-                            </span>
-                            <span className="font-bold">{totalPrice.toLocaleString("ru-RU")}&nbsp;₽</span>
-                        </div>
-
-                        {orderType === "delivery" && delivery && (
-                            <div className="mb-3 rounded-[6px] border border-border/60 bg-black/20 px-3 py-2.5 text-sm leading-5 text-text/78 md:mb-4 md:px-4 md:py-3 md:leading-6">
-                                {deliveryCheck?.available && deliveryCheck.price !== null
-                                    ? `Доставка ориентировочно ${formatDeliveryPrice(deliveryCheck.price)}. Точную сумму уточним перед оплатой.`
-                                    : "Стоимость доставки уточним перед оплатой."}
-                            </div>
-                        )}
-
-                        {orderType === "delivery" && deliveryPrice !== null && (
-                            <div className="mb-3 flex items-end justify-between gap-4 border-t border-border/50 pt-3 font-semibold md:mb-4 md:pt-4 md:text-lg">
-                                <span>Итого с доставкой</span>
-                                <span className="font-bold">{checkoutTotal.toLocaleString("ru-RU")}&nbsp;₽</span>
-                            </div>
-                        )}
-
-                        <div className="space-y-3 md:space-y-4">
-                            <textarea
-                                value={comment}
-                                onChange={(event) => setComment(event.target.value)}
-                                placeholder="Комментарий к заказу"
-                                className="min-h-16 w-full resize-none rounded-[6px] border border-border bg-background px-3 py-2.5 text-sm leading-5 text-text outline-none transition placeholder:text-text/45 focus:border-primary md:min-h-20 md:px-4 md:py-3"
-                            />
-
-                            <div>
-                                <p className="mb-2 text-sm font-semibold text-text/82">Когда приготовить заказ</p>
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                    {dateOptions.map((option) => (
+                                    <div className="sticky bottom-0 -mx-5 mt-3 bg-background/95 px-5 py-3 backdrop-blur md:-mx-8 md:mt-4 md:px-8">
                                         <button
-                                            key={option.mode}
-                                            type="button"
-                                            onClick={() => setDateMode(option.mode)}
-                                            disabled={option.disabled}
-                                            className={`h-9 rounded-[6px] border px-2 text-xs font-semibold transition md:h-10 ${
-                                                activeDateMode === option.mode
-                                                    ? "border-primary bg-primary text-on-primary"
-                                                    : "border-border text-text hover:border-primary hover:text-primary"
-                                            } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-border disabled:hover:text-text`}
+                                            type="submit"
+                                            disabled={isCheckoutDisabled}
+                                            className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 md:h-12"
                                         >
-                                            {option.label}
+                                            {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin"/>}
+                                            {checkoutButtonText}
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {activeDateMode !== "asap" && (
-                                <select
-                                    value={selectedTimeSlot}
-                                    onChange={(event) => setTimeSlot(event.target.value)}
-                                    className="h-11 w-full rounded-[6px] border border-border bg-background px-4 text-sm font-semibold text-text outline-none transition focus:border-primary"
-                                >
-                                    {currentTimeSlots.map((slot) => (
-                                        <option key={slot.value} value={slot.value}>
-                                            {slot.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    </div>
+                                </form>
                             )}
-                        </div>
-
-                        {(orderAvailability.isUnavailable || checkoutError) && (
-                            <div className="mt-3 flex gap-3 rounded-[6px] border border-primary/45 bg-primary/10 px-3 py-2.5 text-sm font-medium leading-5 text-text md:mt-4 md:px-4 md:py-3 md:leading-6">
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary"/>
-                                <span>{checkoutError || orderAvailability.message}</span>
-                            </div>
-                        )}
-
-                                <div className="sticky bottom-0 -mx-5 mt-3 bg-background/95 px-5 py-3 backdrop-blur md:-mx-8 md:mt-4 md:px-8">
-                                    <button
-                                        type="submit"
-                                        disabled={isCheckoutDisabled}
-                                        className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-primary px-5 text-center text-sm font-semibold text-on-primary transition duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 md:h-12"
-                                    >
-                                        {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin"/>}
-                                        {checkoutButtonText}
-                                    </button>
-                                </div>
-                            </form>
                         </>
                     )}
                 </div>
