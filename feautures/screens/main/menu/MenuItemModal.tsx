@@ -25,6 +25,14 @@ const getModifierDefaultAmount = (modifier: MenuModifierGroup["items"][number]) 
     modifier.defaultAmount ?? modifier.restrictions?.byDefault ?? 0
 );
 
+const isNonQuantifiedDefaultModifier = (modifier: MenuModifierGroup["items"][number]) => {
+    const restrictions = modifier.restrictions;
+
+    return getModifierDefaultAmount(modifier) > 0
+        && Math.ceil(restrictions?.minQuantity ?? 0) === 0
+        && restrictions?.maxQuantity === 0;
+};
+
 const getSortedModifierItems = (group: MenuModifierGroup) => (
     [...group.items].sort((firstItem, secondItem) => (firstItem.position ?? 0) - (secondItem.position ?? 0))
 );
@@ -159,6 +167,10 @@ const modifierSupportsQuantity = (
     group: MenuModifierGroup,
     modifier: MenuModifierGroup["items"][number],
 ) => {
+    if (isNonQuantifiedDefaultModifier(modifier)) {
+        return false;
+    }
+
     const minAmount = getModifierMinAmount(group, modifier);
     const maxAmount = getModifierMaxAmount(group, modifier);
     const groupMax = getGroupMaxSelections(group);
