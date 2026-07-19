@@ -9,14 +9,21 @@ import {requestCartAddPermission} from "@/store/cart-gate-store";
 
 interface MenuItemProps {
     item: MenuItemType;
+    onOpen?: () => void;
 }
 
-export function MenuItem({item}: MenuItemProps) {
+export function MenuItem({item, onOpen}: MenuItemProps) {
     const imageWrapperRef = useRef<HTMLDivElement | null>(null);
     const addItem = useCartStore((state) => state.addItem);
+    const hasModifiers = Boolean(item.modifiers?.some((group) => group.items.length > 0));
 
     const handleAddToCart = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
+
+        if (hasModifiers) {
+            onOpen?.();
+            return;
+        }
 
         if (!requestCartAddPermission(item)) {
             return;

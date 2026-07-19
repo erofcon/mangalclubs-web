@@ -1,6 +1,7 @@
 import {create} from "zustand";
 import {useAuthStore} from "@/store/auth-store";
 import {useCartStore} from "@/store/cart-store";
+import type {CartModifier} from "@/store/cart-store";
 import {useOrderStore} from "@/store/order-store";
 import {useUIStore} from "@/store/ui-store";
 import type {MenuItem} from "@/types/products";
@@ -8,6 +9,7 @@ import type {MenuItem} from "@/types/products";
 type PendingCartItem = {
     item: MenuItem;
     quantity: number;
+    modifiers?: CartModifier[];
 };
 
 type CartGateStore = {
@@ -22,7 +24,7 @@ export const useCartGateStore = create<CartGateStore>((set) => ({
     clearPendingCartItem: () => set({pendingCartItem: null}),
 }));
 
-export const requestCartAddPermission = (item: MenuItem, quantity = 1) => {
+export const requestCartAddPermission = (item: MenuItem, quantity = 1, modifiers?: CartModifier[]) => {
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
     const orderType = useOrderStore.getState().orderType;
 
@@ -30,7 +32,7 @@ export const requestCartAddPermission = (item: MenuItem, quantity = 1) => {
         return true;
     }
 
-    useCartGateStore.getState().setPendingCartItem({item, quantity});
+    useCartGateStore.getState().setPendingCartItem({item, quantity, modifiers});
 
     if (!isAuthenticated) {
         useUIStore.getState().openAuthModal();
@@ -61,7 +63,11 @@ export const continuePendingCartFlow = () => {
         return false;
     }
 
-    useCartStore.getState().addItem(pendingCartItem.item, pendingCartItem.quantity);
+    useCartStore.getState().addItem(
+        pendingCartItem.item,
+        pendingCartItem.quantity,
+        pendingCartItem.modifiers,
+    );
     useCartGateStore.getState().clearPendingCartItem();
 
     return true;

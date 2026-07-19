@@ -5,7 +5,7 @@ import {FormEvent, useEffect, useMemo, useState} from "react";
 import {AlertCircle, CheckCircle2, ChevronLeft, LoaderCircle, Minus, Plus, ShoppingBag, X} from "lucide-react";
 import {useUIStore} from "@/store/ui-store";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
-import {useCartStore} from "@/store/cart-store";
+import {getCartItemId, useCartStore} from "@/store/cart-store";
 import {useOrderStore} from "@/store/order-store";
 import type {DeliveryOrderDetails} from "@/store/order-store";
 import {useAppDataStore} from "@/store/app-data-store";
@@ -453,8 +453,14 @@ export function CartDrawer() {
             items: items.map((item) => ({
                 productId: item.id,
                 amount: item.quantity,
-                price: item.price,
-                modifiers: [],
+                price: item.basePrice ?? item.price,
+                productSizeId: item.productSizeId,
+                modifiers: item.modifiers?.map((modifier) => ({
+                    productId: modifier.productId,
+                    amount: modifier.amount,
+                    productGroupId: modifier.productGroupId,
+                    price: modifier.price,
+                })) ?? [],
             })),
         };
 
@@ -633,8 +639,11 @@ export function CartDrawer() {
                             {cartStep === "items" ? (
                                 <div className="flex min-h-full flex-col">
                                     <div className="flex flex-1 flex-col border-t border-border/45">
-                                        {items.map((item) => (
-                                            <div key={item.id} className="flex min-w-0 gap-3 border-b border-border/45 py-4 last:border-0 md:gap-4 md:py-5">
+                                        {items.map((item) => {
+                                            const cartItemId = getCartItemId(item);
+
+                                            return (
+                                            <div key={cartItemId} className="flex min-w-0 gap-3 border-b border-border/45 py-4 last:border-0 md:gap-4 md:py-5">
                                                 <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[8px] border border-border/60 md:h-20 md:w-20">
                                                     {item.image ? (
                                                         <Image
@@ -652,13 +661,27 @@ export function CartDrawer() {
 
                                                 <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 text-text">
                                                     <div className="flex min-w-0 items-start justify-between gap-2">
-                                                        <h3 className="line-clamp-2 min-w-0 pt-0.5 text-sm font-bold leading-tight md:text-base">
-                                                            {item.name}
-                                                        </h3>
+                                                        <div className="min-w-0">
+                                                            <h3 className="line-clamp-2 min-w-0 pt-0.5 text-sm font-bold leading-tight md:text-base">
+                                                                {item.name}
+                                                            </h3>
+
+                                                            {item.modifiers && item.modifiers.length > 0 && (
+                                                                <div className="mt-1.5 space-y-0.5 text-[12px] leading-4 text-text/62">
+                                                                    {item.modifiers.map((modifier) => (
+                                                                        <p key={`${modifier.productGroupId}:${modifier.productId}`}>
+                                                                            {modifier.name}
+                                                                            {modifier.amount > 1 ? ` x${modifier.amount}` : ""}
+                                                                            {modifier.price > 0 ? ` +${(modifier.price * modifier.amount).toLocaleString("ru-RU")}\u00a0₽` : ""}
+                                                                        </p>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
 
                                                         <button
                                                             type="button"
-                                                            onClick={() => removeItem(item.id)}
+                                                            onClick={() => removeItem(cartItemId)}
                                                             aria-label={`Удалить ${item.name} из корзины`}
                                                             className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-border transition duration-300 hover:border-primary hover:text-primary"
                                                         >
@@ -672,7 +695,7 @@ export function CartDrawer() {
                                                         <div className="flex h-9 w-25 shrink-0 items-center justify-between rounded-[6px] border border-border p-1">
                                                             <button
                                                                 type="button"
-                                                                onClick={() => decrementItem(item.id)}
+                                                                onClick={() => decrementItem(cartItemId)}
                                                                 aria-label={`Уменьшить количество ${item.name}`}
                                                                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary disabled:opacity-50"
                                                             >
@@ -683,7 +706,7 @@ export function CartDrawer() {
 
                                                             <button
                                                                 type="button"
-                                                                onClick={() => incrementItem(item.id)}
+                                                                onClick={() => incrementItem(cartItemId)}
                                                                 aria-label={`Увеличить количество ${item.name}`}
                                                                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[4px] transition duration-300 hover:text-primary"
                                                             >
@@ -693,7 +716,8 @@ export function CartDrawer() {
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
                                     <div className="sticky bottom-0 -mx-5 mt-3 bg-background/95 px-5 py-3 backdrop-blur md:-mx-8 md:mt-4 md:px-8">

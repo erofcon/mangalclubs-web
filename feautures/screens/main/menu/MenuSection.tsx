@@ -47,7 +47,7 @@ export function MenuSection() {
                                     }}
                                     className="h-full text-left outline-none"
                                 >
-                                    <MenuItem item={item}/>
+                                    <MenuItem item={item} onOpen={() => setSelectedItem(item)}/>
                                 </div>
                             ))}
                         </div>
