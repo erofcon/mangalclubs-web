@@ -4,13 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import {ArrowUpRight} from "lucide-react";
 import {topLinks} from "@/utils/constants";
-import {getOrganizationHref, getOrganizationWhatsappHref} from "@/utils/organizations";
+import {getOrganizationHref} from "@/utils/organizations";
 import {useAppDataStore} from "@/store/app-data-store";
 
 export function Footer() {
     const organizations = useAppDataStore((state) => state.organizations);
-    const primaryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization) ?? organizations[0];
-    const whatsappHref = primaryOrganization ? getOrganizationWhatsappHref(primaryOrganization) : "#";
+    const whatsappLinks = [
+        {label: "Fazenda", href: "https://wa.me/79282785050"},
+        {label: "Mangal Clubs", href: "https://wa.me/79839995050"},
+    ];
 
     return (
         <footer className="border-t border-border/70 bg-background text-text">
@@ -50,22 +52,27 @@ export function Footer() {
                                 Instagram
                             </a>
 
-                            <a
-                                href={whatsappHref}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex h-11 items-center gap-3 rounded-[6px] border border-border/70 px-4 text-[14px]
-                                font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-                            >
-                                <Image
-                                    src="/icons/WhatsappIcon.svg"
-                                    alt=""
-                                    width={18}
-                                    height={18}
-                                    className="h-4.5 w-4.5"
-                                />
-                                WhatsApp
-                            </a>
+                            <div className="flex shrink-0 gap-3">
+                                {whatsappLinks.map((whatsappLink) => (
+                                    <a
+                                        key={whatsappLink.href}
+                                        href={whatsappLink.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex h-11 items-center gap-3 whitespace-nowrap rounded-[6px] border border-border/70 px-4 text-[14px]
+                                        font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+                                    >
+                                        <Image
+                                            src="/icons/WhatsappIcon.svg"
+                                            alt=""
+                                            width={18}
+                                            height={18}
+                                            className="h-4.5 w-4.5"
+                                        />
+                                        {whatsappLink.label}
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

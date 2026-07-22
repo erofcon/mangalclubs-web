@@ -18,13 +18,13 @@ import {
 import {point} from "@/app/fonts";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mangalclubs.ru";
-const siteDescription = "Mangal Clubs - Ресторан в Грозном с доставкой, самовывозом и бронированием столов и приватных зон.";
+const siteDescription = "Mangal Clubs - Сеть ресторанов в Грозном с доставкой, самовывозом и бронированием столов и приватных зон.";
 
 export const metadata: Metadata = {
     metadataBase: new URL(siteUrl),
     applicationName: "Mangal Clubs",
     title: {
-        default: "Mangal Clubs | Гриль-ресторан в Грозном",
+        default: "Mangal Clubs | Сеть ресторанов в Грозном",
         template: "%s | Mangal Clubs",
     },
     description: siteDescription,
@@ -32,9 +32,10 @@ export const metadata: Metadata = {
         "Mangal Clubs",
         "Мангал Клабс",
         "ресторан Грозный",
+        "сеть ресторанов в Грозном",
         "доставка еды Грозный",
         "бронирование ресторана",
-        "гриль ресторан",
+        "мангал ресторан",
     ],
     alternates: {
         canonical: "/",
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
         locale: "ru_RU",
         url: "/",
         siteName: "Mangal Clubs",
-        title: "Mangal Clubs | Гриль-ресторан в Грозном",
+        title: "Mangal Clubs | Сеть ресторанов в Грозном",
         description: siteDescription,
         images: [
             {
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Mangal Clubs | Гриль-ресторан в Грозном",
+        title: "Mangal Clubs | Сеть ресторанов в Грозном",
         description: siteDescription,
         images: ["/hero/hero-v2.png"],
     },
