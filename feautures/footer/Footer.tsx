@@ -125,24 +125,24 @@ export function Footer() {
                             </ul>
                         </nav>
 
-                        <div>
-                            <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">
-                                Приложение
-                            </p>
+                        {/*<div>*/}
+                        {/*    <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">*/}
+                        {/*        Приложение*/}
+                        {/*    </p>*/}
 
-                            <div className="mt-5 space-y-3">
-                                <StoreLink
-                                    icon="/icons/GooglePlayIcon.svg"
-                                    label="Скачать из"
-                                    name="Google Play"
-                                />
-                                <StoreLink
-                                    icon="/icons/AppleAppStore.svg"
-                                    label="Доступно в"
-                                    name="App Store"
-                                />
-                            </div>
-                        </div>
+                        {/*    <div className="mt-5 space-y-3">*/}
+                        {/*        <StoreLink*/}
+                        {/*            icon="/icons/GooglePlayIcon.svg"*/}
+                        {/*            label="Скачать из"*/}
+                        {/*            name="Google Play"*/}
+                        {/*        />*/}
+                        {/*        <StoreLink*/}
+                        {/*            icon="/icons/AppleAppStore.svg"*/}
+                        {/*            label="Доступно в"*/}
+                        {/*            name="App Store"*/}
+                        {/*        />*/}
+                        {/*    </div>*/}
+                        {/*</div>*/}
                     </div>
                 </div>
 

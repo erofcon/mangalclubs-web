@@ -166,35 +166,12 @@ export function AuthModal() {
                         <span className="cursor-pointer">
                             Даю{" "}
                             <Link
-                                href="/legal#personal-consent"
+                                href="/legal"
                                 target="_blank"
                                 className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
                             >
-                                согласие на обработку персональных данных
-                            </Link>
-                            {" "}и принимаю{" "}
-                            <Link
-                                href="/legal#personal-policy"
-                                target="_blank"
-                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
-                            >
-                                политику обработки персональных данных
-                            </Link>
-                            ,{" "}
-                            <Link
-                                href="/legal#cookie-policy"
-                                target="_blank"
-                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
-                            >
-                                политику cookie
-                            </Link>
-                            {" "}и{" "}
-                            <Link
-                                href="/legal#terms"
-                                target="_blank"
-                                className="underline decoration-text/35 underline-offset-3 transition hover:text-primary"
-                            >
-                                условия сервиса
+                                согласие на обработку персональных данных{" "}и принимаю{" "}
+                                политику обработки персональных данных,{" "}политику cookie{" "}и{" "}условия сервиса
                             </Link>
                         </span>
                     </label>

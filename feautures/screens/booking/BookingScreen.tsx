@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {type ReactNode, useEffect, useMemo, useState} from "react";
 import Image from "next/image";
@@ -122,15 +122,14 @@ export function BookingScreen() {
                 <div
                     className="flex min-h-[70vh] mt-4 items-center px-5 pb-8 sm:min-h-140 sm:items-end sm:px-6 sm:pb-12 lg:px-0">
                     <div className="max-w-170">
-                        <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
+                        <p className="mb-5 text-[14px] font-semibold uppercase tracking-[0.24em] text-primary">
                             Бронирование
                         </p>
-
                         <h1
-                            className="max-w-140 mt-8 text-[42px] font-semibold leading-[0.92] tracking-normal
-                        text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[68px] lg:text-[68px]"
+                            className="max-w-140 mt-8 text-[42px] font-semibold leading-[1.12] tracking-normal
+                        text-text drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)] sm:text-[58px]"
                         >
-                            Выберите место для вечера в Mangal Club.
+                            Выберите место для вечера в <span className="text-primary">Mangal Club</span>
                         </h1>
 
                         <p className="mt-8 max-w-125 text-[14px] font-semibold tracking-normal
@@ -271,7 +270,8 @@ export function BookingScreen() {
                                                     href={`/booking/${booking.id}`}
                                                     className="booking-zone-card group block overflow-hidden rounded-[8px] border border-border/70 transition duration-300 hover:-translate-y-0.5 hover:border-primary/70"
                                                 >
-                                                    <span className="relative block aspect-[1.34] overflow-hidden bg-black">
+                                                    <span
+                                                        className="relative block aspect-[1.34] overflow-hidden bg-black">
                                                         {mobileImage && (
                                                             <Image
                                                                 src={mobileImage}
@@ -364,7 +364,8 @@ type BookingStateProps = {
 function BookingState({icon, title, text, actionLabel, onAction}: BookingStateProps) {
     return (
         <div className="booking-surface mt-6 rounded-[8px] border border-border/70 px-5 py-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[8px] border border-border/70 bg-background">
+            <div
+                className="mx-auto flex h-14 w-14 items-center justify-center rounded-[8px] border border-border/70 bg-background">
                 {icon}
             </div>
             <h3 className="mt-5 text-[26px] font-normal leading-tight text-text">

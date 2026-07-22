@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const operatorName = "ИП Гусейнова Парване Махаррамовна";
-const supportEmail = "указать email для обращений";
-const effectiveDate = "18 июня 2026 года";
+const supportEmail = "ibrqxx@gmail.com";
+const effectiveDate = "22 июля 2026 года";
 
 const documents = [
     {href: "#personal-consent", label: "Согласие на обработку персональных данных"},
@@ -30,10 +30,10 @@ const purposes = [
 ];
 
 function Section({
-    id,
-    title,
-    children,
-}: {
+                     id,
+                     title,
+                     children,
+                 }: {
     id: string;
     title: string;
     children: React.ReactNode;
@@ -54,9 +54,9 @@ function Section({
 }
 
 function Subsection({
-    title,
-    children,
-}: {
+                        title,
+                        children,
+                    }: {
     title: string;
     children: React.ReactNode;
 }) {
@@ -94,7 +94,7 @@ export function LegalScreen() {
                         <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-primary">
                             Правовая информация
                         </p>
-                        <h1 className="mt-4 max-w-180 text-[36px] font-normal leading-none text-text sm:text-6xl">
+                        <h1 className="mt-4 max-w-180 text-[36px] font-normal leading-none text-text sm:text-4xl">
                             Документы Mangal Clubs
                         </h1>
                     </div>
@@ -129,16 +129,15 @@ export function LegalScreen() {
                     <Section id="personal-consent" title="Согласие на обработку персональных данных">
                         <p>
                             Настоящим пользователь, проставляя отметку согласия на сайте Mangal Clubs,
-                            свободно, своей волей и в своем интересе дает {operatorName} согласие на
+                            свободно, своей волей и в своем интересе дает {operatorName} {" "} согласие на
                             обработку своих персональных данных в соответствии с Федеральным законом
                             от 27.07.2006 N 152-ФЗ &quot;О персональных данных&quot;.
                         </p>
 
                         <Subsection title="Оператор">
                             <p>
-                                Оператор персональных данных: {operatorName}. ИНН, ОГРНИП,
-                                адрес места нахождения и контактный email для обращений по персональным
-                                данным необходимо указать в финальной редакции документа. Контакт для
+                                Оператор персональных данных: {operatorName}. ИНН 201211497389, ОГРНИП 324200000047270,
+                                Чеченская Республика, город Грозный. Контакт для
                                 обращений: {supportEmail}.
                             </p>
                         </Subsection>

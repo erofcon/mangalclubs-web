@@ -22,9 +22,9 @@ const principles = [
 ];
 
 const galleryImages = [
-    "/booking/609686908_18097555516907715_1890579568138563188_n..jpg",
-    "/booking/609720157_18097555507907715_5416527739075581508_n..jpg",
-    "/booking/610002010_18097554682907715_6683000151825881101_n..jpg",
+    "/booking/DSC08051.jpg",
+    "/booking/DSC09334.jpg",
+    "/booking/DSC09486.jpg",
 ];
 
 export function AboutScreen() {
@@ -32,7 +32,7 @@ export function AboutScreen() {
     const stats = [
         {value: `${organizations.length}`, label: "ресторана в Грозном"},
         {value: "VIP", label: "кабинки для приватного отдыха"},
-        {value: "бронь", label: "столы и кабинки заранее"},
+        {value: "Бронь", label: "столы и кабинки заранее"},
     ];
 
     return (
@@ -42,7 +42,7 @@ export function AboutScreen() {
                     <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">
                         О ресторане
                     </p>
-                    <h1 className="mt-4 max-w-[820px] text-[34px] font-semibold leading-[1.08] text-text sm:text-[48px] lg:text-[58px]">
+                    <h1 className="mt-4 max-w-[820px] text-[34px] font-semibold leading-[1.08] text-text sm:text-[48px]">
                         Mangal Clubs — рестораны для теплых встреч, сочного мяса и вечеров у живого огня.
                     </h1>
                 </div>
@@ -50,7 +50,7 @@ export function AboutScreen() {
                 <div
                     className="relative aspect-[16/11] overflow-hidden rounded-[8px] border border-border/70 bg-black sm:aspect-[16/8] lg:aspect-[16/6]">
                     <Image
-                        src="/hero/hero-v2.png"
+                        src="/booking/DSC09484.jpg"
                         alt="Интерьер Mangal Clubs"
                         fill
                         priority
