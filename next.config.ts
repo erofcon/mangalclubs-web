@@ -4,6 +4,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 const apiRemotePattern = apiUrl ? new URL(apiUrl) : null;
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: apiRemotePattern
         ? [
