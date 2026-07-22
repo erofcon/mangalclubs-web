@@ -124,25 +124,6 @@ export function Footer() {
                                 </li>
                             </ul>
                         </nav>
-
-                        {/*<div>*/}
-                        {/*    <p className="text-[12px] font-semibold uppercase tracking-widest text-primary">*/}
-                        {/*        Приложение*/}
-                        {/*    </p>*/}
-
-                        {/*    <div className="mt-5 space-y-3">*/}
-                        {/*        <StoreLink*/}
-                        {/*            icon="/icons/GooglePlayIcon.svg"*/}
-                        {/*            label="Скачать из"*/}
-                        {/*            name="Google Play"*/}
-                        {/*        />*/}
-                        {/*        <StoreLink*/}
-                        {/*            icon="/icons/AppleAppStore.svg"*/}
-                        {/*            label="Доступно в"*/}
-                        {/*            name="App Store"*/}
-                        {/*        />*/}
-                        {/*    </div>*/}
-                        {/*</div>*/}
                     </div>
                 </div>
 
@@ -153,36 +134,5 @@ export function Footer() {
                 </div>
             </div>
         </footer>
-    );
-}
-
-type StoreLinkProps = {
-    icon: string;
-    label: string;
-    name: string;
-};
-
-function StoreLink({icon, label, name}: StoreLinkProps) {
-    return (
-        <a
-            href="#"
-            className="flex h-13 items-center gap-3 rounded-[6px] border border-border/70 px-3 transition duration-300 hover:-translate-y-0.5 hover:border-primary"
-        >
-            <Image
-                src={icon}
-                alt=""
-                width={32}
-                height={32}
-                className="h-8 w-8"
-            />
-            <span>
-                <span className="block text-[10px] leading-none text-text/58">
-                    {label}
-                </span>
-                <span className="mt-1 block text-[13px] font-semibold leading-none text-text">
-                    {name}
-                </span>
-            </span>
-        </a>
     );
 }

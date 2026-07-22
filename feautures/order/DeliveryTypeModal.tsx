@@ -14,6 +14,7 @@ import {
     checkDeliveryZone,
     type DeliveryCheckResult,
     type DeliverySettings,
+    getDeliveryMapApiKey,
     getDeliverySettings,
 } from "@/utils/delivery-zones";
 
@@ -640,6 +641,7 @@ export function DeliveryTypeModal() {
                         address={form.address.trim() || "Текущее местоположение"}
                         coordinates={mapCoordinates}
                         deliveryArea={deliverySettings?.deliveryArea}
+                        yandexMapsApiKey={getDeliveryMapApiKey(deliverySettings)}
                         onSelectCoordinates={handleMapSelect}
                     />
 

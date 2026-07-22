@@ -110,8 +110,9 @@ export function BookingScreen() {
                     autoPlay
                     muted
                     preload="metadata"
+                    poster="/hero/img.png"
                 >
-                    <source src="/booking/header/header.mp4" type="video/mp4"/>
+                    <source src="/header/booking_header.mp4" type="video/mp4"/>
                 </video>
 
                 <div

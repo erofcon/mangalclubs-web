@@ -9,6 +9,7 @@ import {GlobalOverlays} from "@/feautures/GlobalOverlays";
 import {HealthGate} from "@/components/HealthGate";
 import {AppDataSync} from "@/components/AppDataSync";
 import {OrderAvailabilityBar} from "@/components/OrderAvailabilityBar";
+import {RouteScrollManager} from "@/components/RouteScrollManager";
 import {
     PAYMENT_REDIRECT_STATE_STORAGE_KEY,
     PAYMENT_REDIRECT_URL_STORAGE_KEY,
@@ -16,10 +17,65 @@ import {
 
 import {point} from "@/app/fonts";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mangalclubs.ru";
+const siteDescription = "Mangal Clubs - Ресторан в Грозном с доставкой, самовывозом и бронированием столов и приватных зон.";
 
 export const metadata: Metadata = {
-    title: "Mangal Clubs",
-    description: "Гриль-ресторан с доставкой и бронированием в Грозном",
+    metadataBase: new URL(siteUrl),
+    applicationName: "Mangal Clubs",
+    title: {
+        default: "Mangal Clubs | Гриль-ресторан в Грозном",
+        template: "%s | Mangal Clubs",
+    },
+    description: siteDescription,
+    keywords: [
+        "Mangal Clubs",
+        "Мангал Клабс",
+        "ресторан Грозный",
+        "доставка еды Грозный",
+        "бронирование ресторана",
+        "гриль ресторан",
+    ],
+    alternates: {
+        canonical: "/",
+    },
+    openGraph: {
+        type: "website",
+        locale: "ru_RU",
+        url: "/",
+        siteName: "Mangal Clubs",
+        title: "Mangal Clubs | Гриль-ресторан в Грозном",
+        description: siteDescription,
+        images: [
+            {
+                url: "/hero/hero-v2.png",
+                width: 1200,
+                height: 630,
+                alt: "Mangal Clubs",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Mangal Clubs | Гриль-ресторан в Грозном",
+        description: siteDescription,
+        images: ["/hero/hero-v2.png"],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+        },
+    },
+    icons: {
+        icon: "/favicon.ico",
+        apple: "/logo.png",
+    },
 };
 
 export default function RootLayout({
@@ -98,6 +154,7 @@ export default function RootLayout({
             `}
         </Script>
         <HealthGate>
+            <RouteScrollManager/>
             <AppDataSync/>
             <OrderAvailabilityBar/>
             <Header/>

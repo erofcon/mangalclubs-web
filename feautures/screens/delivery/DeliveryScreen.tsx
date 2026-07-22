@@ -4,7 +4,12 @@ import dynamic from "next/dynamic";
 import {useEffect, useState} from "react";
 import Link from "next/link";
 import {ChevronRight} from "lucide-react";
-import {type DeliverySettings, type DeliveryZone, getDeliverySettings} from "@/utils/delivery-zones";
+import {
+    type DeliverySettings,
+    type DeliveryZone,
+    getDeliveryMapApiKey,
+    getDeliverySettings,
+} from "@/utils/delivery-zones";
 import {formatOrganizationAddress, getOrganizationHref} from "@/utils/organizations";
 import {useAppDataStore} from "@/store/app-data-store";
 
@@ -107,6 +112,7 @@ export function DeliveryScreen() {
                                     address="Грозный"
                                     coordinates={deliveryOrganization.coordinates}
                                     deliveryArea={deliverySettings?.deliveryArea}
+                                    yandexMapsApiKey={getDeliveryMapApiKey(deliverySettings)}
                                 />
                             </div>
                         )}

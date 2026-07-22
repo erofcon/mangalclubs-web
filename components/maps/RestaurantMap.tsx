@@ -15,6 +15,7 @@ type RestaurantMapProps = {
     address: string;
     coordinates: Coordinates;
     deliveryArea?: DeliveryArea | null;
+    yandexMapsApiKey?: string;
     onSelectCoordinates?: (coordinates: Coordinates) => void;
 };
 
@@ -126,18 +127,18 @@ export function RestaurantMap({
                                   address,
                                   coordinates,
                                   deliveryArea,
+                                  yandexMapsApiKey,
                                   onSelectCoordinates,
                               }: RestaurantMapProps) {
-    const apiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
     const deliveryAreaPositions = useMemo(
         () => deliveryAreaToPositions(deliveryArea),
         [deliveryArea],
     );
 
-    if (!apiKey) {
+    if (!yandexMapsApiKey) {
         return (
             <div className="flex h-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
-                Не задан NEXT_PUBLIC_YANDEX_MAPS_API_KEY
+                Не удалось загрузить карту
             </div>
         );
     }
@@ -162,7 +163,7 @@ export function RestaurantMap({
                 className="h-full w-full"
             >
                 <TileLayer
-                    url={`https://tiles.api-maps.yandex.ru/v1/tiles/?projection=web_mercator&x={x}&y={y}&z={z}&lang=ru_RU&l=map&apikey=${apiKey}`}
+                    url={`https://tiles.api-maps.yandex.ru/v1/tiles/?projection=web_mercator&x={x}&y={y}&z={z}&lang=ru_RU&l=map&apikey=${yandexMapsApiKey}`}
                 />
 
                 {deliveryAreaPositions.length > 0 && (

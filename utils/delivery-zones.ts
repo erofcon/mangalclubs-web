@@ -15,6 +15,9 @@ export type DeliveryArea = {
 export type DeliverySettings = {
     deliveryArea: DeliveryArea;
     pricingZones: DeliveryZone[];
+    yandexMapsApiKey?: string | null;
+    yandex_maps_api_key?: string | null;
+    mapApiKey?: string | null;
 };
 
 export type DeliveryCoordinates = {
@@ -58,6 +61,13 @@ export const getDeliveryZones = (signal?: AbortSignal) => (
 
 export const getDeliverySettings = (signal?: AbortSignal) => (
     apiFetch<DeliverySettings>("/api/v1/delivery-zones/settings", {signal})
+);
+
+export const getDeliveryMapApiKey = (settings?: DeliverySettings | null) => (
+    settings?.yandexMapsApiKey?.trim() ||
+    settings?.yandex_maps_api_key?.trim() ||
+    settings?.mapApiKey?.trim() ||
+    ""
 );
 
 export const checkDeliveryZone = (

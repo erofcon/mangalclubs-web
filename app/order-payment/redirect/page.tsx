@@ -1,3 +1,13 @@
+import type {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: "Переход к оплате",
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
+
 export default function OrderPaymentRedirectPage() {
     return (
         <main className="flex min-h-dvh items-center justify-center bg-background px-5 text-text">

@@ -42,7 +42,7 @@ export function HeroSection() {
                 preload="metadata"
                 poster="/hero/hero-v2.png"
             >
-                <source src="/booking/header/header.mp4" type="video/mp4"/>
+                <source src="/header/main_header.mp4" type="video/mp4"/>
             </video>
 
             <div
