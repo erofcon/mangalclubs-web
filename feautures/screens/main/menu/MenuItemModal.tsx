@@ -1,6 +1,6 @@
 "use client";
 
-import {Minus, Plus} from "lucide-react";
+import {LoaderCircle, Minus, Plus} from "lucide-react";
 import Image from "next/image";
 import {useMemo, useRef, useState} from "react";
 import {type MenuModifierGroup, type MenuItem as MenuItemType} from "@/types/products";
@@ -10,6 +10,7 @@ import {requestCartAddPermission} from "@/store/cart-gate-store";
 
 interface MenuItemModalProps {
     item: MenuItemType;
+    previewImage?: string;
     onClose: () => void;
 }
 
@@ -236,9 +237,10 @@ const buildInitialSelectedModifiers = (groups: MenuModifierGroup[] = []): Select
     }, {})
 );
 
-export function MenuItemModal({item, onClose}: MenuItemModalProps) {
+export function MenuItemModal({item, previewImage, onClose}: MenuItemModalProps) {
     const imageWrapperRef = useRef<HTMLDivElement | null>(null);
     const [quantity, setQuantity] = useState(1);
+    const [isImageLoading, setIsImageLoading] = useState(Boolean(item.image));
     const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifiers>(() => (
         buildInitialSelectedModifiers(item.modifiers)
     ));
@@ -572,14 +574,34 @@ export function MenuItemModal({item, onClose}: MenuItemModalProps) {
                     className="relative flex h-[42dvh] min-h-65 w-full shrink-0 items-center justify-center overflow-hidden bg-background sm:h-full sm:min-h-0 sm:w-1/2"
                 >
                     {item.image ? (
-                        <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            priority
-                            sizes="(max-width: 640px) 100vw, 450px"
-                            className="h-full w-full object-cover"
-                        />
+                        <>
+                            {previewImage && (
+                                // eslint-disable-next-line @next/next/no-img-element -- This is the already cached card thumbnail, shown only until the optimized modal image is ready.
+                                <img
+                                    src={previewImage}
+                                    alt=""
+                                    aria-hidden="true"
+                                    className="absolute inset-0 h-full w-full scale-105 object-cover blur-sm"
+                                />
+                            )}
+                            <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                priority
+                                sizes="(max-width: 640px) 100vw, 450px"
+                                className={`h-full w-full object-cover transition-opacity duration-200 ${
+                                    isImageLoading ? "opacity-0" : "opacity-100"
+                                }`}
+                                onLoad={() => setIsImageLoading(false)}
+                            />
+                            {isImageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20" aria-live="polite">
+                                    <LoaderCircle className="h-8 w-8 animate-spin text-white" strokeWidth={1.8}/>
+                                    <span className="sr-only">Загружаем фото блюда</span>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="text-sm text-text/60">Нет фото</div>
                     )}

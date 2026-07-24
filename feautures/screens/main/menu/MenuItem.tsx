@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, {useRef} from "react";
+import React, {useRef, useState} from "react";
 import {ShoppingCart} from "lucide-react";
 import {MenuItem as MenuItemType} from "@/types/products";
 import {useCartStore} from "@/store/cart-store";
@@ -9,11 +9,12 @@ import {requestCartAddPermission} from "@/store/cart-gate-store";
 
 interface MenuItemProps {
     item: MenuItemType;
-    onOpen?: () => void;
+    onOpen?: (previewImage?: string) => void;
 }
 
 export function MenuItem({item, onOpen}: MenuItemProps) {
     const imageWrapperRef = useRef<HTMLDivElement | null>(null);
+    const [shouldPreloadModalImage, setShouldPreloadModalImage] = useState(false);
     const addItem = useCartStore((state) => state.addItem);
     const hasModifiers = Boolean(item.modifiers?.some((group) => group.items.length > 0));
 
@@ -21,7 +22,7 @@ export function MenuItem({item, onOpen}: MenuItemProps) {
         event.stopPropagation();
 
         if (hasModifiers) {
-            onOpen?.();
+            onOpen?.(imageWrapperRef.current?.querySelector("img")?.currentSrc);
             return;
         }
 
@@ -51,9 +52,19 @@ export function MenuItem({item, onOpen}: MenuItemProps) {
         );
     };
 
+    const preloadModalImage = () => {
+        if (item.image) {
+            setShouldPreloadModalImage(true);
+        }
+    };
+
     return (
         <article
-            className="group relative flex h-full min-h-29 cursor-pointer overflow-hidden rounded-lg border border-border transition duration-300 hover:border-[#76532e] hover:bg-[#101112]">
+            className="group relative flex h-full min-h-29 cursor-pointer overflow-hidden rounded-lg border border-border transition duration-300 hover:border-[#76532e] hover:bg-[#101112]"
+            onPointerEnter={preloadModalImage}
+            onFocusCapture={preloadModalImage}
+            onTouchStart={preloadModalImage}
+        >
             <div
                 className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_44%),radial-gradient(circle_at_20%_45%,rgba(214,173,104,0.13),transparent_38%)]"/>
 
@@ -63,14 +74,26 @@ export function MenuItem({item, onOpen}: MenuItemProps) {
                  sm:w-36.25 lg:w-37.5"
             >
                 {item.image ? (
-                    <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="(min-width: 1280px) 150px, (min-width: 640px) 145px, 130px"
-                        className="h-23 w-full object-cover drop-shadow-[0_18px_18px_rgba(0,0,0,0.54)]
-                         transition duration-300 group-hover:scale-105 sm:h-25"
-                    />
+                    <>
+                        <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            sizes="(min-width: 1280px) 150px, (min-width: 640px) 145px, 130px"
+                            className="h-23 w-full object-cover drop-shadow-[0_18px_18px_rgba(0,0,0,0.54)]
+                             transition duration-300 group-hover:scale-105 sm:h-25"
+                        />
+                        {shouldPreloadModalImage && (
+                            <Image
+                                src={item.image}
+                                alt=""
+                                fill
+                                sizes="(max-width: 640px) 100vw, 450px"
+                                loading="eager"
+                                className="pointer-events-none absolute inset-0 opacity-0"
+                            />
+                        )}
+                    </>
                 ) : (
                     <div className="text-sm text-[#9d9387]">Нет фото</div>
                 )}

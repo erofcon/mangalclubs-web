@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import {useCallback, useEffect, useMemo, useState} from "react";
-import {ChevronLeft, ChevronRight, X} from "lucide-react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {ChevronLeft, ChevronRight, LoaderCircle, X} from "lucide-react";
 import {useBodyScrollLock} from "@/hooks/useBodyScrollLock";
 
 type UseImageLightboxOptions = {
@@ -17,10 +17,15 @@ type TouchPoint = {
 
 export function useImageLightbox({images, alt = "Фото"}: UseImageLightboxOptions) {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [displayedIndex, setDisplayedIndex] = useState<number | null>(null);
+    const [isImageLoading, setIsImageLoading] = useState(false);
     const [touchStart, setTouchStart] = useState<TouchPoint | null>(null);
+    const activeIndexRef = useRef<number | null>(null);
     const isOpen = activeIndex !== null && images.length > 0;
     const normalizedIndex = activeIndex === null ? 0 : clampIndex(activeIndex, images.length);
     const activeImage = images[normalizedIndex];
+    const normalizedDisplayedIndex = displayedIndex === null ? normalizedIndex : clampIndex(displayedIndex, images.length);
+    const displayedImage = images[normalizedDisplayedIndex];
     const canNavigate = images.length > 1;
 
     useBodyScrollLock(isOpen);
@@ -28,32 +33,51 @@ export function useImageLightbox({images, alt = "Фото"}: UseImageLightboxOpt
     const open = useCallback((index = 0) => {
         if (images.length === 0) return;
 
-        setActiveIndex(clampIndex(index, images.length));
+        const nextIndex = clampIndex(index, images.length);
+
+        activeIndexRef.current = nextIndex;
+        setActiveIndex(nextIndex);
+        setDisplayedIndex(nextIndex);
+        setIsImageLoading(true);
     }, [images.length]);
 
     const close = useCallback(() => {
+        activeIndexRef.current = null;
         setActiveIndex(null);
+        setDisplayedIndex(null);
+        setIsImageLoading(false);
     }, []);
 
     const showPrev = useCallback(() => {
         if (images.length < 2) return;
 
-        setActiveIndex((currentIndex) => {
-            const nextIndex = currentIndex === null ? 0 : currentIndex - 1;
+        const nextIndex = wrapIndex((activeIndex ?? 0) - 1, images.length);
 
-            return wrapIndex(nextIndex, images.length);
-        });
-    }, [images.length]);
+        activeIndexRef.current = nextIndex;
+        setActiveIndex(nextIndex);
+        setIsImageLoading(nextIndex !== normalizedDisplayedIndex);
+    }, [activeIndex, images.length, normalizedDisplayedIndex]);
 
     const showNext = useCallback(() => {
         if (images.length < 2) return;
 
-        setActiveIndex((currentIndex) => {
-            const nextIndex = currentIndex === null ? 0 : currentIndex + 1;
+        const nextIndex = wrapIndex((activeIndex ?? 0) + 1, images.length);
 
-            return wrapIndex(nextIndex, images.length);
-        });
-    }, [images.length]);
+        activeIndexRef.current = nextIndex;
+        setActiveIndex(nextIndex);
+        setIsImageLoading(nextIndex !== normalizedDisplayedIndex);
+    }, [activeIndex, images.length, normalizedDisplayedIndex]);
+
+    useEffect(() => {
+        activeIndexRef.current = activeIndex;
+    }, [activeIndex]);
+
+    const showLoadedImage = useCallback((index: number) => {
+        if (activeIndexRef.current !== index) return;
+
+        setDisplayedIndex(index);
+        setIsImageLoading(false);
+    }, []);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -82,7 +106,7 @@ export function useImageLightbox({images, alt = "Фото"}: UseImageLightboxOpt
     }, [close, isOpen, showNext, showPrev]);
 
     const lightbox = useMemo(() => {
-        if (!isOpen || !activeImage) return null;
+        if (!isOpen || !activeImage || !displayedImage) return null;
 
         return (
             <div
@@ -155,13 +179,47 @@ export function useImageLightbox({images, alt = "Фото"}: UseImageLightboxOpt
                     }}
                 >
                     <Image
-                        src={activeImage}
-                        alt={`${alt} ${normalizedIndex + 1}`}
+                        src={displayedImage}
+                        alt={`${alt} ${normalizedDisplayedIndex + 1}`}
                         fill
                         sizes="100vw"
                         className="object-contain"
                         priority
+                        onLoad={() => showLoadedImage(normalizedDisplayedIndex)}
                     />
+                    {activeImage !== displayedImage && (
+                        <Image
+                            key={activeImage}
+                            src={activeImage}
+                            alt=""
+                            fill
+                            sizes="100vw"
+                            className="pointer-events-none absolute inset-0 opacity-0"
+                            onLoad={() => showLoadedImage(normalizedIndex)}
+                        />
+                    )}
+                    {isImageLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30" aria-live="polite">
+                            <LoaderCircle className="h-9 w-9 animate-spin text-white" strokeWidth={1.8}/>
+                            <span className="sr-only">Загружаем фото</span>
+                        </div>
+                    )}
+                    {!isImageLoading && canNavigate && Array.from(new Set([
+                        wrapIndex(normalizedIndex - 1, images.length),
+                        wrapIndex(normalizedIndex + 1, images.length),
+                    ])).map((index) => (
+                        index !== normalizedIndex && (
+                            <Image
+                                key={`preload-${images[index]}`}
+                                src={images[index]}
+                                alt=""
+                                fill
+                                sizes="100vw"
+                                loading="eager"
+                                className="pointer-events-none absolute inset-0 opacity-0"
+                            />
+                        )
+                    ))}
                 </div>
 
                 {canNavigate && (
@@ -171,7 +229,7 @@ export function useImageLightbox({images, alt = "Фото"}: UseImageLightboxOpt
                 )}
             </div>
         );
-    }, [activeImage, alt, canNavigate, close, images.length, isOpen, normalizedIndex, showNext, showPrev, touchStart]);
+    }, [activeImage, alt, canNavigate, close, displayedImage, images, isImageLoading, isOpen, normalizedDisplayedIndex, normalizedIndex, showLoadedImage, showNext, showPrev, touchStart]);
 
     return {
         isOpen,

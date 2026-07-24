@@ -6,11 +6,20 @@ import {MenuItem} from "@/feautures/screens/main/menu/MenuItem";
 import {MenuItemModal} from "@/feautures/screens/main/menu/MenuItemModal";
 import {useAppDataStore} from "@/store/app-data-store";
 
+type SelectedMenuItem = {
+    item: MenuItemType;
+    previewImage?: string;
+};
+
 export function MenuSection() {
-    const [selectedItem, setSelectedItem] = useState<MenuItemType | null>(null);
+    const [selectedItem, setSelectedItem] = useState<SelectedMenuItem | null>(null);
     const menus = useAppDataStore((state) => state.menu);
     const isMenuLoading = useAppDataStore((state) => state.isMenuLoading);
     const errorMessage = useAppDataStore((state) => state.errorMessage);
+
+    const openItem = (item: MenuItemType, previewImage?: string) => {
+        setSelectedItem({item, previewImage});
+    };
 
     return (
         <>
@@ -39,15 +48,15 @@ export function MenuSection() {
                                     key={item.id}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => setSelectedItem(item)}
+                                    onClick={(event) => openItem(item, event.currentTarget.querySelector("img")?.currentSrc)}
                                     onKeyDown={(event) => {
                                         if (event.key === "Enter" || event.key === " ") {
-                                            setSelectedItem(item);
+                                            openItem(item, event.currentTarget.querySelector("img")?.currentSrc);
                                         }
                                     }}
                                     className="h-full text-left outline-none"
                                 >
-                                    <MenuItem item={item} onOpen={() => setSelectedItem(item)}/>
+                                    <MenuItem item={item} onOpen={(previewImage) => openItem(item, previewImage)}/>
                                 </div>
                             ))}
                         </div>
@@ -61,7 +70,8 @@ export function MenuSection() {
 
             {selectedItem && (
                 <MenuItemModal
-                    item={selectedItem}
+                    item={selectedItem.item}
+                    previewImage={selectedItem.previewImage}
                     onClose={() => setSelectedItem(null)}
                 />
             )}

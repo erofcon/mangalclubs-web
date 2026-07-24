@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {useParams, useRouter} from "next/navigation";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {ArrowLeft, LoaderCircle, type LucideIcon, MapPin, MessageCircle, Phone, RefreshCcw} from "lucide-react";
 import {
     formatOrganizationAddress,
@@ -34,9 +34,14 @@ export function BookingSelectedScreen() {
     const [errorMessage, setErrorMessage] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [displayedImageIndex, setDisplayedImageIndex] = useState(0);
+    const [isSelectedImageLoading, setIsSelectedImageLoading] = useState(false);
+    const requestedImageIndexRef = useRef(0);
     const galleryImages = useMemo(() => getBookingGalleryImages(booking), [booking]);
     const normalizedSelectedImageIndex = Math.min(selectedImageIndex, Math.max(galleryImages.length - 1, 0));
     const selectedImage = galleryImages[normalizedSelectedImageIndex] ?? galleryImages[0];
+    const normalizedDisplayedImageIndex = Math.min(displayedImageIndex, Math.max(galleryImages.length - 1, 0));
+    const displayedImage = galleryImages[normalizedDisplayedImageIndex] ?? selectedImage;
     const imageLightbox = useImageLightbox({
         images: galleryImages,
         alt: booking?.title ?? "Зона бронирования",
@@ -56,6 +61,8 @@ export function BookingSelectedScreen() {
 
                 setBooking(loadedBooking);
                 setSelectedImageIndex(0);
+                setDisplayedImageIndex(0);
+                setIsSelectedImageLoading(true);
                 setStatus(loadedBooking.isActive === false ? "not-found" : "ready");
             } catch (error) {
                 if (controller.signal.aborted) return;
@@ -79,6 +86,25 @@ export function BookingSelectedScreen() {
             controller.abort();
         };
     }, [bookingId, reloadKey]);
+
+    useEffect(() => {
+        requestedImageIndexRef.current = normalizedSelectedImageIndex;
+    }, [normalizedSelectedImageIndex]);
+
+    const selectImage = (index: number) => {
+        if (index === normalizedSelectedImageIndex) return;
+
+        requestedImageIndexRef.current = index;
+        setSelectedImageIndex(index);
+        setIsSelectedImageLoading(index !== normalizedDisplayedImageIndex);
+    };
+
+    const showSelectedImage = (index: number) => {
+        if (requestedImageIndexRef.current !== index) return;
+
+        setDisplayedImageIndex(index);
+        setIsSelectedImageLoading(false);
+    };
 
     if (!bookingId) {
         return (
@@ -165,7 +191,7 @@ export function BookingSelectedScreen() {
                             </p>
                         )}
 
-                        {selectedImage && (
+                        {displayedImage && (
                             <button
                                 type="button"
                                 onClick={() => imageLightbox.open(normalizedSelectedImageIndex)}
@@ -173,13 +199,44 @@ export function BookingSelectedScreen() {
                                 aria-label="Открыть фото на весь экран"
                             >
                                 <Image
-                                    src={selectedImage}
+                                    src={displayedImage}
                                     alt={booking.title ?? "Зона бронирования"}
                                     fill
                                     priority
                                     sizes="(max-width: 1023px) 100vw, 790px"
                                     className="object-cover"
+                                    onLoad={() => showSelectedImage(normalizedDisplayedImageIndex)}
                                 />
+                                {selectedImage && normalizedDisplayedImageIndex !== normalizedSelectedImageIndex && (
+                                    <Image
+                                        key={selectedImage}
+                                        src={selectedImage}
+                                        alt=""
+                                        fill
+                                        sizes="(max-width: 1023px) 100vw, 790px"
+                                        className="pointer-events-none absolute inset-0 opacity-0"
+                                        onLoad={() => showSelectedImage(normalizedSelectedImageIndex)}
+                                    />
+                                )}
+                                {isSelectedImageLoading && (
+                                    <span className="absolute inset-0 flex items-center justify-center bg-black/35" aria-live="polite">
+                                        <LoaderCircle className="h-8 w-8 animate-spin text-white" strokeWidth={1.8}/>
+                                        <span className="sr-only">Загружаем фото</span>
+                                    </span>
+                                )}
+                                {!isSelectedImageLoading && galleryImages.map((image, index) => (
+                                    index !== normalizedDisplayedImageIndex && (
+                                        <Image
+                                            key={`preload-${image}`}
+                                            src={image}
+                                            alt=""
+                                            fill
+                                            sizes="(max-width: 1023px) 100vw, 790px"
+                                            loading="eager"
+                                            className="pointer-events-none absolute inset-0 opacity-0"
+                                        />
+                                    )
+                                ))}
                             </button>
                         )}
 
@@ -192,7 +249,7 @@ export function BookingSelectedScreen() {
                                         <button
                                             key={image}
                                             type="button"
-                                            onClick={() => setSelectedImageIndex(index)}
+                                            onClick={() => selectImage(index)}
                                             className={`relative aspect-[1.2] overflow-hidden rounded-[6px] border transition duration-300 ${
                                                 isSelected
                                                     ? "border-primary"
