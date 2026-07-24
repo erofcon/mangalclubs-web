@@ -18,7 +18,7 @@ import {CategoryNav, type CategoryNavItem} from "@/feautures/screens/main/catego
 import {formatOrganizationAddress} from "@/utils/organizations";
 import type {Organization} from "@/types/organization";
 import {useAppDataStore} from "@/store/app-data-store";
-import {getBookingResponsiveImages, loadBookingCategories, loadBookings} from "@/utils/bookings";
+import {getBookingGalleryImages, loadBookingCategories, loadBookings} from "@/utils/bookings";
 import type {Booking, BookingCategory} from "@/types/booking";
 
 type BookingLoadStatus = "loading" | "ready" | "error";
@@ -261,9 +261,7 @@ export function BookingScreen() {
                                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                         {categoryBookings.map((booking) => {
                                             const organization = getBookingOrganizationInfo(booking, organizations);
-                                            const {mobileImages, desktopImages} = getBookingResponsiveImages(booking);
-                                            const mobileImage = mobileImages[0] ?? desktopImages[0];
-                                            const desktopImage = desktopImages[0] ?? mobileImages[0];
+                                            const image = getBookingGalleryImages(booking)[0];
 
                                             return (
                                                 <Link
@@ -273,22 +271,13 @@ export function BookingScreen() {
                                                 >
                                                     <span
                                                         className="relative block aspect-[1.34] overflow-hidden bg-black">
-                                                        {mobileImage && (
+                                                        {image && (
                                                             <Image
-                                                                src={mobileImage}
+                                                                src={image}
                                                                 alt={booking.title ?? "Зона бронирования"}
                                                                 fill
                                                                 sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
-                                                                className="object-cover transition duration-500 group-hover:scale-[1.035] lg:hidden"
-                                                            />
-                                                        )}
-                                                        {desktopImage && (
-                                                            <Image
-                                                                src={desktopImage}
-                                                                alt={booking.title ?? "Зона бронирования"}
-                                                                fill
-                                                                sizes="(max-width: 1279px) 50vw, 33vw"
-                                                                className="hidden object-cover transition duration-500 group-hover:scale-[1.035] lg:block"
+                                                                className="object-cover transition duration-500 group-hover:scale-[1.035]"
                                                             />
                                                         )}
                                                         <span

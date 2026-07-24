@@ -12,7 +12,7 @@ import {
 } from "@/utils/organizations";
 import {useImageLightbox} from "@/hooks/useImageLightbox";
 import {useAppDataStore} from "@/store/app-data-store";
-import {getBookingResponsiveImages, loadBooking} from "@/utils/bookings";
+import {getBookingGalleryImages, loadBooking} from "@/utils/bookings";
 import type {Booking} from "@/types/booking";
 import type {Organization} from "@/types/organization";
 
@@ -34,9 +34,7 @@ export function BookingSelectedScreen() {
     const [errorMessage, setErrorMessage] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const isDesktopGallery = useMediaQuery("(min-width: 1024px)");
-    const responsiveImages = useMemo(() => getBookingResponsiveImages(booking), [booking]);
-    const galleryImages = isDesktopGallery ? responsiveImages.desktopImages : responsiveImages.mobileImages;
+    const galleryImages = useMemo(() => getBookingGalleryImages(booking), [booking]);
     const normalizedSelectedImageIndex = Math.min(selectedImageIndex, Math.max(galleryImages.length - 1, 0));
     const selectedImage = galleryImages[normalizedSelectedImageIndex] ?? galleryImages[0];
     const imageLightbox = useImageLightbox({
@@ -215,20 +213,6 @@ export function BookingSelectedScreen() {
                             </div>
                         )}
 
-                        <section className="mt-10 border-t border-border/70 pt-6">
-                            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-primary">
-                                О зоне
-                            </p>
-                            <h2
-                                className="mt-2 max-w-[640px] text-[28px] font-normal leading-tight text-text sm:text-[34px]"
-                            >
-                                Кому подойдет
-                            </h2>
-
-                            <p className="mt-5 max-w-[780px] text-[15px] leading-7 text-text/72 sm:text-[16px]">
-                                {booking.longDescription || booking.description || "Команда ресторана подскажет детали бронирования, посадку и свободное время."}
-                            </p>
-                        </section>
                     </div>
 
                     <aside className="booking-surface rounded-[8px] border border-border/70 p-5 lg:sticky lg:top-6">
@@ -397,22 +381,4 @@ function getBookingOrganizationInfo(booking: Booking, organizations: Organizatio
         whatsapp_phone: whatsappPhone,
         address: organization ? formatOrganizationAddress(organization) : undefined,
     };
-}
-
-function useMediaQuery(query: string) {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-        const mediaQueryList = window.matchMedia(query);
-        const handleChange = () => setMatches(mediaQueryList.matches);
-
-        handleChange();
-        mediaQueryList.addEventListener("change", handleChange);
-
-        return () => {
-            mediaQueryList.removeEventListener("change", handleChange);
-        };
-    }, [query]);
-
-    return matches;
 }
