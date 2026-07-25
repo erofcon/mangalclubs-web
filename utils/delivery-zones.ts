@@ -5,6 +5,7 @@ export type DeliveryZone = {
     distance_from_km: number;
     distance_to_km: number | null;
     price: number;
+    delivery_time: string;
 };
 
 export type DeliveryArea = {

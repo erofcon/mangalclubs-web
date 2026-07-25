@@ -38,14 +38,6 @@ const formatDistance = (zone: DeliveryZone) => {
     return `${zone.distance_from_km.toLocaleString("ru-RU")}-${zone.distance_to_km.toLocaleString("ru-RU")} км`;
 };
 
-const getDeliveryTime = (zone: DeliveryZone) => {
-    if (!zone.distance_to_km || zone.distance_to_km <= 3) {
-        return "от 45 минут";
-    }
-
-    return `от ${45 + (zone.distance_to_km - 3) * 5} минут`;
-};
-
 export function DeliveryScreen() {
     const organizations = useAppDataStore((state) => state.organizations);
     const defaultDeliveryOrganization = useAppDataStore((state) => state.defaultDeliveryOrganization);
@@ -113,6 +105,7 @@ export function DeliveryScreen() {
                                     coordinates={deliveryOrganization.coordinates}
                                     deliveryArea={deliverySettings?.deliveryArea}
                                     yandexMapsApiKey={getDeliveryMapApiKey(deliverySettings)}
+                                    showOpenInYandexMaps
                                 />
                             </div>
                         )}
@@ -150,7 +143,7 @@ export function DeliveryScreen() {
                                         </div>
 
                                         <DeliveryValue label="Доставка" value={formatPrice(zone.price)}/>
-                                        <DeliveryValue label="Время" value={getDeliveryTime(zone)}/>
+                                        <DeliveryValue label="Время" value={zone.delivery_time}/>
                                     </div>
                                 ))
                             )}

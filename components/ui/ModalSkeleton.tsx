@@ -20,7 +20,7 @@ export function ModalSkeleton({
     return (
         <div
             onClick={onClose}
-            className="fixed inset-0 z-100 flex h-dvh min-h-0 items-stretch justify-center overflow-hidden bg-black/70 backdrop-blur-sm sm:items-center sm:p-4"
+            className="fixed inset-0 z-[2000] flex h-dvh min-h-0 items-stretch justify-center overflow-hidden bg-black/70 backdrop-blur-sm sm:items-center sm:p-4"
         >
             <div
                 onClick={(e) => e.stopPropagation()}

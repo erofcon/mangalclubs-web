@@ -3,6 +3,7 @@
 import {useEffect, useMemo} from "react";
 import {MapContainer, Marker, Polygon, Popup, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import L from "leaflet";
+import {MapPinned} from "lucide-react";
 import type {DeliveryArea} from "@/utils/delivery-zones";
 
 type Coordinates = {
@@ -17,6 +18,7 @@ type RestaurantMapProps = {
     deliveryArea?: DeliveryArea | null;
     yandexMapsApiKey?: string;
     onSelectCoordinates?: (coordinates: Coordinates) => void;
+    showOpenInYandexMaps?: boolean;
 };
 
 const restaurantIcon = new L.Icon({
@@ -129,6 +131,7 @@ export function RestaurantMap({
                                   deliveryArea,
                                   yandexMapsApiKey,
                                   onSelectCoordinates,
+                                  showOpenInYandexMaps = false,
                               }: RestaurantMapProps) {
     const deliveryAreaPositions = useMemo(
         () => deliveryAreaToPositions(deliveryArea),
@@ -195,6 +198,17 @@ export function RestaurantMap({
                     </Popup>
                 </Marker>
             </MapContainer>
+            {showOpenInYandexMaps && (
+                <a
+                    href={getYandexMapsUrl(coordinates)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute right-2 top-2 z-[1000] inline-flex h-10 items-center gap-2 rounded-[4px] bg-background/90 px-3 text-[12px] font-semibold text-text shadow-sm transition duration-300 hover:text-primary"
+                >
+                    <MapPinned className="h-4 w-4" strokeWidth={1.8}/>
+                    Открыть в Яндекс Картах
+                </a>
+            )}
             <a
                 href={YANDEX_MAPS_TERMS_URL}
                 target="_blank"
@@ -205,4 +219,8 @@ export function RestaurantMap({
             </a>
         </div>
     );
+}
+
+function getYandexMapsUrl({latitude, longitude}: Coordinates) {
+    return `https://yandex.ru/maps/?ll=${longitude}%2C${latitude}&z=16&pt=${longitude}%2C${latitude}%2Cpm2rdm`;
 }
