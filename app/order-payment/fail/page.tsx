@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import {Suspense} from "react";
 import {OrderPaymentStatusScreen} from "@/feautures/order/OrderPaymentStatusScreen";
 
 export const metadata: Metadata = {
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function OrderPaymentFailPage() {
-    return <OrderPaymentStatusScreen result="fail"/>;
+    return (
+        <Suspense fallback={null}>
+            <OrderPaymentStatusScreen result="fail"/>
+        </Suspense>
+    );
 }
