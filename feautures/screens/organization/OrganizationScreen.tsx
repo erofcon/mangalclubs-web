@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -27,11 +27,15 @@ const getOrganizationImages = (organization: Organization) => {
     return Array.from(new Set([organization.photo_url].filter(Boolean) as string[]));
 };
 
-export function OrganizationScreen() {
+type OrganizationScreenProps = {
+    initialOrganization?: Organization;
+};
+
+export function OrganizationScreen({initialOrganization}: OrganizationScreenProps) {
     const params = useParams();
     const organizationIdOrSlug = params?.id as string | undefined;
     const organizations = useAppDataStore((state) => state.organizations);
-    const organization = getOrganizationByIdOrSlug(organizationIdOrSlug, organizations);
+    const organization = getOrganizationByIdOrSlug(organizationIdOrSlug, organizations) ?? initialOrganization ?? null;
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const galleryImages = organization ? getOrganizationImages(organization) : [];
     const imageLightbox = useImageLightbox({
