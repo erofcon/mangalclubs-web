@@ -31,6 +31,7 @@ import {useAuthStore} from "@/store/auth-store";
 import {useNotificationStore} from "@/store/notification-store";
 import {useUIStore} from "@/store/ui-store";
 import type {MenuCategory, MenuItem} from "@/types/products";
+import type {Organization} from "@/types/organization";
 import {
     deleteCustomerAvatar,
     deleteCustomerProfile,
@@ -354,14 +355,27 @@ const openPaymentUrl = (paymentUrl: string, orderId: string) => {
     window.location.href = "/order-payment/redirect";
 };
 
-const getOrderPlaceLabel = (order: CustomerOrder) => {
+const getOrderOrganizationName = (order: CustomerOrder, organizations: Organization[]) => {
+    const organization = organizations.find((item) => (
+        item.id === order.organizationId ||
+        item.slug === order.organizationId ||
+        item.id === order.organizationSlug ||
+        item.slug === order.organizationSlug
+    ));
+
+    return organization?.name ?? null;
+};
+
+const getOrderPlaceLabel = (order: CustomerOrder, organizations: Organization[]) => {
     const deliveryAddress = getDeliveryAddressLabel(order);
 
     if (deliveryAddress) return deliveryAddress;
     if (order.orderType === "delivery") return "Адрес доставки уточняется";
-    if (order.organizationSlug) return `Ресторан ${order.organizationSlug}`;
+    const organizationName = getOrderOrganizationName(order, organizations);
 
-    return "Самовывоз из ресторана";
+    if (organizationName) return `Ресторан ${organizationName}`;
+
+    return "Ресторан не указан";
 };
 
 const getOrderPreviewText = (
@@ -1288,6 +1302,7 @@ function OrdersSection({
                            onLoadMoreHistoryOrders,
                        }: OrdersSectionProps) {
     const menu = useAppDataStore((state) => state.menu);
+    const organizations = useAppDataStore((state) => state.organizations);
     const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
     const menuItemLookup = useMemo(() => buildMenuItemLookup(menu), [menu]);
 
@@ -1316,6 +1331,7 @@ function OrdersSection({
                                 key={order.id}
                                 order={order}
                                 menuItemLookup={menuItemLookup}
+                                organizations={organizations}
                                 unreadNotifications={orderNotifications}
                                 isRefreshing={refreshingOrderIds.includes(order.id)}
                                 onOpen={() => {
@@ -1349,6 +1365,7 @@ function OrdersSection({
                                 key={order.id}
                                 order={order}
                                 menuItemLookup={menuItemLookup}
+                                organizations={organizations}
                                 unreadNotifications={orderNotifications}
                                 onOpen={() => {
                                     setSelectedOrder(order);
@@ -1364,6 +1381,7 @@ function OrdersSection({
                 <OrderDetailsModal
                     order={selectedOrder}
                     menuItemLookup={menuItemLookup}
+                    organizations={organizations}
                     onContinuePayment={() => onContinuePayment(selectedOrder)}
                     onClose={() => setSelectedOrder(null)}
                 />
@@ -1508,6 +1526,7 @@ function OrderNotificationsPanel({
 type OrderCardProps = {
     order: CustomerOrder;
     menuItemLookup: Map<string, MenuItem>;
+    organizations: Organization[];
     unreadNotifications?: CustomerOrderNotification[];
     isRefreshing?: boolean;
     onOpen: () => void;
@@ -1518,6 +1537,7 @@ type OrderCardProps = {
 function OrderCard({
                        order,
                        menuItemLookup,
+                       organizations,
                        unreadNotifications = [],
                        isRefreshing = false,
                        onOpen,
@@ -1585,7 +1605,7 @@ function OrderCard({
                         />
                         <OrderMeta
                             icon={<MapPin className="h-4 w-4" strokeWidth={1.8}/>}
-                            label={getOrderPlaceLabel(order)}
+                            label={getOrderPlaceLabel(order, organizations)}
                         />
                         <OrderMeta
                             icon={<ReceiptText className="h-4 w-4" strokeWidth={1.8}/>}
@@ -1629,11 +1649,12 @@ function OrderCard({
 type OrderDetailsModalProps = {
     order: CustomerOrder;
     menuItemLookup: Map<string, MenuItem>;
+    organizations: Organization[];
     onContinuePayment?: () => void;
     onClose: () => void;
 };
 
-function OrderDetailsModal({order, menuItemLookup, onContinuePayment, onClose}: OrderDetailsModalProps) {
+function OrderDetailsModal({order, menuItemLookup, organizations, onContinuePayment, onClose}: OrderDetailsModalProps) {
     const items = order.items ?? [];
     const status = getCustomerOrderStatusDescriptor(order);
     const paymentStatus = order.paymentStatus ? getPaymentStatusDescriptor(order.paymentStatus) : null;
@@ -1699,23 +1720,21 @@ function OrderDetailsModal({order, menuItemLookup, onContinuePayment, onClose}: 
                         <OrderDetail
                             icon={<MapPin className="h-3.5 w-3.5" strokeWidth={1.8}/>}
                             label={order.orderType === "delivery" ? "Доставка" : "Самовывоз"}
-                            value={getOrderPlaceLabel(order)}
+                            value={getOrderPlaceLabel(order, organizations)}
                         />
                     </div>
 
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         <OrderInfoPill
                             label="Телефон"
                             value={order.phone || "Не указан"}
                         />
-                        <OrderInfoPill
-                            label="Гостей"
-                            value={typeof order.guestsCount === "number" ? String(order.guestsCount) : "1"}
-                        />
-                        <OrderInfoPill
-                            label="Доставка"
-                            value={deliveryPrice !== null ? formatMoney(deliveryPrice) : "Без отдельной строки"}
-                        />
+                        {order.orderType === "delivery" && deliveryPrice !== null && (
+                            <OrderInfoPill
+                                label="Стоимость доставки"
+                                value={formatMoney(deliveryPrice)}
+                            />
+                        )}
                     </div>
 
                 <div className="mt-4 overflow-hidden rounded-[8px] border border-border/70">

@@ -779,7 +779,10 @@ export function CartDrawer() {
                                             />
 
                                             <div>
-                                                <p className="mb-2 text-sm font-semibold text-text/82">Когда приготовить заказ</p>
+                                                <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                                    <p className="text-sm font-semibold text-text/82">Когда приготовить заказ</p>
+                                                    <span className="text-[11px] font-medium text-primary/90">Время по Москве (МСК)</span>
+                                                </div>
                                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                                     {dateOptions.map((option) => (
                                                         <button
