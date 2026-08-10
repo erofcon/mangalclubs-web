@@ -1,6 +1,7 @@
 import {create} from "zustand";
 import {createJSONStorage, persist} from "zustand/middleware";
 import type {Coordinates, Organization} from "@/types/organization";
+import {useCartStore} from "@/store/cart-store";
 
 export type OrderType = "delivery" | "restaurant";
 
@@ -48,7 +49,7 @@ const trimDelivery = (delivery: DeliveryOrderInput): DeliveryOrderDetails => ({
 
 export const useOrderStore = create<OrderStore>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             orderType: null,
             delivery: null,
             restaurant: null,
@@ -58,6 +59,10 @@ export const useOrderStore = create<OrderStore>()(
 
                 if (!normalizedDelivery.address) {
                     return false;
+                }
+
+                if (get().orderType !== "delivery") {
+                    useCartStore.getState().clearCart();
                 }
 
                 set({
@@ -72,6 +77,14 @@ export const useOrderStore = create<OrderStore>()(
             selectRestaurant: (restaurant) => {
                 if (!restaurant.name.trim() || !restaurant.address.trim()) {
                     return false;
+                }
+
+                const currentOrder = get();
+                const hasRestaurantChanged = currentOrder.orderType !== "restaurant" ||
+                    currentOrder.restaurant?.id !== restaurant.id;
+
+                if (hasRestaurantChanged) {
+                    useCartStore.getState().clearCart();
                 }
 
                 set({

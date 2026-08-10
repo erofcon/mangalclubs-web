@@ -120,11 +120,24 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
     const clearCart = useCartStore((state) => state.clearCart);
     const hasClearedCart = useRef(false);
 
-    const [storedOrderId] = useState(getStoredOrderId);
+    // Browser-persisted auth and order data are unavailable during SSR.
+    // Read them after hydration so the initial server/client markup matches.
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [storedOrderId, setStoredOrderId] = useState("");
     const [status, setStatus] = useState<OrderStatusOut | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const orderId = searchParams.get("orderId") || storedOrderId;
+    const renderedIsAuthenticated = isHydrated && isAuthenticated;
+
+    useEffect(() => {
+        const hydrationTimer = window.setTimeout(() => {
+            setStoredOrderId(getStoredOrderId());
+            setIsHydrated(true);
+        }, 0);
+
+        return () => window.clearTimeout(hydrationTimer);
+    }, []);
 
     const loadStatus = useCallback(async () => {
         if (!orderId || !accessToken) return null;
@@ -247,7 +260,7 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
                         </div>
                     )}
 
-                    {orderId && !isAuthenticated && (
+                    {orderId && isHydrated && !renderedIsAuthenticated && (
                         <div className="mt-5 rounded-[6px] border border-primary/45 bg-primary/10 px-4 py-3 text-sm font-medium leading-6 text-text">
                             Войдите в аккаунт, чтобы проверить статус заказа.
                         </div>
@@ -275,8 +288,8 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
 
                         <button
                             type="button"
-                            onClick={isAuthenticated ? () => void loadStatus() : openAuthModal}
-                            disabled={isAuthenticated && isLoading}
+                            onClick={renderedIsAuthenticated ? () => void loadStatus() : openAuthModal}
+                            disabled={renderedIsAuthenticated && isLoading}
                             className="inline-flex h-12 items-center justify-center gap-3 rounded-[6px] border border-border/70 px-5 text-[14px] font-semibold text-text transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:border-border/70 disabled:hover:text-text"
                         >
                             {isLoading ? (
@@ -284,7 +297,7 @@ export function OrderPaymentStatusScreen({result}: OrderPaymentStatusScreenProps
                             ) : (
                                 <RefreshCw className="h-4 w-4" strokeWidth={1.8}/>
                             )}
-                            {isAuthenticated ? "Обновить статус" : "Войти"}
+                            {renderedIsAuthenticated ? "Обновить статус" : "Войти"}
                         </button>
                     </div>
                 </div>
