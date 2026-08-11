@@ -15,14 +15,16 @@ import {createOrder, LAST_ORDER_ID_STORAGE_KEY} from "@/utils/orders";
 import type {OrderCreatePayload} from "@/utils/orders";
 import {checkDeliveryZone} from "@/utils/delivery-zones";
 import type {DeliveryCheckResult} from "@/utils/delivery-zones";
-import type {Organization, WorkingHour} from "@/types/organization";
+import {
+    getOrganizationOrderTimeSlots,
+    type OrganizationOrderTimeSlots,
+} from "@/utils/order-time-slots";
 import {
     PAYMENT_REDIRECT_STATE_STORAGE_KEY,
     PAYMENT_REDIRECT_URL_STORAGE_KEY,
 } from "@/utils/payment-return";
 
 type DateMode = "asap" | "today" | "tomorrow" | "dayAfterTomorrow";
-type ScheduledDateMode = Exclude<DateMode, "asap">;
 
 type TimeSlot = {
     value: string;
@@ -43,6 +45,8 @@ type CheckoutSuccess = {
 };
 
 type CartStep = "items" | "checkout";
+
+const ORDER_TIME_SLOTS_REFRESH_MS = 60_000;
 
 const formatDeliveryPrice = (price: number) => (
     `${price.toLocaleString("ru-RU")} ₽`
@@ -89,172 +93,35 @@ const getProductPlural = (count: number) => {
     return "товаров";
 };
 
-const padTimePart = (value: number) => String(value).padStart(2, "0");
+const addCalendarDays = (dateValue: string, days: number) => {
+    const [year, month, day] = dateValue.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
 
-const SLOT_STEP_MINUTES = 30;
-const MIN_ORDER_DELAY_MINUTES = 30;
+    date.setUTCDate(date.getUTCDate() + days);
 
-const dateModeOffsets: Record<ScheduledDateMode, number> = {
-    today: 0,
-    tomorrow: 1,
-    dayAfterTomorrow: 2,
+    return date.toISOString().slice(0, 10);
 };
 
-const addDays = (date: Date, days: number) => {
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + days);
-
-    return nextDate;
-};
-
-const roundUpToHalfHour = (date: Date) => {
-    const nextDate = new Date(date);
-    const minutes = nextDate.getMinutes();
-    const extraMinutes = minutes === 0 || minutes === 30
-        ? 0
-        : minutes < 30
-            ? 30 - minutes
-            : 60 - minutes;
-
-    nextDate.setMinutes(minutes + extraMinutes, 0, 0);
-
-    return nextDate;
-};
-
-const getDateForMode = (mode: ScheduledDateMode) => {
-    const now = new Date();
-
-    return addDays(now, dateModeOffsets[mode]);
-};
-
-const getWeekdayIndex = (date: Date) => (date.getDay() + 6) % 7;
-
-const getWorkingHourForDate = (workingHours: WorkingHour[] | undefined, date: Date) => (
-    workingHours?.find((item) => item.weekday === getWeekdayIndex(date))
+const formatSlotLabel = (value: string) => (
+    value.match(/T(\d{2}:\d{2})/)?.[1] ?? value
 );
 
-const getStartOfDay = (date: Date) => {
-    const nextDate = new Date(date);
-
-    nextDate.setHours(0, 0, 0, 0);
-
-    return nextDate;
-};
-
-const getEndOfDay = (date: Date) => {
-    const nextDate = new Date(date);
-
-    nextDate.setHours(23, 59, 59, 999);
-
-    return nextDate;
-};
-
-const maxDate = (first: Date, second: Date) => (
-    first > second ? first : second
+const mapTimeSlots = (schedule?: OrganizationOrderTimeSlots): TimeSlot[] => (
+    schedule?.slots.map((slot) => ({
+        value: slot.startsAt,
+        label: formatSlotLabel(slot.startsAt),
+    })) ?? []
 );
-
-const minDate = (first: Date, second: Date) => (
-    first < second ? first : second
-);
-
-const parseTimeParts = (value: string) => {
-    const [hours = "0", minutes = "0"] = value.replace("Z", "").split(":");
-
-    return {
-        hours: Number(hours),
-        minutes: Number(minutes),
-    };
-};
-
-const setTimeOnDate = (date: Date, value: string) => {
-    const nextDate = new Date(date);
-    const {hours, minutes} = parseTimeParts(value);
-
-    nextDate.setHours(hours, minutes, 0, 0);
-
-    return nextDate;
-};
-
-const formatSlotLabel = (date: Date) => (
-    `${padTimePart(date.getHours())}:${padTimePart(date.getMinutes())}`
-);
-
-const createTimeSlots = (
-    mode: ScheduledDateMode,
-    organization: Pick<Organization, "working_hours"> | null,
-): TimeSlot[] => {
-    const workingHours = organization?.working_hours;
-
-    if (!workingHours?.length) {
-        return [];
-    }
-
-    const day = getDateForMode(mode);
-    const dayStart = getStartOfDay(day);
-    const dayEnd = getEndOfDay(day);
-    const intervalBaseDates = [addDays(day, -1), day];
-    const slots: TimeSlot[] = [];
-    const seenSlotValues = new Set<string>();
-
-    intervalBaseDates.forEach((baseDate) => {
-        const workingHour = getWorkingHourForDate(workingHours, baseDate);
-
-        if (!workingHour || workingHour.is_closed || !workingHour.opens_at || !workingHour.closes_at) {
-            return;
-        }
-
-        let start = setTimeOnDate(baseDate, workingHour.opens_at);
-        let end = setTimeOnDate(baseDate, workingHour.closes_at);
-
-        if (workingHour.closes_next_day) {
-            end = addDays(end, 1);
-        }
-
-        start = maxDate(start, dayStart);
-        end = minDate(end, dayEnd);
-
-        if (mode === "today") {
-            const earliest = new Date();
-            earliest.setMinutes(earliest.getMinutes() + MIN_ORDER_DELAY_MINUTES);
-            const roundedEarliest = roundUpToHalfHour(earliest);
-
-            start = maxDate(start, roundedEarliest);
-        }
-
-        start = roundUpToHalfHour(start);
-
-        if (start > end) {
-            return;
-        }
-
-        const cursor = new Date(start);
-
-        while (cursor <= end) {
-            const value = cursor.toISOString();
-
-            if (!seenSlotValues.has(value)) {
-                seenSlotValues.add(value);
-                slots.push({
-                    value,
-                    label: formatSlotLabel(cursor),
-                });
-            }
-
-            cursor.setMinutes(cursor.getMinutes() + SLOT_STEP_MINUTES);
-        }
-    });
-
-    return slots.sort((first, second) => (
-        new Date(first.value).getTime() - new Date(second.value).getTime()
-    ));
-};
 
 const createDateOptions = (
-    organization: Pick<Organization, "working_hours"> | null,
+    todayDate: string | null,
+    schedules: Record<string, OrganizationOrderTimeSlots>,
 ): DateOption[] => {
-    const todaySlots = createTimeSlots("today", organization);
-    const tomorrowSlots = createTimeSlots("tomorrow", organization);
-    const dayAfterTomorrowSlots = createTimeSlots("dayAfterTomorrow", organization);
+    const todaySlots = todayDate ? mapTimeSlots(schedules[todayDate]) : [];
+    const tomorrowDate = todayDate ? addCalendarDays(todayDate, 1) : null;
+    const dayAfterTomorrowDate = todayDate ? addCalendarDays(todayDate, 2) : null;
+    const tomorrowSlots = tomorrowDate ? mapTimeSlots(schedules[tomorrowDate]) : [];
+    const dayAfterTomorrowSlots = dayAfterTomorrowDate ? mapTimeSlots(schedules[dayAfterTomorrowDate]) : [];
 
     return [
         {
@@ -287,10 +154,11 @@ const createDateOptions = (
 const createCompleteBefore = (
     dateMode: DateMode,
     timeSlot: string,
-    organization: Pick<Organization, "working_hours"> | null,
+    todayDate: string | null,
+    schedules: Record<string, OrganizationOrderTimeSlots>,
 ) => {
     if (dateMode === "asap") {
-        return createTimeSlots("today", organization)[0]?.value ?? null;
+        return todayDate ? schedules[todayDate]?.slots[0]?.startsAt ?? null : null;
     }
 
     return timeSlot || null;
@@ -345,6 +213,12 @@ export function CartDrawer() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [checkoutError, setCheckoutError] = useState("");
     const [checkoutSuccess, setCheckoutSuccess] = useState<CheckoutSuccess | null>(null);
+    const [orderTimeSlotsByDate, setOrderTimeSlotsByDate] = useState<Record<string, OrganizationOrderTimeSlots>>({});
+    const [orderTimeSlotsToday, setOrderTimeSlotsToday] = useState<string | null>(null);
+    const [orderTimeSlotsLoadedFor, setOrderTimeSlotsLoadedFor] = useState<string | null>(null);
+    const [isOrderTimeSlotsLoading, setIsOrderTimeSlotsLoading] = useState(false);
+    const [orderTimeSlotsError, setOrderTimeSlotsError] = useState("");
+    const [orderTimeSlotsErrorFor, setOrderTimeSlotsErrorFor] = useState<string | null>(null);
     const [deliveryCheckState, setDeliveryCheckState] = useState<{
         key: string;
         result: DeliveryCheckResult;
@@ -359,9 +233,20 @@ export function CartDrawer() {
         defaultDeliveryOrganization,
         availabilityByOrganizationId,
     });
+    const orderTimeSlotsOrganizationSlug = orderAvailability.organization?.slug ?? null;
+    const hasFreshOrderTimeSlots = Boolean(
+        orderTimeSlotsOrganizationSlug &&
+        orderTimeSlotsLoadedFor === orderTimeSlotsOrganizationSlug,
+    );
+    const currentOrderTimeSlotsError = orderTimeSlotsErrorFor === orderTimeSlotsOrganizationSlug
+        ? orderTimeSlotsError
+        : "";
     const dateOptions = useMemo(
-        () => createDateOptions(orderAvailability.organization),
-        [orderAvailability.organization],
+        () => createDateOptions(
+            hasFreshOrderTimeSlots ? orderTimeSlotsToday : null,
+            hasFreshOrderTimeSlots ? orderTimeSlotsByDate : {},
+        ),
+        [hasFreshOrderTimeSlots, orderTimeSlotsByDate, orderTimeSlotsToday],
     );
     const selectedDateOption = dateOptions.find((option) => option.mode === dateMode);
     const firstAvailableDateOption = dateOptions.find((option) => !option.disabled);
@@ -375,9 +260,92 @@ export function CartDrawer() {
         : currentTimeSlots[0]?.value ?? "";
     const isSelectedDateDisabled = currentDateOption.disabled;
     const isScheduledModeWithoutSlots = activeDateMode !== "asap" && !selectedTimeSlot;
-    const isCheckoutDisabled = orderAvailability.isUnavailable || isSubmitting || isSelectedDateDisabled || isScheduledModeWithoutSlots;
+    const isCheckoutDisabled = orderAvailability.isUnavailable ||
+        isSubmitting ||
+        isOrderTimeSlotsLoading ||
+        Boolean(currentOrderTimeSlotsError) ||
+        !orderTimeSlotsOrganizationSlug ||
+        !hasFreshOrderTimeSlots ||
+        isSelectedDateDisabled ||
+        isScheduledModeWithoutSlots;
 
     useBodyScrollLock(isOpen);
+
+    useEffect(() => {
+        if (!isOpen || !orderTimeSlotsOrganizationSlug) return;
+
+        const controller = new AbortController();
+
+        const loadOrderTimeSlots = async (clearCurrentSlots = true) => {
+            if (clearCurrentSlots) {
+                setOrderTimeSlotsLoadedFor(null);
+            }
+            setIsOrderTimeSlotsLoading(true);
+            setOrderTimeSlotsError("");
+            setOrderTimeSlotsErrorFor(orderTimeSlotsOrganizationSlug);
+
+            try {
+                // The first request deliberately omits `date`: the backend supplies
+                // the current Moscow calendar date and its current clock is the source
+                // of truth, regardless of the customer's device timezone.
+                const todaySchedule = await getOrganizationOrderTimeSlots(
+                    orderTimeSlotsOrganizationSlug,
+                    undefined,
+                    30,
+                    controller.signal,
+                );
+                const tomorrowDate = addCalendarDays(todaySchedule.date, 1);
+                const dayAfterTomorrowDate = addCalendarDays(todaySchedule.date, 2);
+                const [tomorrowSchedule, dayAfterTomorrowSchedule] = await Promise.all([
+                    getOrganizationOrderTimeSlots(
+                        orderTimeSlotsOrganizationSlug,
+                        tomorrowDate,
+                        30,
+                        controller.signal,
+                    ),
+                    getOrganizationOrderTimeSlots(
+                        orderTimeSlotsOrganizationSlug,
+                        dayAfterTomorrowDate,
+                        30,
+                        controller.signal,
+                    ),
+                ]);
+
+                if (controller.signal.aborted) return;
+
+                setOrderTimeSlotsToday(todaySchedule.date);
+                setOrderTimeSlotsByDate({
+                    [todaySchedule.date]: todaySchedule,
+                    [tomorrowSchedule.date]: tomorrowSchedule,
+                    [dayAfterTomorrowSchedule.date]: dayAfterTomorrowSchedule,
+                });
+                setOrderTimeSlotsLoadedFor(orderTimeSlotsOrganizationSlug);
+            } catch (error) {
+                if (controller.signal.aborted) return;
+
+                setOrderTimeSlotsErrorFor(orderTimeSlotsOrganizationSlug);
+                setOrderTimeSlotsError(
+                    error instanceof Error
+                        ? error.message
+                        : "Не удалось загрузить доступное время заказа.",
+                );
+            } finally {
+                if (!controller.signal.aborted) {
+                    setIsOrderTimeSlotsLoading(false);
+                }
+            }
+        };
+
+        void loadOrderTimeSlots();
+        const refreshTimer = window.setInterval(() => {
+            void loadOrderTimeSlots(false);
+        }, ORDER_TIME_SLOTS_REFRESH_MS);
+
+        return () => {
+            controller.abort();
+            window.clearInterval(refreshTimer);
+        };
+    }, [isOpen, orderTimeSlotsOrganizationSlug]);
 
     const deliveryCheckKey = getDeliveryCheckKey(delivery);
     const deliveryCheck = deliveryCheckState?.key === deliveryCheckKey
@@ -437,7 +405,12 @@ export function CartDrawer() {
             return null;
         }
 
-        const completeBefore = createCompleteBefore(activeDateMode, selectedTimeSlot, organization);
+        const completeBefore = createCompleteBefore(
+            activeDateMode,
+            selectedTimeSlot,
+            orderTimeSlotsToday,
+            orderTimeSlotsByDate,
+        );
 
         if (!completeBefore) {
             setCheckoutError("На выбранную дату нет доступного времени для заказа.");
@@ -516,6 +489,31 @@ export function CartDrawer() {
         setIsSubmitting(true);
 
         try {
+            // A slot can become unavailable while the cart is open. Recheck
+            // today's schedule immediately before creating the order so the
+            // payment API and the UI use the same current backend snapshot.
+            if (
+                payload.completeBefore?.startsWith(orderTimeSlotsToday ?? "") &&
+                orderTimeSlotsOrganizationSlug
+            ) {
+                const latestTodaySchedule = await getOrganizationOrderTimeSlots(
+                    orderTimeSlotsOrganizationSlug,
+                    undefined,
+                    30,
+                );
+
+                setOrderTimeSlotsToday(latestTodaySchedule.date);
+                setOrderTimeSlotsByDate((currentSchedules) => ({
+                    ...currentSchedules,
+                    [latestTodaySchedule.date]: latestTodaySchedule,
+                }));
+
+                if (!latestTodaySchedule.slots.some((slot) => slot.startsAt === payload.completeBefore)) {
+                    setCheckoutError("Выбранное время больше недоступно. Выберите другой слот.");
+                    return;
+                }
+            }
+
             if (payload.orderType === "delivery" && payload.deliveryPoint) {
                 const result = await checkDeliveryZone({
                     coordinates: payload.deliveryPoint.coordinates,
@@ -802,7 +800,13 @@ export function CartDrawer() {
                                                 </div>
                                             </div>
 
-                                            {activeDateMode !== "asap" && (
+                                            {isOrderTimeSlotsLoading && (
+                                                <p className="text-sm leading-5 text-text/65">
+                                                    Загружаем доступные слоты по московскому времени...
+                                                </p>
+                                            )}
+
+                                            {activeDateMode !== "asap" && !isOrderTimeSlotsLoading && (
                                                 <select
                                                     value={selectedTimeSlot}
                                                     onChange={(event) => setTimeSlot(event.target.value)}
@@ -817,10 +821,12 @@ export function CartDrawer() {
                                             )}
                                         </div>
 
-                                        {(orderAvailability.isUnavailable || checkoutError) && (
+                                        {(orderAvailability.isUnavailable || currentOrderTimeSlotsError || checkoutError) && (
                                             <div className="mt-3 flex gap-3 rounded-[6px] border border-primary/45 bg-primary/10 px-3 py-2.5 text-sm font-medium leading-5 text-text md:mt-4 md:px-4 md:py-3 md:leading-6">
                                                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary"/>
-                                                <span>{checkoutError || orderAvailability.message}</span>
+                                                <span>
+                                                    {checkoutError || currentOrderTimeSlotsError || orderAvailability.message}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
