@@ -13,7 +13,6 @@ export type DeliveryOrderDetails = {
     entrance: string;
     floor: string;
     apartment: string;
-    comment: string;
     coordinates: Coordinates;
 };
 
@@ -43,7 +42,6 @@ const trimDelivery = (delivery: DeliveryOrderInput): DeliveryOrderDetails => ({
     entrance: delivery.entrance.trim(),
     floor: delivery.floor.trim(),
     apartment: delivery.apartment.trim(),
-    comment: delivery.comment.trim(),
     coordinates: delivery.coordinates,
 });
 

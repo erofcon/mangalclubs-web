@@ -39,7 +39,6 @@ type DeliveryFormState = {
     entrance: string;
     floor: string;
     apartment: string;
-    comment: string;
 };
 
 type CoordinatesState = {
@@ -118,7 +117,6 @@ const initialForm: DeliveryFormState = {
     entrance: "",
     floor: "",
     apartment: "",
-    comment: "",
 };
 
 const DEFAULT_DELIVERY_COORDINATES: CoordinatesState = {
@@ -249,7 +247,6 @@ export function DeliveryTypeModal() {
                 entrance: selectedDelivery.entrance,
                 floor: selectedDelivery.floor,
                 apartment: selectedDelivery.apartment,
-                comment: selectedDelivery.comment,
             }
             : initialForm
     ));
@@ -344,7 +341,6 @@ export function DeliveryTypeModal() {
             entrance: selectedDelivery.entrance,
             floor: selectedDelivery.floor,
             apartment: selectedDelivery.apartment,
-            comment: selectedDelivery.comment,
         });
         setMapCoordinates({
             latitude: selectedDelivery.coordinates.latitude,
@@ -766,14 +762,6 @@ export function DeliveryTypeModal() {
                                 </div>
                             </div>
 
-                            <div className="relative pt-2">
-                                <textarea
-                                    value={form.comment}
-                                    onChange={handleChange("comment")}
-                                    placeholder="Комментарий курьеру"
-                                    className="min-h-30 w-full resize-none rounded-[6px] border border-border bg-background px-5 py-4 text-sm text-text outline-none transition placeholder:text-text/45 focus:border-primary"
-                                />
-                            </div>
                         </div>
                     </div>
 

@@ -458,7 +458,6 @@ export function CartDrawer() {
                     latitude: delivery.coordinates.latitude,
                     longitude: delivery.coordinates.longitude,
                 },
-                comment: delivery.comment || undefined,
             };
         }
 
